@@ -1,0 +1,259 @@
+.bar {
+  background: var(--color-surface-panel-translucent);
+  height: var(--layout-status-bar-height);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: var(--space-8);
+  padding-right: var(--space-8);
+  position: relative;
+  font-size: var(--font-size-status-bar);
+  color: var(--color-white);
+  z-index: var(--z-status-bar);
+}
+
+.sectionStart {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 5rem;
+}
+
+.sectionCoords {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 20rem;
+}
+
+.sectionMission {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 10rem;
+  margin-right: var(--space-6);
+}
+
+.sectionModes {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.sectionSystems {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.sectionEnd {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.menuButton {
+  background: transparent;
+  border: none;
+  color: var(--color-white);
+  cursor: pointer;
+  padding: 0;
+  margin-left: -10px;
+  transition: transform var(--duration-normal) var(--ease-default);
+}
+
+.menuButton:hover {
+  transform: scale(1.1);
+}
+
+.coordsButton {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-1);
+  cursor: pointer;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  min-width: 250px;
+}
+
+.coordsIcon {
+  width: 2rem;
+  height: auto;
+}
+
+.coordsDivider {
+  width: 1px;
+  height: 1.5rem;
+  background: var(--color-white);
+}
+
+.coordsText {
+  font-family: ui-monospace, monospace;
+  white-space: nowrap;
+  font-size: 1rem;
+}
+
+.elevationText {
+  white-space: nowrap;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.missionSelect {
+  width: 100%;
+  padding: var(--space-2) var(--space-6);
+  height: 2.75rem;
+  background: var(--color-surface-panel-translucent);
+  color: var(--color-white);
+  border: 1px solid var(--color-border-panel);
+  min-width: 200px;
+  font-size: inherit;
+}
+
+.missionSelect:focus {
+  outline: none;
+}
+
+.missionLabel {
+  margin-right: var(--space-2);
+}
+
+.modeColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding-bottom: 0;
+}
+
+.modeButton {
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.modeSubLabel {
+  font-size: 0.75rem;
+  margin-top: -5px;
+  text-align: center;
+  width: 100%;
+}
+
+.divider {
+  width: 1px;
+  height: 2rem;
+  background: #9ca3af;
+}
+
+.systemColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding-bottom: var(--space-2);
+  margin-left: var(--space-8);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  color: inherit;
+}
+
+.systemColumnFlush {
+  composes: systemColumn;
+  padding-bottom: 0;
+  margin-left: 0;
+  cursor: default;
+}
+
+.systemLabel {
+  font-size: 0.75rem;
+}
+
+.clockBlock {
+  text-align: right;
+  line-height: 1.25;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--layout-radius-lg);
+}
+
+.clockDate {
+  font-size: 0.875rem;
+  opacity: 0.9;
+}
+
+.clockTime {
+  font-weight: 700;
+  font-size: 0.875rem;
+  padding-right: var(--space-2);
+}
+
+.modeLabel {
+  font-size: 1rem;
+  margin-left: var(--space-2);
+  margin-right: var(--space-2);
+}
+
+.serverWrap {
+  position: relative;
+  margin-top: var(--space-2);
+}
+
+.serverIcon {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+.semiAutoSvg {
+  width: 3rem;
+  height: 3rem;
+}
+
+.semiAutoText {
+  fill: var(--color-white);
+  font-family: Arial, sans-serif;
+  font-size: 32px;
+  font-weight: bold;
+}
+
+.flyoutRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-surface-panel-translucent);
+}
+
+.flyoutAction {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--color-white);
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: var(--space-2);
+  border-radius: var(--layout-radius-sm);
+  background: transparent;
+  border: none;
+}
+
+.flyoutAction:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.flyoutSemiLabel {
+  position: relative;
+  margin-top: var(--space-2);
+  margin-bottom: var(--space-1);
+  font-weight: 700;
+}
+
+.flyoutStatusText {
+  text-align: right;
+  color: var(--color-white);
+  font-size: 0.75rem;
+  margin-bottom: var(--space-2);
+}

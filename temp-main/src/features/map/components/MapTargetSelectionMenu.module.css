@@ -1,0 +1,65 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.25);
+  z-index: 40;
+}
+
+.panel {
+  position: fixed;
+  z-index: 999;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  padding: 0.5rem 0;
+  min-width: 12rem;
+  max-height: 16rem;
+  overflow-y: auto;
+}
+
+.header {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.item {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  text-align: left;
+  font-size: 0.875rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.item:hover {
+  background: #f3f4f6;
+}
+
+.dotFriendly {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 9999px;
+  background: #22c55e;
+  flex-shrink: 0;
+}
+
+.dotHostile {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 9999px;
+  background: #ef4444;
+  flex-shrink: 0;
+}
+
+.typeHint {
+  color: #6b7280;
+  font-size: 0.75rem;
+}

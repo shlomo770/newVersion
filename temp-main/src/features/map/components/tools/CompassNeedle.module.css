@@ -1,0 +1,14 @@
+.root {
+  position: fixed;
+  top: calc(var(--layout-status-bar-height) + var(--space-12));
+  right: var(--layout-sidebar-offset);
+  width: 5rem;
+  height: 5rem;
+  z-index: var(--z-compass-widget);
+  pointer-events: none;
+  transition: transform 0.3s ease;
+}
+
+.svg {
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35));
+}

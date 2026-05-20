@@ -1,0 +1,31 @@
+.button {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--layout-radius-sm);
+  font-weight: 600;
+  border: 1px solid var(--color-border-panel);
+  transition: background var(--duration-fast) var(--ease-default), border-color var(--duration-fast) var(--ease-default), color var(--duration-fast) var(--ease-default);
+  cursor: pointer;
+}
+
+.buttonActive {
+  background: #dc2626;
+  border-color: #f87171;
+  color: var(--color-white);
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.buttonIdle {
+  background: #262626;
+  border-color: #525252;
+  color: #d4d4d4;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}

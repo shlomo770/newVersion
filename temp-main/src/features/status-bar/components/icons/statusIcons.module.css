@@ -1,0 +1,143 @@
+.iconWrap {
+  position: relative;
+  margin-top: var(--space-2);
+}
+
+.iconWrapFlush {
+  position: relative;
+}
+
+.iconSvg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.iconSvgLarge {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+.iconOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.noCommImg {
+  width: 1.5rem;
+  height: auto;
+}
+
+.armLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-status-fail);
+  margin-top: -0.5rem;
+}
+
+.iffText {
+  fill: var(--color-white);
+  font-family: Arial, sans-serif;
+  font-size: 32px;
+  font-weight: bold;
+}
+
+.gunReady,
+.gunReady path {
+  fill: var(--color-white);
+  stroke: var(--color-white);
+}
+
+.gunWarning,
+.gunWarning path {
+  fill: var(--color-yellow);
+  stroke: var(--color-yellow);
+}
+
+.gunFail,
+.gunFail path {
+  fill: var(--color-red);
+  stroke: var(--color-red);
+}
+
+.gunTrack,
+.gunTrack path {
+  fill: var(--color-green);
+  stroke: var(--color-green);
+}
+
+.gunArm,
+.gunArm path {
+  fill: var(--color-white);
+  stroke: var(--color-white);
+}
+
+.gunNoComm,
+.gunNoComm path {
+  fill: var(--color-gray);
+  stroke: var(--color-gray);
+}
+
+.radarOk,
+.radarOk path {
+  fill: var(--color-white);
+  stroke: var(--color-white);
+}
+
+.radarWarning,
+.radarWarning path {
+  fill: var(--color-yellow);
+  stroke: var(--color-yellow);
+}
+
+.radarFail,
+.radarFail path {
+  fill: var(--color-red);
+  stroke: var(--color-red);
+}
+
+.radarActive,
+.radarActive path {
+  fill: var(--color-green);
+  stroke: var(--color-green);
+}
+
+.radarNoComm,
+.radarNoComm path {
+  fill: var(--color-gray);
+  stroke: var(--color-gray);
+}
+
+.insSurvey,
+.insSurvey path {
+  fill: var(--color-white);
+}
+
+.insAlign,
+.insAlign path {
+  fill: var(--color-yellow);
+}
+
+.insFail,
+.insFail path {
+  fill: var(--color-red);
+}
+
+.insNoComm,
+.insNoComm path {
+  fill: var(--color-gray);
+}
+
+.antennaDefault,
+.antennaDefault path {
+  fill: var(--color-white);
+}
+
+.droneDefault,
+.droneDefault path,
+.droneDefault circle {
+  fill: var(--color-white);
+  stroke: var(--color-white);
+}

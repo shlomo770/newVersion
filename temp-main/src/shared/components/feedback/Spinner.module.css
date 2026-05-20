@@ -1,0 +1,18 @@
+.root {
+  display: inline-block;
+  animation: shared-spinner-rotate 1s linear infinite;
+}
+
+@keyframes shared-spinner-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.track {
+  opacity: 0.6;
+}
+
+.arc {
+  stroke-linecap: round;
+}

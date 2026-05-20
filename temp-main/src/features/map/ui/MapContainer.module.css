@@ -1,0 +1,39 @@
+.root {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.canvas {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: var(--layout-radius-lg);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.hudCluster {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-map-hud);
+  pointer-events: none;
+}
+
+.hudCluster > * {
+  pointer-events: auto;
+}
+
+.layerSlot {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-map-canvas-decoration);
+  pointer-events: none;
+}
+
+.layerSlot > * {
+  pointer-events: auto;
+}

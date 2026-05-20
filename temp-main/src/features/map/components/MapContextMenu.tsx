@@ -1,0 +1,127 @@
+import type { FC, PointerEvent } from 'react';
+import styles from './MapContextMenu.module.css';
+
+export interface MapContextMenuProps {
+  open: boolean;
+  x: number;
+  y: number;
+  entityId: string;
+  entityName: string;
+  isTarget?: boolean;
+  targetIsFriend?: boolean;
+  onClose: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  onAllocateTarget?: () => void;
+  onDesignateTarget?: () => void;
+  onToggleFriend?: () => void;
+}
+
+function stopPropagation(e: PointerEvent): void {
+  e.stopPropagation();
+}
+
+export const MapContextMenu: FC<MapContextMenuProps> = ({
+  open,
+  x,
+  y,
+  isTarget = false,
+  targetIsFriend = false,
+  onEdit,
+  onDelete,
+  onAllocateTarget,
+  onDesignateTarget,
+  onToggleFriend,
+}) => {
+  if (!open) return null;
+
+  if (isTarget) {
+    const switchingToHostile = targetIsFriend;
+    const actionLabel = switchingToHostile ? 'אויב' : 'ידיד';
+    const iconPrimary = switchingToHostile ? '#ef4444' : '#43e55f';
+    const iconSecondary = switchingToHostile ? '#991b1b' : '#2e7d32';
+    const friendButtonClass = switchingToHostile
+      ? styles.actionButtonHostile
+      : styles.actionButtonFriendly;
+
+    return (
+      <div
+        className={styles.overlay}
+        style={{ left: x, top: y }}
+        onPointerDown={stopPropagation}
+        role="menu"
+        aria-label="Target actions"
+      >
+        <div className={styles.actions}>
+          {(onAllocateTarget ?? onDesignateTarget) && (
+            <button
+              type="button"
+              className={styles.actionButton}
+              onPointerDown={onAllocateTarget ?? onDesignateTarget}
+              aria-label="Allocate target"
+            >
+              <img
+                src="/icons/targets/Target_Point.png"
+                alt=""
+                className={styles.actionIcon}
+              />
+              <span className={styles.actionLabel}>Allocat</span>
+            </button>
+          )}
+
+          {onToggleFriend && (
+            <button
+              type="button"
+              className={`${styles.actionButton} ${friendButtonClass}`}
+              onPointerDown={onToggleFriend}
+              aria-label={switchingToHostile ? 'סמן כאויב' : 'סמן כידיד'}
+            >
+              <div className="mb-2 flex h-8 w-8 items-center justify-center">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="512"
+                  height="512"
+                  viewBox="0 0 512 512"
+                  aria-hidden
+                >
+                  <g transform="scale(0.9) rotate(-45 256 256)">
+                    <path
+                      d="M466.598 491.65 269.674 9.188a14.769 14.769 0 0 0-27.348 0L45.403 491.65a14.77 14.77 0 0 0 21.502 18.106L256 391.571l189.095 118.184A14.736 14.736 0 0 0 452.92 512a14.767 14.767 0 0 0 13.678-20.35z"
+                      fill={iconPrimary}
+                    />
+                    <path
+                      d="M445.095 509.755A14.736 14.736 0 0 0 452.92 512a14.77 14.77 0 0 0 13.677-20.351L269.674 9.187A14.77 14.77 0 0 0 256 0v391.571l189.095 118.184z"
+                      fill={iconSecondary}
+                    />
+                  </g>
+                </svg>
+              </div>
+              <span className={styles.actionLabel}>{actionLabel}</span>
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={styles.entityMenu}
+      style={{ left: x, top: y }}
+      onPointerDown={stopPropagation}
+      role="menu"
+      aria-label="Entity actions"
+    >
+      <button type="button" className={styles.entityButton} onPointerDown={onEdit}>
+        Edit
+      </button>
+      <button
+        type="button"
+        className={`${styles.entityButton} ${styles.entityButtonDanger}`}
+        onPointerDown={onDelete}
+      >
+        Delete
+      </button>
+    </div>
+  );
+};

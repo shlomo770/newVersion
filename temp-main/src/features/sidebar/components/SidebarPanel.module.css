@@ -1,0 +1,53 @@
+.rail {
+  position: fixed;
+  left: 0;
+  top: var(--layout-status-bar-height);
+  height: calc(100% - var(--layout-status-bar-height));
+  width: 4rem;
+  background: rgba(30, 30, 30, 0.88);
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.2);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--space-6);
+  padding-top: var(--space-6);
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--layout-radius-lg);
+  transition: transform var(--duration-normal) var(--ease-default), color var(--duration-normal) var(--ease-default), background var(--duration-normal) var(--ease-default);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+}
+
+.item:hover {
+  transform: scale(1.1);
+  color: var(--color-white);
+}
+
+.itemActive {
+  color: var(--color-white);
+  background: #3a3a3a;
+}
+
+.iconWrap {
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.label {
+  font-size: 0.75rem;
+  font-weight: 500;
+}

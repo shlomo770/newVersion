@@ -1,0 +1,7 @@
+.expandedCard {
+  position: fixed;
+  top: 40%;
+  right: 15%;
+  z-index: var(--z-target-panel);
+  outline: none;
+}

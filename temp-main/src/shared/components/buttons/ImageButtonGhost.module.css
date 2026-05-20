@@ -1,0 +1,37 @@
+.button {
+  background: transparent;
+  border: none;
+  padding: 0;
+  line-height: 0;
+  outline: none;
+  margin-top: 10px;
+  transition: transform 90ms ease, filter 140ms ease;
+}
+
+.button:not(:disabled) {
+  cursor: pointer;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--color-amber-focus);
+  outline-offset: 4px;
+  border-radius: var(--layout-radius-sm);
+}
+
+.image {
+  display: block;
+  user-select: none;
+  pointer-events: none;
+}
+
+.imageDisabled {
+  opacity: 0.5;
+}
+
+.imageEnabled {
+  opacity: 1;
+}

@@ -1,0 +1,17 @@
+.button {
+  position: absolute;
+  top: calc(var(--layout-status-bar-height) + var(--space-4));
+  left: 160px;
+  z-index: var(--z-map-hud);
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  border-radius: 9999px;
+  background: var(--color-surface-panel-translucent);
+  border: none;
+  cursor: pointer;
+}
+
+.icon {
+  width: 2.5rem;
+  height: 2.5rem;
+}

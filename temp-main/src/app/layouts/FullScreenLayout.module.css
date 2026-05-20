@@ -1,0 +1,37 @@
+.root {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.splash {
+  background: linear-gradient(
+    to bottom right,
+    var(--color-splash-bg-from),
+    var(--color-splash-bg-via),
+    var(--color-splash-bg-to)
+  );
+}
+
+.maintenance {
+  background: #070a10;
+  color: var(--color-text-primary);
+}
+
+.tactical {
+  background: var(--color-surface-dark);
+  color: var(--color-text-primary);
+}
