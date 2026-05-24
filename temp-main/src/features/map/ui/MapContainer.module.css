@@ -29,8 +29,8 @@
 
 .mapActionDock {
   position: absolute;
-  top: calc(var(--layout-status-bar-height) + var(--space-4));
-  left: var(--space-3);
+  top: var(--layout-map-action-dock-top, 3.25rem);
+  left: var(--layout-map-action-dock-left, 0.5rem);
   display: flex;
   align-items: center;
   justify-content: flex-start;

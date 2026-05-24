@@ -36,7 +36,7 @@ export function useMapStyleReady(
       map.off('load', run);
       if (cleanup) cleanup();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- caller supplies domain deps
+    // caller supplies domain deps
   }, [map, ...deps]);
 }
 

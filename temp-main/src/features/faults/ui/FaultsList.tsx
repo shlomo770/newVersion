@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import { useAppSelector } from '@/hooks/useAppSelector';
-import { ErrorSeverityE, ErrorStateE } from '@/enums/general.enum';
+import { ErrorSeverityE, ErrorStateE } from '@domain/enums/general.enum';
 import {
   selectCategories,
   selectFilteredFaults,
@@ -11,6 +11,8 @@ import {
   getBadge,
   type Fault,
 } from '../store/faultsSlice';
+import { AppSelect } from '@shared/ui';
+import { he } from '@shared/i18n';
 import styles from './FaultsList.module.css';
 
 const normalizeTs = (ts: number) => (ts < 1e12 ? ts * 1000 : ts);
@@ -90,9 +92,9 @@ export default function FaultsList() {
 
       <div className={styles.filters}>
         <div className={styles.filterGroup}>
-          <span className={styles.filterLabel}>Severity</span>
-          <select
-            className={styles.severitySelect}
+          <AppSelect
+            compact
+            label="Severity"
             value={severity}
             onChange={(e) => {
               const value = e.target.value;
@@ -107,7 +109,7 @@ export default function FaultsList() {
               {sevText(ErrorSeverityE.INTERMEDIATE)}
             </option>
             <option value={ErrorSeverityE.WARNING}>{sevText(ErrorSeverityE.WARNING)}</option>
-          </select>
+          </AppSelect>
         </div>
 
         <div className={styles.filterGroup}>
@@ -186,7 +188,7 @@ export default function FaultsList() {
         })}
 
         {view.length === 0 && (
-          <div className={styles.emptyState}>אין תקלות לפי הפילטר הנוכחי</div>
+          <div className={styles.emptyState}>{he.faults.emptyFiltered}</div>
         )}
       </div>
     </div>

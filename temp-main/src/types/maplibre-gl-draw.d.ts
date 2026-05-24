@@ -1,7 +1,6 @@
 declare module '@hyvilo/maplibre-gl-draw' {
   import type { IControl, Map } from 'maplibre-gl';
   import type { GeoJSON } from 'geojson';
-  import type { LayerSpecification } from 'maplibre-gl';
 
   export type DrawStyleLayer =
     | Omit<import('maplibre-gl').FillLayerSpecification, 'source'>

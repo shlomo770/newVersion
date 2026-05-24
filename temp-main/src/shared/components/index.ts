@@ -22,4 +22,4 @@ export { ToggleSwitch } from './ToggleSwitch/ToggleSwitch';
 export type { ToggleSwitchProps, ToggleSwitchSize } from './ToggleSwitch/ToggleSwitch';
 
 export { FlyoutMenu } from './overlay/FlyoutMenu';
-export type { FlyoutMenuProps, FlyoutPlacement } from './overlay/FlyoutMenu';
+export type { FlyoutMenuProps, FlyoutPlacement, FlyoutAlign } from './overlay/FlyoutMenu';

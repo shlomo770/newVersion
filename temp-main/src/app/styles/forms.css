@@ -1,0 +1,357 @@
+/**
+ * JBK Form Design System — single source of truth for all form UI.
+ *
+ * Tokens: `src/config/form.config.ts` + `src/config/theme.config.ts`
+ * Applied via CSS custom properties on `:root` (`applyTheme()`).
+ *
+ * Usage:
+ *   - Prefer `<AppInput>`, `<AppSelect>`, `<AppButton>`, `<AppFormStack>` from `@shared/ui`
+ *   - Or apply global classes directly: `.jbk-field`, `.jbk-control`, `.jbk-btn`, etc.
+ */
+
+/* ── Layout ─────────────────────────────────────────────────────────── */
+
+.jbk-form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--form-stack-gap, var(--theme-spacing-form-gap, var(--space-2)));
+}
+
+.jbk-form-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--form-stack-gap, var(--theme-spacing-form-gap, var(--space-2)));
+}
+
+.jbk-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--form-actions-gap, var(--theme-spacing-form-gap, var(--space-2)));
+}
+
+.jbk-form-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--form-section-gap, var(--theme-spacing-panel-gap, var(--space-3)));
+  padding: var(--form-section-padding, var(--theme-spacing-panel-padding-sm, var(--space-3)));
+  border-radius: var(--form-section-radius, var(--theme-radius-lg, var(--layout-radius-lg)));
+  border: 1px solid var(--theme-color-border-subtle, var(--color-border-zinc));
+  background: var(--theme-color-bg-card, rgba(255, 255, 255, 0.03));
+}
+
+.jbk-form-section-title {
+  margin: 0;
+  font-family: var(--theme-font-family-sans, var(--font-family-sans));
+  font-size: var(--theme-font-size-sm, 0.875rem);
+  font-weight: 600;
+  color: var(--theme-color-text-primary, var(--color-text-primary));
+}
+
+.jbk-form-section-subtitle {
+  margin: 0;
+  font-family: var(--theme-font-family-sans, var(--font-family-sans));
+  font-size: var(--theme-font-size-xs, 0.75rem);
+  color: var(--theme-color-text-muted, var(--color-text-muted));
+}
+
+/* ── Field ──────────────────────────────────────────────────────────── */
+
+.jbk-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--form-field-gap, var(--space-1));
+  min-width: 0;
+}
+
+.jbk-label {
+  font-family: var(--theme-font-family-sans, var(--font-family-sans));
+  font-size: var(--form-label-size, var(--theme-font-size-xs, 0.75rem));
+  font-weight: var(--form-label-weight, 500);
+  color: var(--theme-color-text-label, var(--color-text-muted));
+  direction: rtl;
+  text-align: right;
+}
+
+.jbk-form-section-title,
+.jbk-form-section-subtitle {
+  direction: rtl;
+  text-align: right;
+}
+
+/* ── Controls (input / select / textarea) ───────────────────────────── */
+
+.jbk-control,
+.jbk-select,
+.jbk-textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: var(--form-control-min-height, var(--component-input-height-sm));
+  padding: var(--form-control-padding-y, var(--space-2)) var(--form-control-padding-x, var(--space-3));
+  border-radius: var(--form-control-radius, var(--theme-radius-md, var(--layout-radius-md)));
+  border: 1px solid var(--theme-color-border, var(--color-border-panel));
+  background: var(--theme-color-bg-input, var(--color-surface-input-dark));
+  color: var(--theme-color-text-primary, var(--color-text-primary));
+  font-family: var(--theme-font-family-sans, var(--font-family-sans));
+  font-size: var(--form-control-font-size, var(--theme-font-size-sm, 0.875rem));
+  line-height: 1.25;
+  outline: none;
+  transition:
+    border-color var(--duration-fast, 150ms) var(--ease-default, ease),
+    box-shadow var(--duration-fast, 150ms) var(--ease-default, ease),
+    background var(--duration-fast, 150ms) var(--ease-default, ease);
+}
+
+.jbk-control::placeholder,
+.jbk-textarea::placeholder {
+  color: var(--theme-color-text-muted, var(--color-text-muted));
+}
+
+.jbk-control:focus,
+.jbk-select:focus,
+.jbk-textarea:focus {
+  border-color: var(--theme-color-border-focus, var(--color-amber-focus));
+  box-shadow: 0 0 0 var(--form-control-focus-ring, 1px)
+    color-mix(in srgb, var(--theme-color-border-focus, var(--color-amber-focus)) 50%, transparent);
+}
+
+.jbk-control:disabled,
+.jbk-select:disabled,
+.jbk-textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.jbk-control--compact,
+.jbk-select--compact {
+  min-height: var(--form-control-min-height-compact, 1.75rem);
+  padding: var(--form-control-padding-y-compact, var(--space-1))
+    var(--form-control-padding-x-compact, var(--space-2));
+  font-size: var(--form-control-font-size-compact, var(--theme-font-size-xs, 0.75rem));
+}
+
+.jbk-control--center {
+  text-align: center;
+}
+
+.jbk-control--mono {
+  font-family: var(--theme-font-family-mono, var(--font-family-mono));
+  font-variant-numeric: tabular-nums;
+}
+
+.jbk-control--inline {
+  min-height: auto;
+  padding: var(--space-1) var(--space-2);
+  border-color: transparent;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+}
+
+.jbk-control--inline:hover:not(:disabled) {
+  border-color: var(--theme-color-border-subtle, var(--color-border-zinc));
+  background: var(--theme-color-bg-card-hover, rgba(255, 255, 255, 0.04));
+}
+
+.jbk-control--inline:focus {
+  border-color: var(--theme-color-border-focus, var(--color-amber-focus));
+  background: color-mix(in srgb, var(--theme-color-bg-input) 60%, transparent);
+}
+
+.jbk-select {
+  cursor: pointer;
+  appearance: none;
+  padding-inline-start: var(--space-8);
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position:
+    calc(var(--space-3) - 2px) calc(50% - 3px),
+    calc(var(--space-3) - 2px) calc(50% + 1px);
+  background-size:
+    5px 5px,
+    5px 5px;
+  background-repeat: no-repeat;
+  color: var(--theme-color-text-primary, var(--color-text-primary));
+}
+
+.jbk-select option {
+  background: var(--theme-color-bg-panel, var(--color-surface-panel));
+  color: var(--theme-color-text-primary, var(--color-text-primary));
+}
+
+.jbk-select--compact {
+  padding-inline-start: var(--space-6);
+}
+
+.jbk-control::-webkit-inner-spin-button,
+.jbk-control::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.jbk-control[type='number'] {
+  -moz-appearance: textfield;
+}
+
+.jbk-textarea {
+  min-height: 5rem;
+  resize: vertical;
+}
+
+/* Legacy alias — prefer `.jbk-control` in new code */
+.input-dark {
+  width: 100%;
+  min-width: 0;
+  min-height: var(--form-control-min-height, var(--component-input-height-sm));
+  padding: var(--form-control-padding-y, var(--space-2)) var(--form-control-padding-x, var(--space-3));
+  border-radius: var(--form-control-radius, var(--theme-radius-md, var(--layout-radius-md)));
+  border: 1px solid var(--theme-color-border, var(--color-border-panel));
+  background: var(--theme-color-bg-input, var(--color-surface-input-dark));
+  color: var(--theme-color-text-primary, var(--color-text-primary));
+  font-family: var(--theme-font-family-sans, var(--font-family-sans));
+  font-size: var(--form-control-font-size, var(--theme-font-size-sm, 0.875rem));
+  outline: none;
+}
+
+.input-dark:focus {
+  border-color: var(--theme-color-border-focus, var(--color-amber-focus));
+  box-shadow: 0 0 0 var(--form-control-focus-ring, 1px)
+    color-mix(in srgb, var(--theme-color-border-focus, var(--color-amber-focus)) 50%, transparent);
+}
+
+/* ── Buttons ────────────────────────────────────────────────────────── */
+
+.jbk-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--form-control-radius, var(--theme-radius-md, var(--layout-radius-md)));
+  font-family: var(--theme-font-family-sans, var(--font-family-sans));
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background var(--duration-fast, 150ms) var(--ease-default, ease),
+    border-color var(--duration-fast, 150ms) var(--ease-default, ease),
+    color var(--duration-fast, 150ms) var(--ease-default, ease),
+    opacity var(--duration-fast, 150ms) var(--ease-default, ease);
+}
+
+.jbk-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.jbk-btn:focus-visible {
+  outline: 2px solid var(--theme-color-border-focus, var(--color-amber-focus));
+  outline-offset: 2px;
+}
+
+.jbk-btn--sm {
+  min-height: var(--component-button-height-sm);
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--form-button-font-size-sm, var(--theme-font-size-xs, 0.75rem));
+}
+
+.jbk-btn--md {
+  min-height: var(--component-button-height-md);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--form-button-font-size-md, var(--theme-font-size-sm, 0.875rem));
+}
+
+.jbk-btn--lg {
+  min-height: var(--component-button-height-lg);
+  padding: var(--space-3) var(--space-6);
+  font-size: var(--form-button-font-size-lg, var(--theme-font-size-md, 1rem));
+}
+
+.jbk-btn--full {
+  width: 100%;
+}
+
+.jbk-btn--primary {
+  background: var(--theme-color-primary, var(--color-brand-accent));
+  color: var(--theme-color-text-inverse, var(--color-white));
+  border-color: color-mix(in srgb, var(--theme-color-primary) 80%, var(--color-white));
+}
+
+.jbk-btn--primary:hover:not(:disabled) {
+  background: var(--theme-color-primary-hover);
+}
+
+.jbk-btn--secondary {
+  background: var(--theme-color-bg-panel, var(--color-surface-panel));
+  color: var(--theme-color-text-primary, var(--color-text-primary));
+  border-color: var(--theme-color-border, var(--color-border-panel));
+}
+
+.jbk-btn--secondary:hover:not(:disabled) {
+  border-color: var(--theme-color-accent, var(--color-brand-primary));
+  background: color-mix(in srgb, var(--theme-color-bg-panel) 92%, var(--theme-color-accent));
+}
+
+.jbk-btn--danger {
+  background: var(--theme-color-danger, var(--color-red));
+  color: var(--theme-color-text-inverse, var(--color-white));
+  border-color: color-mix(in srgb, var(--theme-color-danger) 75%, var(--color-black));
+}
+
+.jbk-btn--danger:hover:not(:disabled) {
+  background: var(--theme-color-danger-hover);
+}
+
+.jbk-btn--success {
+  background: var(--theme-color-success, var(--color-green));
+  color: var(--theme-color-text-inverse, var(--color-white));
+  border-color: color-mix(in srgb, var(--theme-color-success) 75%, var(--color-black));
+}
+
+.jbk-btn--success:hover:not(:disabled) {
+  background: var(--theme-color-success-hover);
+}
+
+.jbk-btn--ghost {
+  background: transparent;
+  color: var(--theme-color-text-primary, var(--color-text-primary));
+  border-color: var(--theme-color-border, var(--color-border-panel));
+}
+
+.jbk-btn--ghost:hover:not(:disabled) {
+  background: var(--theme-color-primary-muted, var(--color-brand-primary-muted));
+}
+
+.jbk-btn--icon {
+  background: transparent;
+  color: var(--theme-color-text-muted, var(--color-text-muted));
+  border-color: transparent;
+  padding: var(--space-2);
+}
+
+.jbk-btn--icon:hover:not(:disabled) {
+  color: var(--theme-color-text-inverse, var(--color-white));
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ── Sidebar / panel shells (shared chrome) ─────────────────────────── */
+
+.jbk-sidebar-panel {
+  background: var(--theme-color-bg-panel, var(--color-surface-panel));
+  color: var(--theme-color-text-primary, var(--color-text-primary));
+  box-shadow: var(--theme-shadow-panel, var(--shadow-panel));
+}
+
+.jbk-sidebar-panel-header {
+  background: var(--theme-color-bg-panel-header, var(--color-surface-panel));
+  border-bottom: 1px solid var(--theme-color-border-subtle, var(--color-border-zinc));
+}
+
+.jbk-sidebar-panel-card {
+  border-radius: var(--theme-radius-lg, var(--layout-radius-lg));
+  border: 1px solid var(--theme-color-border-subtle, var(--color-border-zinc));
+  background: var(--theme-color-bg-card, rgba(255, 255, 255, 0.03));
+}

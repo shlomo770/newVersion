@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '@/hooks/useAppSelector';
 import { useAppDispatch } from '@/hooks/useAppDispatch';
 import { clearModeSelection } from '@features/system-mode';
-import { SelectedModeE } from '@/enums/general.enum';
+import { SelectedModeE } from '@domain/enums/general.enum';
 import {
   GunStatusE,
   InsStatusE,
@@ -17,6 +17,7 @@ import {
   RenderRadarIcon,
 } from '@features/status-bar';
 import styles from './MaintenanceDashboard.module.css';
+import { he } from '@shared/i18n';
 
 type Panel = 'ins' | 'gun' | 'radar';
 
@@ -68,7 +69,7 @@ function MaintenanceDashboard() {
     const entries = Object.values(guns ?? {});
     if (!entries.length) return null;
     return entries.map((g) => (
-      <DataRow key={g.gunId} label={`תותח ${g.gunId}`} value={GunStatusE[g.status]} />
+      <DataRow key={g.gunId} label={he.maintenance.gunLabel(g.gunId)} value={GunStatusE[g.status]} />
     ));
   }, [guns]);
 
@@ -81,19 +82,19 @@ function MaintenanceDashboard() {
     {
       id: 'ins' as const,
       title: 'INS',
-      subtitle: 'ניווט ועמדה',
+      subtitle: he.maintenance.insSubtitle,
       icon: <RenderInsIcon status={insStatus} />,
     },
     {
       id: 'gun' as const,
       title: 'GUN',
-      subtitle: 'תותח',
+      subtitle: he.maintenance.gunSubtitle,
       icon: <RenderGunIcon status={gunStatus ?? GunStatusE.NO_COMM} />,
     },
     {
       id: 'radar' as const,
       title: 'RADAR',
-      subtitle: 'מכ״ם',
+      subtitle: he.maintenance.radarSubtitle,
       icon: <RenderRadarIcon status={radarStatus ?? RadarStatusE.NO_COMM} />,
     },
   ] as const;
@@ -104,17 +105,17 @@ function MaintenanceDashboard() {
       <div className={styles.content}>
         <header className={styles.header}>
           <div>
-            <p className={styles.kicker}>תחזוקה</p>
-            <h1 className={styles.title}>לוח בקרת מערכות</h1>
+            <p className={styles.kicker}>{he.maintenance.kicker}</p>
+            <h1 className={styles.title}>{he.maintenance.title}</h1>
             <p className={styles.subtitle}>
-              נתונים חיים מהמצב האחרון שהתקבל מהרשת. בחרו מערכת כדי לראות פירוט מלא.
+              {he.maintenance.subtitle}
             </p>
           </div>
           <div className={styles.headerActions}>
-            <span className={styles.clockLabel}>עדכון שעון מקומי</span>
+            <span className={styles.clockLabel}>{he.maintenance.clockLabel}</span>
             <span className={styles.clockValue}>{nowLabel}</span>
             <button type="button" onClick={leave} className={styles.leaveButton}>
-              חזרה לבחירת מצב
+              {he.maintenance.backToMode}
             </button>
           </div>
         </header>
@@ -134,7 +135,7 @@ function MaintenanceDashboard() {
                 </div>
                 <span className={styles.cardTitle}>{c.title}</span>
                 <span className={styles.cardSubtitle}>{c.subtitle}</span>
-                {active && <span className={styles.activeBadge}>פעיל</span>}
+                {active && <span className={styles.activeBadge}>{he.maintenance.active}</span>}
               </button>
             );
           })}
@@ -143,34 +144,34 @@ function MaintenanceDashboard() {
         <section className={styles.detailSection}>
           {panel === 'ins' && (
             <div>
-              <h2 className={styles.detailTitle}>INS — מצב ועמדה</h2>
+              <h2 className={styles.detailTitle}>{he.maintenance.insDetailTitle}</h2>
               <div className={styles.detailGrid}>
-                <DataRow label="סטטוס TMAPS / INS" value={InsStatusE[insStatus] ?? insStatus} />
-                <DataRow label="כיוון (°)" value={fmtNum(my.heading, 2)} />
+                <DataRow label={he.maintenance.insStatus} value={InsStatusE[insStatus] ?? insStatus} />
+                <DataRow label={he.maintenance.heading} value={fmtNum(my.heading, 2)} />
                 <DataRow label="Pitch (°)" value={fmtNum(my.pitch, 2)} />
                 <DataRow label="Roll (°)" value={fmtNum(my.roll, 2)} />
-                <DataRow label="מיקום פעיל (lat)" value={fmtNum(my.coordinates?.lat, 6)} />
-                <DataRow label="מיקום פעיל (lng)" value={fmtNum(my.coordinates?.lng, 6)} />
+                <DataRow label={he.maintenance.activeLat} value={fmtNum(my.coordinates?.lat, 6)} />
+                <DataRow label={he.maintenance.activeLng} value={fmtNum(my.coordinates?.lng, 6)} />
                 <DataRow label="GPS" value={`${fmtNum(my.gps_pos?.lat, 5)}, ${fmtNum(my.gps_pos?.lng, 5)}`} />
                 <DataRow label="TMAPS" value={`${fmtNum(my.tmaps_pos?.lat, 5)}, ${fmtNum(my.tmaps_pos?.lng, 5)}`} />
-                <DataRow label="שימוש ב-GPS" value={String(my.use_gps)} />
-                <DataRow label="שימוש בידני" value={String(my.use_manual)} />
-                <DataRow label="אזור" value={String(my.zone)} />
+                <DataRow label={he.maintenance.useGps} value={String(my.use_gps)} />
+                <DataRow label={he.maintenance.useManual} value={String(my.use_manual)} />
+                <DataRow label={he.maintenance.zone} value={String(my.zone)} />
                 <DataRow label="Fig of merit" value={fmtNum(my.fig_of_merit, 2)} />
-                <DataRow label="מרחק מצטבר" value={fmtNum(my.distance_travelled, 2)} />
+                <DataRow label={he.maintenance.cumulativeDistance} value={fmtNum(my.distance_travelled, 2)} />
               </div>
             </div>
           )}
 
           {panel === 'gun' && (
             <div>
-              <h2 className={styles.detailTitle}>GUN — תותח</h2>
+              <h2 className={styles.detailTitle}>{he.maintenance.gunDetailTitle}</h2>
               <div className={styles.detailStack}>
-                <DataRow label="סטטוס כללי" value={gunStatus != null ? GunStatusE[gunStatus] : '—'} />
-                <DataRow label="אזימוט כיוון (°)" value={fmtNum(my.gunAzimut, 2)} />
+                <DataRow label={he.maintenance.gunGeneralStatus} value={gunStatus != null ? GunStatusE[gunStatus] : '—'} />
+                <DataRow label={he.maintenance.gunAzimuth} value={fmtNum(my.gunAzimut, 2)} />
                 {gunRows}
                 {!gunRows && (
-                  <p className={styles.emptyHint}>אין רשומות תותח נפרדות — מוצג סטטוס כללי בלבד.</p>
+                  <p className={styles.emptyHint}>{he.maintenance.noGunRecords}</p>
                 )}
               </div>
             </div>
@@ -178,19 +179,19 @@ function MaintenanceDashboard() {
 
           {panel === 'radar' && (
             <div>
-              <h2 className={styles.detailTitle}>RADAR — מכ״ם</h2>
+              <h2 className={styles.detailTitle}>{he.maintenance.radarDetailTitle}</h2>
               <div className={styles.detailGrid}>
-                <DataRow label="סטטוס תצוגה" value={radarStatus != null ? RadarStatusE[radarStatus] : '—'} />
-                <DataRow label="סטטוס שרת" value={RadarStatusE[radarServer.state]} />
-                <DataRow label="מצב עבודה" value={RadarStateE[radarServer.mode]} />
-                <DataRow label="חדר עבודה" value={String(radarServer.workRoom)} />
-                <DataRow label="קטגוריית משימה" value={String(radarServer.missionCategory)} />
-                <DataRow label="אינדקס תדר" value={String(radarServer.freqIndex)} />
-                <DataRow label="גובה מינימלי" value={String(radarServer.min_elevation)} />
-                <DataRow label="מגזרי בלנקינג" value={String(radarServer.blanking_sectors)} />
-                <DataRow label="טווח (מ׳)" value={String(radarRange)} />
+                <DataRow label={he.maintenance.radarDisplayStatus} value={radarStatus != null ? RadarStatusE[radarStatus] : '—'} />
+                <DataRow label={he.maintenance.radarServerStatus} value={RadarStatusE[radarServer.state]} />
+                <DataRow label={he.maintenance.workMode} value={RadarStateE[radarServer.mode]} />
+                <DataRow label={he.maintenance.workRoom} value={String(radarServer.workRoom)} />
+                <DataRow label={he.maintenance.missionCategory} value={String(radarServer.missionCategory)} />
+                <DataRow label={he.maintenance.freqIndex} value={String(radarServer.freqIndex)} />
+                <DataRow label={he.maintenance.minElevation} value={String(radarServer.min_elevation)} />
+                <DataRow label={he.maintenance.blankingSectors} value={String(radarServer.blanking_sectors)} />
+                <DataRow label={he.maintenance.rangeMeters} value={String(radarRange)} />
                 <DataRow
-                  label="מגזרי אי-כיסוי"
+                  label={he.maintenance.nonCoverageSectors}
                   value={
                     radarNon && radarNon.length ? (
                       <span className={styles.dataValueBreak}>{radarNon.join(', ')}</span>

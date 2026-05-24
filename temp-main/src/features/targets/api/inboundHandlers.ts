@@ -2,7 +2,7 @@ import type { MessageRegistry } from '@core/ws/messageRegistry';
 import type { InboundHandlerContext } from '@core/ws/types';
 import { isValidLatLng } from '@domain/utils/latLng';
 import { WsMessageName } from '@domain/enums/ws.enum';
-import { TargetState, TargetStateString, TargetType } from '@/enums/target.enum';
+import { TargetState, TargetStateString, TargetType } from '@domain/enums/target.enum';
 import {
   updateTarget,
   setTargetRecommendation,

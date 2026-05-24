@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@app/store';
-import { SelectedModeE } from '../enums/general.enum';
+import { SelectedModeE } from '@domain/enums/general.enum';
 import { MapPage } from './MapPage';
 import { ModeSelectionPage } from './ModeSelectionPage';
 import { MaintenancePage } from './MaintenancePage';

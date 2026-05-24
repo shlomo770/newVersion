@@ -5,6 +5,7 @@ import { setSelectedMode } from '../store/systemSlice';
 import { SelectedModeE } from '@domain/enums/general.enum';
 import { AppButton } from '@shared/ui';
 import { PLATFORM_ICONS } from '@/config';
+import { he } from '@shared/i18n';
 import styles from './ModeSelector.module.css';
 
 /** Short pause after entering fullscreen before triggering the route
@@ -67,7 +68,7 @@ const ModeSelector: FC = () => {
           <h1 className={styles.title}>JBK</h1>
         </div>
 
-        <p className={styles.subtitle}>בחרו מצב הפעלה</p>
+        <p className={styles.subtitle}>{he.systemMode.subtitle}</p>
 
         <div className={styles.actions}>
           <AppButton
@@ -76,7 +77,7 @@ const ModeSelector: FC = () => {
             className={styles.modeButton}
             onClick={() => handleModeSelect(SelectedModeE.Mission, '/map')}
           >
-            מבצעי
+            {he.systemMode.mission}
           </AppButton>
 
           <AppButton
@@ -85,7 +86,7 @@ const ModeSelector: FC = () => {
             className={styles.modeButton}
             onClick={() => handleModeSelect(SelectedModeE.Maintenance, '/maintenance')}
           >
-            תחזוקה
+            {he.systemMode.maintenance}
           </AppButton>
 
           <AppButton
@@ -94,7 +95,7 @@ const ModeSelector: FC = () => {
             className={styles.modeButton}
             onClick={() => handleModeSelect(SelectedModeE.Training, '/map')}
           >
-            אימון
+            {he.systemMode.training}
           </AppButton>
         </div>
       </div>

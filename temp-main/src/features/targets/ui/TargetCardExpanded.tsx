@@ -1,4 +1,4 @@
-import { TargetStateString } from '@/enums/target.enum';
+import { TargetStateString } from '@domain/enums/target.enum';
 import { cn } from '@shared/ui';
 import { TARGET_CARD_ICONS } from '@/config';
 import {
@@ -10,6 +10,7 @@ import { getTargetIcon } from '../utils/targetIconResolver';
 import { ImageButtonGhost } from '@shared/components/buttons/ImageButtonGhost';
 import { RedRoundButton } from '@shared/components/buttons/RedRoundButton';
 import { SpinnerMustard } from '@shared/components/feedback/Spinner';
+import { he } from '@shared/i18n';
 import styles from './TargetCardExpanded.module.css';
 
 interface TargetCardExpandedProps {
@@ -95,14 +96,14 @@ export function TargetCardExpanded({
                 size={ACTION_BUTTON_SIZES.allocateImage}
                 src={TARGET_CARD_ICONS.allocate}
               />
-              <div className={styles.actionLabel}>הקצה</div>
+              <div className={styles.actionLabel}>{he.targets.allocate}</div>
             </div>
           )}
           {target.status === TargetStateString.designated && (
             <RedRoundButton
               onClick={() => onAbort(target.id)}
               size={ACTION_BUTTON_SIZES.abortRound}
-              label="ביטול"
+              label={he.targets.cancel}
             />
           )}
           {(target.status === TargetStateString.track ||
@@ -110,7 +111,7 @@ export function TargetCardExpanded({
             <RedRoundButton
               onClick={() => onAbort(target.id)}
               size={ACTION_BUTTON_SIZES.abortRound}
-              label="ביטול"
+              label={he.targets.cancel}
             />
           )}
           {target.status === TargetStateString.allocated && (
@@ -125,13 +126,13 @@ export function TargetCardExpanded({
                   type="button"
                   className={styles.waitingAbortBtn}
                   onClick={() => onAbort(target.id)}
-                  aria-label="ביטול"
-                  title="ביטול"
+                  aria-label={he.targets.cancel}
+                  title={he.targets.cancel}
                 >
-                  ביטול
+                  {he.targets.cancel}
                 </button>
               </div>
-              <div className={styles.actionLabel}>בהמתנה</div>
+              <div className={styles.actionLabel}>{he.targets.pending}</div>
             </div>
           )}
           {target.status === TargetStateString.destroyed && (
@@ -140,7 +141,7 @@ export function TargetCardExpanded({
                 size={ACTION_BUTTON_SIZES.destroyedImage}
                 src={TARGET_CARD_ICONS.destroyed}
               />
-              <div className={styles.actionLabel}>הושמד</div>
+              <div className={styles.actionLabel}>{he.targets.destroyed}</div>
             </div>
           )}
         </div>

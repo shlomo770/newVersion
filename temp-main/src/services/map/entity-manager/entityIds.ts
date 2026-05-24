@@ -12,4 +12,4 @@ export {
   entityIconLayerIdFor as entityIconLayerId,
   entityLabelSourceIdFor as entityLabelSourceId,
   entityLabelLayerIdFor as entityLabelLayerId,
-} from '@features/map/config';
+} from '@/services/map/config';

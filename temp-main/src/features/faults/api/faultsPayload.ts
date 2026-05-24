@@ -1,4 +1,4 @@
-import { ErrorSeverityE, ErrorStateE } from '@/enums/general.enum';
+import { ErrorSeverityE, ErrorStateE } from '@domain/enums/general.enum';
 
 export interface FaultWireItem {
   code: number;

@@ -3,9 +3,9 @@ import type { MutableRefObject } from 'react';
 import { useAppDispatch } from '@/hooks/useAppDispatch';
 import {
   addEntity,
-  setDrawingMode,
   setCreationForm,
 } from '@features/entities';
+import { setDrawingMode } from '@features/map';
 import type { EntityDrawDraft, EntityType } from '@domain/models/entity';
 import type { Coordinates } from '@domain/models/coordinates';
 import { EntityCategoryEnum } from '@domain/enums/entity.enum';

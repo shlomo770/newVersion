@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 import { FaExclamationTriangle } from 'react-icons/fa';
 import { useAppSelector } from '@/hooks/useAppSelector';
-import { ErrorSeverityE } from '@/enums/general.enum';import {
+import { ErrorSeverityE } from '@domain/enums/general.enum';
+import {
   selectPopupQueue,
   dismissPopup,
   popNextPopup,
@@ -11,6 +12,7 @@ import { ErrorSeverityE } from '@/enums/general.enum';import {
   acknowledgeAll,
 } from '../store/faultsSlice';
 import { AppButton, AppIconButton } from '@shared/ui';
+import { he } from '@shared/i18n';
 import styles from './ToastHost.module.css';
 
 const DISMISS_TTL_MS = 60_000;
@@ -97,7 +99,7 @@ export default function ToastHost() {
               </div>
               <div className={styles.toastMessage}>{first.description}</div>
             </div>
-            <AppIconButton label="Dismiss" size="sm" className={styles.closeButton} onClick={closeNow}>
+            <AppIconButton label={he.faults.dismiss} size="sm" className={styles.closeButton} onClick={closeNow}>
               X
             </AppIconButton>
           </div>

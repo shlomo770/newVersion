@@ -1,204 +1,101 @@
-# MapLibre React App
+# MapLibre React App (JBK Tactical Map)
 
-A modern, high-performance React application using MapLibre GL JS as the map engine with Redux for state management. This application provides a comprehensive mapping solution with entity drawing, editing, and management capabilities.
-
-## Features
-
-### 🗺️ Map Features
-- **Vector Tiles**: OpenStreetMap tiles for high-quality mapping
-- **Full Map Rotation**: 0-360° rotation control via slider
-- **Brightness Control**: Adjust map brightness (darken background only)
-- **Responsive Design**: Works on desktop and mobile devices
-
-### ✏️ Drawing Tools
-- **Polygon**: Click to add points, double-click to finish
-- **Line**: Click to add points, double-click to finish
-- **Rectangle**: First click sets corner, second defines size, third sets rotation
-- **Circle**: First click is center, second defines radius
-- **Marker**: Single click to place
-
-### 🏗️ Entity Management
-- **Redux State Management**: Centralized state with byId, allIds, and groupedByType
-- **Entity Tree**: Sidebar with all entities organized by type
-- **Entity Editor**: Full editing capabilities with style controls
-- **Persistent Storage**: Entities are serializable for save/load operations
-
-### 🎨 UI/UX Features
-- **Modern Interface**: Clean, professional design with Tailwind CSS
-- **Interactive Controls**: Real-time visual feedback during editing
-- **Entity Selection**: Click entities in sidebar to focus and edit
-- **Style Customization**: Color, opacity, and stroke width controls
+Modern React 18 + TypeScript tactical map application with MapLibre GL, Redux Toolkit, and real-time WebSocket data (radar, targets, entities, INS, faults).
 
 ## Architecture
 
-### Tech Stack
-- **React 18**: Modern React with hooks and functional components
-- **TypeScript**: Full type safety throughout the application
-- **Redux Toolkit**: Modern Redux with RTK Query patterns
-- **MapLibre GL JS**: Open-source mapping library
-- **Mapbox GL Draw**: Drawing and editing tools
-- **Tailwind CSS**: Utility-first CSS framework
-- **Vite**: Fast build tool and development server
+Layered structure inspired by Feature-Sliced Design:
 
-### Project Structure
+```
+app / pages          → composition & routing
+features/*           → domain UI, Redux slices, WS inbound handlers
+domain/*             → pure models, enums, wire mappers
+core/*               → REST/WS clients, server config, message registry
+services/map         → MapLibre engine (no @features imports)
+shared/*             → design system, i18n, reusable UI
+config/*             → global theme, form tokens, icons
+```
+
+### Dependency rules (enforced by ESLint)
+
+| Layer | May import |
+|-------|------------|
+| `features` | domain, core, shared, services, config |
+| `services` | domain, core, shared — **not** `@features` |
+| `core`, `domain`, `shared` | each other — **not** `@features` |
+
+Map engine config lives in `src/services/map/config/`. Feature code re-exports via `@features/map/config`.
+
+Entity state reaches map services through `MapServiceRuntime`, wired in `MapFacade` via `createMapServiceRuntime()`.
+
+## Project structure
+
 ```
 src/
-├── components/          # React components
-│   ├── MapContainer.tsx
-│   ├── Toolbar.tsx
-│   ├── EntityTree.tsx
-│   └── EntityEditor.tsx
-├── hooks/              # Custom React hooks
-│   ├── useAppDispatch.ts
-│   └── useAppSelector.ts
-├── services/           # Business logic and external services
-│   └── mapService.ts
-├── store/              # Redux store and slices
-│   ├── store.ts
-│   ├── entitySlice.ts
-│   └── mapSlice.ts
-├── types/              # TypeScript type definitions
-│   └── index.ts
-├── App.tsx             # Main application component
-├── main.tsx           # Application entry point
-└── index.css          # Global styles
+├── app/                 # Bootstrap, store, providers, WS registration
+├── pages/               # Route-level pages (Map, Mode, Maintenance)
+├── features/            # Feature modules (map, entities, targets, …)
+├── domain/              # Models, enums, mappers
+├── core/                # REST client, WS client, message registry
+├── services/map/        # MapService, drawing, entity renderer
+├── shared/              # UI kit, i18n, components
+└── config/              # Theme, forms, icons
 ```
 
-## Getting Started
+## Getting started
 
 ### Prerequisites
-- Node.js 16+ 
-- npm or yarn
 
-### Installation
+- Node.js 18+
+- npm
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd maplibre-react-app
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Start development server**
-   ```bash
-   npm run dev
-   ```
-
-4. **Open your browser**
-   Navigate to `http://localhost:3000`
-
-### Build for Production
+### Install & run
 
 ```bash
-npm run build
+npm install
+npm run dev          # Vite dev server → http://localhost:3000
 ```
 
-## Usage
+### WebSocket backend
 
-### Drawing Entities
+The app expects a WebSocket server at `ws://localhost:8080` (see `src/config/communication.json`).
 
-1. **Select a drawing tool** from the toolbar
-2. **Click on the map** to start drawing
-3. **Follow the tool-specific instructions**:
-   - **Polygon/Line**: Click to add points, double-click to finish
-   - **Rectangle**: Click corner → click opposite corner → click for rotation
-   - **Circle**: Click center → click to define radius
-   - **Marker**: Single click to place
+Optional mock server (requires `data/SRTM.tif` for elevation queries):
 
-### Managing Entities
-
-1. **View all entities** in the Entity Tree sidebar
-2. **Click an entity** to select and focus on it
-3. **Edit properties** in the Entity Editor panel
-4. **Delete entities** using the trash icon in the tree
-
-### Map Controls
-
-- **Rotation Slider**: Adjust map rotation (0-360°)
-- **Brightness Slider**: Control map brightness (0-2x)
-- **Reset Map**: Return to default view
-- **Clear All**: Remove all entities
-
-## Development
-
-### Key Features Implementation
-
-#### Entity State Management
-```typescript
-// Redux slice with normalized state
-const entitySlice = createSlice({
-  name: 'entities',
-  initialState: {
-    byId: {},
-    allIds: [],
-    groupedByType: {
-      polygon: [],
-      line: [],
-      rectangle: [],
-      circle: [],
-      marker: []
-    }
-  }
-});
+```bash
+npm run mock-server   # ws://localhost:8080
 ```
 
-#### Map Service Integration
-```typescript
-// Isolated map logic
-export class MapService {
-  initialize(container, callbacks) {
-    // MapLibre initialization
-    // Event handling
-    // Drawing tools setup
-  }
-}
-```
+`ws` and `geotiff` are included as devDependencies.
 
-#### Custom Hooks
-```typescript
-// Typed Redux hooks
-export const useAppDispatch = () => useDispatch<AppDispatch>();
-export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
-```
+Override endpoints via env vars: `VITE_WS_SERVER`, `VITE_MAP_SERVER`, `VITE_API_SERVER`.
 
-### Extending the Application
+## Scripts
 
-#### Adding New Entity Types
-1. Update `EntityType` in `types/index.ts`
-2. Add drawing mode in `mapService.ts`
-3. Update entity tree rendering
-4. Add style controls to editor
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Development server |
+| `npm run build` | Production build |
+| `npm run preview` | Preview production build |
+| `npm run mock-server` | WebSocket mock backend (port 8080) |
+| `npm run test` | Run Vitest unit tests |
+| `npm run lint` | ESLint (includes import boundary rules) |
+| `npm run typecheck` | TypeScript check |
 
-#### Custom Map Styles
-1. Modify the style object in `mapService.ts`
-2. Add new tile sources
-3. Configure layer properties
+## Styling
 
-#### Additional Features
-- **Save/Load**: Implement entity serialization
-- **Export**: Add GeoJSON export functionality
-- **Import**: Support for external data sources
-- **Collaboration**: Real-time entity sharing
+- **CSS Modules** for component layout
+- **Global tokens** via `theme.config.ts` → CSS variables
+- **Form primitives** via `forms.css` (`jbk-*` classes)
 
-## Contributing
+## Localization
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+Hebrew UI strings: `src/shared/i18n/he.ts`. Layout stays LTR (icons, map chrome); RTL applies only to Hebrew text (labels, titles, dialogs).
 
-## License
+## Tech stack
 
-This project is licensed under the MIT License.
-
-## Acknowledgments
-
-- [MapLibre GL JS](https://maplibre.org/) for the mapping engine
-- [Mapbox GL Draw](https://github.com/mapbox/mapbox-gl-draw) for drawing tools
-- [Redux Toolkit](https://redux-toolkit.js.org/) for state management
-- [Tailwind CSS](https://tailwindcss.com/) for styling 
+- React 18, TypeScript (strict)
+- Redux Toolkit
+- MapLibre GL JS, Mapbox GL Draw
+- Vite 4
+- Vitest, ESLint

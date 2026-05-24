@@ -50,6 +50,7 @@
 
 .content {
   min-width: 0;
+  direction: rtl;
   text-align: right;
 }
 

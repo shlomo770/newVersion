@@ -1,4 +1,5 @@
 import { useId, useState } from 'react';
+import { he } from '@shared/i18n';
 import styles from './RedRoundButton.module.css';
 
 export interface RedRoundButtonProps {
@@ -12,7 +13,7 @@ export interface RedRoundButtonProps {
 
 export function RedRoundButton({
   size = 80,
-  label = 'ביטול',
+  label = he.common.cancel,
   onClick,
   disabled = false,
   gloss = 0.55,

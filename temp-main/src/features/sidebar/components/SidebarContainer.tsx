@@ -1,24 +1,27 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import type { PanelType } from '@/types';
 import SidebarPanel from './SidebarPanel';
 import SidebarForm from './SidebarForm';
 
 export interface SidebarContainerProps {
   isOpen: boolean;
-  onClose: () => void;
+  activePanel: PanelType;
+  onActivePanelChange: (panel: PanelType) => void;
 }
 
-export default function SidebarContainer({ isOpen }: SidebarContainerProps) {
-  const [activePanel, setActivePanel] = useState<PanelType>(null);
-
+export default function SidebarContainer({
+  isOpen,
+  activePanel,
+  onActivePanelChange,
+}: SidebarContainerProps) {
   useEffect(() => {
     if (!isOpen) {
-      setActivePanel(null);
+      onActivePanelChange(null);
     }
-  }, [isOpen]);
+  }, [isOpen, onActivePanelChange]);
 
   const handlePanelSelect = (panelType: PanelType) => {
-    setActivePanel((current) => (current === panelType ? null : panelType));
+    onActivePanelChange(activePanel === panelType ? null : panelType);
   };
 
   if (!isOpen) return null;
@@ -26,7 +29,9 @@ export default function SidebarContainer({ isOpen }: SidebarContainerProps) {
   return (
     <>
       <SidebarPanel activePanel={activePanel} onPanelSelect={handlePanelSelect} />
-      {activePanel && <SidebarForm type={activePanel} onClose={() => setActivePanel(null)} />}
+      {activePanel ? (
+        <SidebarForm type={activePanel} onClose={() => onActivePanelChange(null)} />
+      ) : null}
     </>
   );
 }

@@ -36,12 +36,14 @@
   font-size: var(--theme-font-size-lg, 1.125rem);
   font-weight: 600;
   text-align: center;
+  direction: rtl;
   color: var(--theme-color-text-inverse, var(--color-white));
 }
 
 .message {
   margin: 0 0 var(--space-4);
   text-align: center;
+  direction: rtl;
   font-size: var(--theme-font-size-sm, 0.875rem);
   color: var(--theme-color-text-muted, var(--color-text-muted));
 }

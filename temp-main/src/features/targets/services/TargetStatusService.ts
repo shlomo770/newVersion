@@ -1,6 +1,6 @@
 import { store } from '@app/store';
 import type { RootState } from '@app/store';
-import { TargetStateString } from '@/enums/target.enum';
+import { TargetStateString } from '@domain/enums/target.enum';
 import { removeTarget, type Target } from '../store/targetsSlice';
 import { TARGET_STATUS_POLL_INTERVAL_MS } from '../config/targetRuntime.config';
 

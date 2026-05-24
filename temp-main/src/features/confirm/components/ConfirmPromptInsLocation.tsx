@@ -3,8 +3,9 @@ import { createPortal } from 'react-dom';
 import { useAppDispatch } from '@/hooks/useAppDispatch';
 import { useAppSelector } from '@/hooks/useAppSelector';
 import { useWebSocket } from '@/hooks/useWebSocket';
-import { WsMessageName } from '@/enums/ws.enum';
+import { WsMessageName } from '@domain/enums/ws.enum';
 import { AppButton } from '@shared/ui';
+import { he } from '@shared/i18n';
 import { closePrompt } from '../store/confirmSlice';
 import styles from './ConfirmPromptInsLocation.module.css';
 
@@ -21,10 +22,10 @@ export function ConfirmPromptInsLocation() {
 
   if (!prompt) return null;
 
-  const { title = 'אישור פעולה', message, confirmText = 'מאשר', cancelText = 'בטל' } = prompt;
+  const { title = he.confirm.defaultTitle, message, confirmText = he.confirm.confirm, cancelText = he.confirm.cancel } = prompt;
 
   const modal = (
-    <div ref={backdropRef} dir="rtl" className={styles.backdrop}>
+    <div ref={backdropRef} className={styles.backdrop}>
       <div role="dialog" aria-modal="true" className={styles.dialog}>
         <div className={styles.body}>
           <div className={styles.headerRow}>

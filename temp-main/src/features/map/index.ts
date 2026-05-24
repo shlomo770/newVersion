@@ -1,3 +1,11 @@
+export { default as mapInteractionReducer } from './store/mapInteractionSlice';
+export { setDrawingMode, clearDrawingMode } from './store/mapInteractionSlice';
+export type { MapDrawingMode } from './store/mapInteractionSlice';
+
+export { MapCommandsProvider, useMapCommands, useMapCommandsOptional } from './context/MapCommandsContext';
+export type { MapCommands } from './context/mapCommands';
+export { createMapCommands } from './context/mapCommands';
+
 export { default as mapReducer } from './store/mapSlice';
 export { default as filterReducer } from './store/filterSlice';
 export { default as settingsReducer } from './store/settingsSlice';
@@ -56,7 +64,6 @@ export { default as MapContainer } from './ui/MapContainer';
 export type { MapContainerProps } from './ui/MapContainer';
 
 export { MapFacade } from './services/MapFacade';
-export type { JsonPathInput } from './services/MapFacade';
 export type { MapDrawingUiState } from './services/mapDrawingTypes';
 
 export {

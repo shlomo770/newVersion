@@ -176,7 +176,7 @@ const MapContainer: FC<MapContainerProps> = memo((props) => {
         />
       ) : null}
 
-      {!openSider ? (
+      {!openSider && !entitiesOpen ? (
         <div className={styles.mapActionDock} role="toolbar" aria-label="Map actions">
           <EntitiesButton onToggleSidebar={() => setEntitiesOpen((open) => !open)} />
           <MapControls mapFacadeRef={mapFacadeRef} />

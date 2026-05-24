@@ -3,7 +3,8 @@ import { PiLineSegmentBold, PiPolygonFill } from 'react-icons/pi';
 import { FaCircleNotch, FaEllipsisH, FaChartPie } from 'react-icons/fa';
 import { useAppDispatch } from '@/hooks/useAppDispatch';
 import { useAppSelector } from '@/hooks/useAppSelector';
-import { setDrawingMode, setCreationForm } from '@features/entities/store/entitiesSlice';
+import { setCreationForm } from '@features/entities/store/entitiesSlice';
+import { setDrawingMode } from '@features/map';
 import { DegreeInput } from '@shared/components/inputs/DegreeInput';
 import {
   AppButton,
@@ -18,6 +19,7 @@ import { WsMessageName } from '@domain/enums/ws.enum';
 import { EntityCategoryEnum } from '@domain/enums/entity.enum';
 import { setTabooZoneSector } from '@features/taboo-zone';
 import type { EntityType } from '@domain/models/entity';
+import { he } from '@shared/i18n';
 import styles from './EntityCreationPanel.module.css';
 
 interface EntityCreationPanelProps {
@@ -110,22 +112,22 @@ const EntityCreationPanel: FC<EntityCreationPanelProps> = ({ isOpen, onClose }) 
     <AppFloatingPanel
       open={isOpen}
       onClose={handleClose}
-      title="Create new area"
+      title={he.entities.panels.creationTitle}
       position="left"
     >
       {!showTABOOZONEForm ? (
         <div className={styles.formStack}>
           <AppInput
-            label="שם"
+            label={he.entities.panels.name}
             compact
             value={creationName}
             onChange={(e) =>
               dispatch(setCreationForm({ name: e.target.value, category: creationCategory, height: creationHeight }))
             }
-            placeholder="Entity name..."
+            placeholder={he.entities.panels.entityNamePlaceholder}
           />
           <AppInput
-            label="גובה (מטר)"
+            label={he.entities.panels.heightMeters}
             compact
             type="number"
             step={1}
@@ -139,7 +141,7 @@ const EntityCreationPanel: FC<EntityCreationPanelProps> = ({ isOpen, onClose }) 
             }
           />
           <AppSelect
-            label="קטגוריה"
+            label={he.entities.panels.category}
             compact
             value={creationCategory}
             onChange={(e) =>
@@ -154,27 +156,27 @@ const EntityCreationPanel: FC<EntityCreationPanelProps> = ({ isOpen, onClose }) 
           </AppSelect>
 
           <div>
-            <AppSectionTitle withBorder>Shape</AppSectionTitle>
+            <AppSectionTitle withBorder>{he.entities.panels.shapeSection}</AppSectionTitle>
             <div className={styles.shapeGrid}>
               <button
                 type="button"
                 disabled={!canSelectCirclePolygonEllipse}
                 className={styles.shapeButton}
                 onClick={() => handleCreateEntity('circle')}
-                title={!canSelectCirclePolygonEllipse ? 'נא להזין שם ולבחור קטגוריה' : undefined}
+                title={!canSelectCirclePolygonEllipse ? he.entities.panels.shapeNameRequired : undefined}
               >
                 <FaCircleNotch size={22} />
-                <span className={styles.shapeLabel}>Circle</span>
+                <span className={styles.shapeLabel}>{he.entities.panels.shapeCircle}</span>
               </button>
               <button
                 type="button"
                 disabled={!canSelectCirclePolygonEllipse}
                 className={styles.shapeButton}
                 onClick={() => handleCreateEntity('polygon')}
-                title={!canSelectCirclePolygonEllipse ? 'נא להזין שם ולבחור קטגוריה' : undefined}
+                title={!canSelectCirclePolygonEllipse ? he.entities.panels.shapeNameRequired : undefined}
               >
                 <PiPolygonFill size={22} />
-                <span className={styles.shapeLabel}>Polygon</span>
+                <span className={styles.shapeLabel}>{he.entities.panels.shapePolygon}</span>
               </button>
               <button
                 type="button"
@@ -184,27 +186,27 @@ const EntityCreationPanel: FC<EntityCreationPanelProps> = ({ isOpen, onClose }) 
                 title={
                   !canSelectEllipse
                     ? creationCategory === EntityCategoryEnum.FIZ
-                      ? 'בקטגוריה FIZ לא ניתן ליצור Ellipse'
-                      : 'נא להזין שם ולבחור קטגוריה'
+                      ? he.entities.panels.shapeEllipseFizForbidden
+                      : he.entities.panels.shapeNameRequired
                     : undefined
                 }
               >
                 <FaEllipsisH size={22} />
-                <span className={styles.shapeLabel}>Ellipse</span>
+                <span className={styles.shapeLabel}>{he.entities.panels.shapeEllipse}</span>
               </button>
               <button
                 type="button"
                 disabled={!canSelectPolyline}
                 className={styles.shapeButton}
                 onClick={() => handleCreateEntity('line')}
-                title={!canSelectPolyline ? 'Polyline זמין רק בקטגוריה FREE' : undefined}
+                title={!canSelectPolyline ? he.entities.panels.shapePolylineFreeOnly : undefined}
               >
                 <PiLineSegmentBold size={22} />
-                <span className={styles.shapeLabel}>Polyline</span>
+                <span className={styles.shapeLabel}>{he.entities.panels.shapePolyline}</span>
               </button>
               <button type="button" className={styles.shapeButton} onClick={() => handleCreateEntity('sector')}>
                 <FaChartPie size={22} />
-                <span className={styles.shapeLabel}>TABOOZONE</span>
+                <span className={styles.shapeLabel}>{he.entities.panels.shapeTaboozone}</span>
               </button>
             </div>
           </div>
@@ -212,17 +214,17 @@ const EntityCreationPanel: FC<EntityCreationPanelProps> = ({ isOpen, onClose }) 
       ) : (
         <div className={styles.formStack}>
           <div className={styles.tabooHeader}>
-            <label className={styles.tabooTitle}>TABOOZONE (ממיקום הגוף)</label>
+            <label className={styles.tabooTitle}>{he.entities.panels.taboozoneFromBody}</label>
             <button type="button" className={styles.backLink} onClick={() => setShowTABOOZONEForm(false)}>
-              חזרה
+              {he.common.back}
             </button>
           </div>
           <div className={styles.degreeRow}>
-            <DegreeInput label="מעלה מ-" value={angleFrom} onChange={setAngleFrom} />
-            <DegreeInput label="מעלה עד" value={angleTo} onChange={setAngleTo} />
+            <DegreeInput label={he.entities.panels.angleFrom} value={angleFrom} onChange={setAngleFrom} />
+            <DegreeInput label={he.entities.panels.angleTo} value={angleTo} onChange={setAngleTo} />
           </div>
           <AppInput
-            label="רדיוס (מ)"
+            label={he.entities.panels.radiusMeters}
             compact
             type="number"
             min={1}
@@ -230,14 +232,14 @@ const EntityCreationPanel: FC<EntityCreationPanelProps> = ({ isOpen, onClose }) 
             value={radius}
             onChange={(e) => setRadius(e.target.value === '' ? '' : +e.target.value)}
           />
-          <AppInput label="קטגוריה" compact readOnly value={TABOOZONE_CATEGORY} />
+          <AppInput label={he.entities.panels.category} compact readOnly value={TABOOZONE_CATEGORY} />
           <AppButton
             fullWidth
             disabled={!canCreateTABOOZONE}
             onClick={handleCreateTABOOZONEFromForm}
-            title={!canCreateTABOOZONE ? 'יש למלא זוויות/רדיוס ולוודא שיש מיקום גוף תקין' : undefined}
+            title={!canCreateTABOOZONE ? he.entities.panels.taboozoneFillRequired : undefined}
           >
-            צור TABOOZONE
+            {he.entities.panels.createTaboozone}
           </AppButton>
         </div>
       )}

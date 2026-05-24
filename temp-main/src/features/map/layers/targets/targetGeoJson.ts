@@ -3,7 +3,7 @@ import { getTargetIconIdFromTarget } from '@features/targets/utils/targetIconRes
 import { formatTargetMapLabel } from '@features/targets/utils/targetLabel';
 import { TARGET_ASSIGNMENT_TIP_GEOMETRY } from '@features/map/config';
 import { isAbortableTarget } from '@features/targets/utils/targetAbortRule';
-import { TargetStateString } from '@/enums/target.enum';
+import { TargetStateString } from '@domain/enums/target.enum';
 
 /**
  * Pure GeoJSON builders for the targets layer pipeline.

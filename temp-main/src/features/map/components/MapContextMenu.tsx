@@ -1,5 +1,6 @@
 import type { FC, PointerEvent } from 'react';
 import { TARGET_CARD_ICONS } from '@/config';
+import { he } from '@shared/i18n';
 import styles from './MapContextMenu.module.css';
 
 /**
@@ -50,7 +51,7 @@ export const MapContextMenu: FC<MapContextMenuProps> = ({
 
   if (isTarget) {
     const switchingToHostile = targetIsFriend;
-    const actionLabel = switchingToHostile ? 'אויב' : 'ידיד';
+    const actionLabel = switchingToHostile ? he.map.contextMenu.enemy : he.map.contextMenu.friend;
     const iconPrimary = switchingToHostile
       ? `var(--theme-color-danger, ${FRIEND_HOSTILE_FALLBACKS.hostilePrimary})`
       : `var(--theme-color-success, ${FRIEND_HOSTILE_FALLBACKS.friendlyPrimary})`;
@@ -75,14 +76,14 @@ export const MapContextMenu: FC<MapContextMenuProps> = ({
               type="button"
               className={styles.actionButton}
               onPointerDown={onAllocateTarget ?? onDesignateTarget}
-              aria-label="Allocate target"
+              aria-label={he.map.contextMenu.allocate}
             >
               <img
                 src={TARGET_CARD_ICONS.allocate}
                 alt=""
                 className={styles.actionIcon}
               />
-              <span className={styles.actionLabel}>Allocat</span>
+              <span className={styles.actionLabel}>{he.targets.allocate}</span>
             </button>
           )}
 
@@ -91,7 +92,7 @@ export const MapContextMenu: FC<MapContextMenuProps> = ({
               type="button"
               className={`${styles.actionButton} ${friendButtonClass}`}
               onPointerDown={onToggleFriend}
-              aria-label={switchingToHostile ? 'סמן כאויב' : 'סמן כידיד'}
+              aria-label={switchingToHostile ? he.map.contextMenu.markEnemy : he.map.contextMenu.markFriend}
             >
               <div className={styles.friendIconWrap}>
                 <svg
@@ -127,17 +128,17 @@ export const MapContextMenu: FC<MapContextMenuProps> = ({
       style={{ left: x, top: y }}
       onPointerDown={stopPropagation}
       role="menu"
-      aria-label="Entity actions"
+      aria-label={he.map.contextMenu.entityActions}
     >
       <button type="button" className={styles.entityButton} onPointerDown={onEdit}>
-        Edit
+        {he.map.contextMenu.edit}
       </button>
       <button
         type="button"
         className={`${styles.entityButton} ${styles.entityButtonDanger}`}
         onPointerDown={onDelete}
       >
-        Delete
+        {he.map.contextMenu.delete}
       </button>
     </div>
   );

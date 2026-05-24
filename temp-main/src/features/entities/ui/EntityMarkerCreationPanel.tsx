@@ -1,10 +1,12 @@
 import { FC } from 'react';
 import { useAppDispatch } from '@/hooks/useAppDispatch';
 import { useAppSelector } from '@/hooks/useAppSelector';
-import { setCreationForm, setDrawingMode, setSelectedMarkerIcon } from '@features/entities/store/entitiesSlice';
+import { setCreationForm, setSelectedMarkerIcon } from '@features/entities/store/entitiesSlice';
+import { setDrawingMode } from '@features/map';
 import { MARKER_ICONS, getMarkerIconChar } from '@/constants/markerIcons';
 import { EntityCategoryEnum } from '@domain/enums/entity.enum';
 import { AppButton, AppFloatingPanel, AppInput, AppSectionTitle, cn } from '@shared/ui';
+import { he } from '@shared/i18n';
 import styles from './EntityMarkerCreationPanel.module.css';
 
 interface EntityMarkerCreationPanelProps {
@@ -30,29 +32,29 @@ const EntityMarkerCreationPanel: FC<EntityMarkerCreationPanelProps> = ({ isOpen,
 
   const handleStartDrawing = () => {
     if (!selectedIcon) return;
-    const name = creationName?.trim() || 'נקודה';
+    const name = creationName?.trim() || he.entities.panels.defaultMarkerName;
     dispatch(setCreationForm({ name, category: EntityCategoryEnum.FREE, height: creationHeight }));
     dispatch(setDrawingMode('marker'));
     onClose();
   };
 
   return (
-    <AppFloatingPanel open={isOpen} onClose={handleClose} title="נקודה חדשה" position="left">
+    <AppFloatingPanel open={isOpen} onClose={handleClose} title={he.entities.panels.markerCreationTitle} position="left">
       <div className={styles.stack}>
-        <p className={styles.hint}>שם · אייקון קטן · ציור במפה</p>
+        <p className={styles.hint}>{he.entities.panels.markerHint}</p>
 
         <AppInput
           compact
-          label="שם"
+          label={he.entities.panels.name}
           value={creationName}
           onChange={(e) =>
             dispatch(setCreationForm({ name: e.target.value, category: EntityCategoryEnum.FREE, height: creationHeight }))
           }
-          placeholder="שם הנקודה…"
+          placeholder={he.entities.panels.namePlaceholder}
         />
 
         <div>
-          <AppSectionTitle>אייקון</AppSectionTitle>
+          <AppSectionTitle>{he.entities.panels.markerIcon}</AppSectionTitle>
           <div className={styles.grid}>
             {MARKER_ICONS.map(({ code, label, font }) => {
               const isSelected = selectedIcon === code;
@@ -75,7 +77,7 @@ const EntityMarkerCreationPanel: FC<EntityMarkerCreationPanelProps> = ({ isOpen,
         </div>
 
         <AppButton fullWidth disabled={!selectedIcon} onClick={handleStartDrawing}>
-          ציור נקודה במפה
+          {he.entities.panels.drawMarkerOnMap}
         </AppButton>
       </div>
     </AppFloatingPanel>

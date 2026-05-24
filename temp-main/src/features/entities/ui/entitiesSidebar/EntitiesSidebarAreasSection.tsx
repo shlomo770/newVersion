@@ -1,9 +1,8 @@
-import React, { FC, MutableRefObject } from "react";
+import React, { FC } from "react";
 import { FaCopy, FaCrosshairs, FaEye, FaEyeSlash, FaPlus, FaTrashAlt } from "react-icons/fa";
 import type { AppDispatch } from '@app/store';
 import type { Entity } from '@features/entities/store/entitiesSlice';
 import {
-  removeEntity,
   setPreviewEntityId,
   setSelectedEntity,
   toggleEntityVisibility,
@@ -16,9 +15,9 @@ import {
 } from "./entityDisplay";
 import { isTabooZoneEntity } from './entitiesSidebarUtils';
 import type { OutboundMessageMap, OutboundMessageName } from '@/services/webSocket/wsTypes';
-import { sendDeleteEntity } from '@features/entities/api/outboundBuilders';
-import { swalConfirmDanger, swalInfo } from '@/utils/swalDialog';
-import type { MapService } from '@/services/map/MapService';
+import { confirmAndDeleteEntity } from '@features/entities/lib/entityDelete';
+import { he } from '@shared/i18n';
+import { useMapCommandsOptional } from '@features/map';
 import { AppButton, AppIconButton, AppInput, cn } from "@shared/ui";
 import { ENTITIES_SIDEBAR_ICONS } from "@/config";
 import styles from "./EntitiesSidebar.shared.module.css";
@@ -35,7 +34,6 @@ export type EntitiesSidebarAreasSectionProps = {
   editingEntityId?: string | null;
   selectedEntityId: string | null;
   activeMissionName: string | null;
-  mapServiceRef?: MutableRefObject<MapService | null>;
   dispatch: AppDispatch;
   sendMessage: <T extends OutboundMessageName>(headerName: T, data: OutboundMessageMap[T]) => void;
   setGroupVisibility: (list: Entity[], visible: boolean) => void;
@@ -59,7 +57,6 @@ const EntitiesSidebarAreasSection: FC<EntitiesSidebarAreasSectionProps> = ({
   editingEntityId,
   selectedEntityId,
   activeMissionName,
-  mapServiceRef,
   dispatch,
   setGroupVisibility,
   deleteGroup,
@@ -69,6 +66,8 @@ const EntitiesSidebarAreasSection: FC<EntitiesSidebarAreasSectionProps> = ({
   entityOpen,
   openDuplicatePanel,
 }) => {
+  const mapCommands = useMapCommandsOptional();
+
   const handleEntityClick = (entity: Entity) => {
     if (entity.type === 'marker' || isTabooZoneEntity(entity)) {
       dispatch(setSelectedEntity(entity.id));
@@ -80,25 +79,18 @@ const EntitiesSidebarAreasSection: FC<EntitiesSidebarAreasSectionProps> = ({
 
   const handleDeleteEntity = async (e: React.MouseEvent, entity: Entity) => {
     e.stopPropagation();
-    if (editingEntityId === entity.id) {
-      await swalInfo("לא ניתן למחוק ישות שנמצאת כרגע בעריכה.", "לא ניתן למחוק");
-      return;
-    }
-    const ok = await swalConfirmDanger(`למחוק את "${entity.name}"?`, {
-      title: "מחיקת ישות",
-      confirmText: "מחק",
-      cancelText: "ביטול",
+    await confirmAndDeleteEntity({
+      entity,
+      editingEntityId,
+      dispatch,
+      mapCommands,
+      selectedEntityId,
     });
-    if (!ok) return;
-    sendDeleteEntity(entity.id);
-    dispatch(removeEntity(entity.id));
-    if (mapServiceRef?.current) mapServiceRef.current.removeEntityFromMap?.(entity.id);
-    if (selectedEntityId === entity.id) dispatch(setSelectedEntity(null));
   };
 
   const applyVisibility = (entity: Entity, nextVisible: boolean) => {
     dispatch(toggleEntityVisibility(entity.id));
-    const map = mapServiceRef?.current?.getMap?.() ?? null;
+    const map = mapCommands?.getMap() ?? null;
     setEntityVisibilityOnMap(map, entity.id, nextVisible);
   };
 
@@ -106,12 +98,12 @@ const EntitiesSidebarAreasSection: FC<EntitiesSidebarAreasSectionProps> = ({
     <div className={styles.scrollSection}>
       <button type="button" onClick={onBack} className={styles.backLink}>
         <img src={ENTITIES_SIDEBAR_ICONS.back} alt="" className={styles.backIcon} />
-        חזרה
+        {he.common.back}
       </button>
 
       <div className={styles.sectionHeader}>
-        <p className={styles.sectionTitle}>Existing areas</p>
-        <AppIconButton size="sm" label="יצירת ישות חדשה" onClick={() => onOpenCreatePanel?.()}>
+        <p className={styles.sectionTitle}>{he.entities.sidebar.areas}</p>
+        <AppIconButton size="sm" label={he.entities.sidebar.newAreaEntity} onClick={() => onOpenCreatePanel?.()}>
           <FaPlus />
         </AppIconButton>
       </div>
@@ -121,7 +113,7 @@ const EntitiesSidebarAreasSection: FC<EntitiesSidebarAreasSectionProps> = ({
         fieldClassName={styles.fieldStack}
         value={areaSearchQuery}
         onChange={(e) => setAreaSearchQuery(e.target.value)}
-        placeholder="חיפוש לפי שם ישות..."
+        placeholder={he.entities.sidebar.areaSearchPlaceholder}
       />
 
       <div className={styles.listSpaced}>
@@ -148,11 +140,14 @@ const EntitiesSidebarAreasSection: FC<EntitiesSidebarAreasSectionProps> = ({
                     <span className={styles.badge}>{catCount}</span>
                     <span className={styles.entityName}>{cat}</span>
                   </span>
-                  <span className={styles.groupChevron}>{isCatOpen ? "▲" : "▼"}</span>
+                  <span
+                    className={cn(styles.groupChevron, isCatOpen && styles.groupChevronOpen)}
+                    aria-hidden
+                  />
                 </button>
                 <AppIconButton
                   size="sm"
-                  label={allHidden ? "הצג כולם" : "הסתר כולם"}
+                  label={allHidden ? he.common.showAllPlural : he.common.hideAllPlural}
                   onClick={(e) => {
                     e.stopPropagation();
                     setGroupVisibility(catList, allHidden);
@@ -165,13 +160,13 @@ const EntitiesSidebarAreasSection: FC<EntitiesSidebarAreasSectionProps> = ({
                   danger
                   label={
                     hasEditingInCategory
-                      ? "לא ניתן למחוק קטגוריה כשישות בתוכה בעריכה"
-                      : "מחק קטגוריה"
+                      ? he.entities.delete.cannotDeleteCategoryEditing
+                      : he.entities.delete.deleteCategory
                   }
                   disabled={hasEditingInCategory}
                   onClick={(e) => {
                     e.stopPropagation();
-                    deleteGroup(catList, `קטגוריה ${cat}`);
+                    deleteGroup(catList, he.entities.sidebar.categoryDeletePrefix(cat));
                   }}
                 >
                   <FaTrashAlt />
@@ -203,11 +198,14 @@ const EntitiesSidebarAreasSection: FC<EntitiesSidebarAreasSectionProps> = ({
                               <span className={cn(styles.badge, styles.badgeSm)}>{typeCount}</span>
                               <span className={styles.entityName}>{typeLabel}</span>
                             </span>
-                            <span className={styles.groupChevron}>{isTypeOpen ? "▲" : "▼"}</span>
+                            <span
+                              className={cn(styles.groupChevron, isTypeOpen && styles.groupChevronOpen)}
+                              aria-hidden
+                            />
                           </button>
                           <AppIconButton
                             size="sm"
-                            label={typeAllHidden ? "הצג כולם" : "הסתר כולם"}
+                            label={typeAllHidden ? he.common.showAllPlural : he.common.hideAllPlural}
                             onClick={(e) => {
                               e.stopPropagation();
                               setGroupVisibility(list, typeAllHidden);
@@ -220,13 +218,13 @@ const EntitiesSidebarAreasSection: FC<EntitiesSidebarAreasSectionProps> = ({
                             danger
                             label={
                               hasEditingInType
-                                ? "לא ניתן למחוק סוג כשישות בתוכו בעריכה"
-                                : "מחק סוג"
+                                ? he.entities.delete.cannotDeleteTypeEditing
+                                : he.entities.delete.deleteType
                             }
                             disabled={hasEditingInType}
                             onClick={(e) => {
                               e.stopPropagation();
-                              deleteGroup(list, `סוג ${typeLabel}`);
+                              deleteGroup(list, he.entities.sidebar.typeDeletePrefix(typeLabel));
                             }}
                           >
                             <FaTrashAlt />
@@ -259,7 +257,7 @@ const EntitiesSidebarAreasSection: FC<EntitiesSidebarAreasSectionProps> = ({
                                   <div className={styles.entityActions}>
                                     <AppIconButton
                                       size="sm"
-                                      label="מרכז למפה"
+                                      label={he.entities.sidebar.centerOnMapAlt}
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         onCenterToEntity(entity);
@@ -269,7 +267,7 @@ const EntitiesSidebarAreasSection: FC<EntitiesSidebarAreasSectionProps> = ({
                                     </AppIconButton>
                                     <AppIconButton
                                       size="sm"
-                                      label={entity.visible ? "הסתר" : "הצג"}
+                                      label={entity.visible ? he.common.hide : he.common.show}
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         applyVisibility(entity, !entity.visible);
@@ -282,8 +280,8 @@ const EntitiesSidebarAreasSection: FC<EntitiesSidebarAreasSectionProps> = ({
                                       danger
                                       label={
                                         editingEntityId === entity.id
-                                          ? "לא ניתן למחוק ישות שנמצאת בעריכה"
-                                          : "מחק"
+                                          ? he.entities.delete.cannotDeleteEntityEditing
+                                          : he.common.delete
                                       }
                                       disabled={editingEntityId === entity.id}
                                       onClick={(e) => handleDeleteEntity(e, entity)}
@@ -310,7 +308,7 @@ const EntitiesSidebarAreasSection: FC<EntitiesSidebarAreasSectionProps> = ({
         <div className={styles.selectedFooter}>
           <div className={styles.selectedFooterRow}>
             <div className={styles.entityName}>
-              <span className={styles.selectedLabel}>נבחר: </span>
+              <span className={styles.selectedLabel}>{he.entities.sidebar.selectedPrefix}</span>
               <span className={styles.selectedName}>{entityOpen.name}</span>
               {entityOpen.category && (
                 <span className={styles.selectedMeta}> · {entityOpen.category}</span>
@@ -320,10 +318,10 @@ const EntitiesSidebarAreasSection: FC<EntitiesSidebarAreasSectionProps> = ({
               variant="secondary"
               size="sm"
               onClick={() => openDuplicatePanel(entityOpen)}
-              title="שכפל ישות"
+              title={he.entities.sidebar.duplicateEntityTitle}
             >
               <FaCopy />
-              שכפל
+              {he.entities.sidebar.duplicateVerb}
             </AppButton>
           </div>
         </div>

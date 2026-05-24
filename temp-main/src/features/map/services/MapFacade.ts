@@ -3,20 +3,16 @@ import type { Coordinates } from '@domain/models/coordinates';
 import { MapService } from '@/services/map/MapService';
 import type { MapDrawingUiState } from './mapDrawingTypes';
 
-export type JsonPathInput = {
-  id?: string;
-  name?: string;
-  points: Array<Coordinates & { alt?: number }>;
-};
-
 /**
  * Typed facade over MapLibre / MapService — components must not touch the raw map instance.
  */
+import { createMapServiceRuntime } from './createMapServiceRuntime';
+
 export class MapFacade {
   private readonly service: MapService;
 
   constructor(service?: MapService) {
-    this.service = service ?? new MapService();
+    this.service = service ?? new MapService(createMapServiceRuntime());
   }
 
   get underlying(): MapService {
@@ -152,9 +148,5 @@ export class MapFacade {
 
   clearAreaMeasurement(): void {
     this.service.clearAreaMeasurement();
-  }
-
-  renderJsonPaths(paths: JsonPathInput[]): void {
-    this.service.renderJsonPaths(paths);
   }
 }

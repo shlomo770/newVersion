@@ -1,3 +1,6 @@
+export { AppFormStack } from './AppFormStack/AppFormStack';
+export type { AppFormStackProps } from './AppFormStack/AppFormStack';
+
 export { cn } from './themeUtils';
 
 export { AppButton } from './AppButton/AppButton';

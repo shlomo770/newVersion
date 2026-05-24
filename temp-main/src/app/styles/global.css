@@ -1,4 +1,5 @@
 @import './variables.css';
+@import './forms.css';
 
 /* Third-party global styles */
 @import 'maplibre-gl/dist/maplibre-gl.css';
@@ -22,6 +23,7 @@
 html,
 body,
 #root {
+  direction: ltr;
   height: 100%;
   height: 100dvh;
   max-height: 100dvh;
@@ -297,23 +299,6 @@ input[type="range"].brightness::-moz-range-thumb {
     opacity: 1;
     transform: scale(1) translateY(0);
   }
-}
-
-.input-dark {
-  width: 100%;
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--theme-radius-md, var(--layout-radius-md));
-  background: var(--theme-color-bg-input, var(--color-surface-input-dark));
-  border: 1px solid var(--theme-color-border, var(--color-border-panel));
-  color: var(--theme-color-text-primary, var(--color-text-primary));
-  outline: none;
-  font-family: var(--theme-font-family-sans, var(--font-family-sans));
-  font-size: var(--theme-font-size-sm, 0.875rem);
-}
-
-.input-dark:focus {
-  border-color: var(--theme-color-border-focus, var(--color-amber-focus));
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--theme-color-border-focus) 50%, transparent);
 }
 
 input[type="number"]::-webkit-inner-spin-button,

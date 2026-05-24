@@ -20,12 +20,16 @@
   font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--color-white);
+  direction: rtl;
+  text-align: right;
 }
 
 .subtitle {
   margin-top: 2px;
   font-size: 11px;
   color: var(--color-text-muted);
+  direction: rtl;
+  text-align: right;
 }
 
 .stack {

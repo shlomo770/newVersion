@@ -1,10 +1,9 @@
-import React, { FC, MutableRefObject } from "react";
+import React, { FC } from "react";
 import { FaCrosshairs, FaEye, FaEyeSlash, FaPlus, FaTrashAlt, FaChevronLeft } from "react-icons/fa";
 import { MARKER_ICONS, getMarkerIconChar } from "@/constants/markerIcons";
 import type { AppDispatch } from '@app/store';
 import type { Entity } from '@features/entities/store/entitiesSlice';
 import {
-  removeEntity,
   setPreviewEntityId,
   setSelectedEntity,
   toggleEntityVisibility,
@@ -12,9 +11,9 @@ import {
 import { setEntityVisibilityOnMap } from "@/utils/mapEntityLayerVisibility";
 import { isTabooZoneEntity } from './entitiesSidebarUtils';
 import type { OutboundMessageMap, OutboundMessageName } from '@/services/webSocket/wsTypes';
-import { sendDeleteEntity } from '@features/entities/api/outboundBuilders';
-import { swalConfirmDanger, swalInfo } from '@/utils/swalDialog';
-import type { MapService } from '@/services/map/MapService';
+import { confirmAndDeleteEntity } from '@features/entities/lib/entityDelete';
+import { useMapCommandsOptional } from '@features/map';
+import { he } from '@shared/i18n';
 import { AppIconButton, AppInput, cn } from "@shared/ui";
 import { ENTITIES_SIDEBAR_ICONS } from "@/config";
 import styles from "./EntitiesSidebar.shared.module.css";
@@ -28,7 +27,6 @@ export type EntitiesSidebarPointsSectionProps = {
   setOpenMarkerGroup: (v: string | null) => void;
   activeMissionName: string | null;
   selectedEntityId: string | null;
-  mapServiceRef?: MutableRefObject<MapService | null>;
   dispatch: AppDispatch;
   sendMessage: <T extends OutboundMessageName>(headerName: T, data: OutboundMessageMap[T]) => void;
   setGroupVisibility: (list: Entity[], visible: boolean) => void;
@@ -78,7 +76,6 @@ const EntitiesSidebarPointsSection: FC<EntitiesSidebarPointsSectionProps> = ({
   setOpenMarkerGroup,
   activeMissionName,
   selectedEntityId,
-  mapServiceRef,
   dispatch,
   setGroupVisibility,
   deleteGroup,
@@ -87,6 +84,8 @@ const EntitiesSidebarPointsSection: FC<EntitiesSidebarPointsSectionProps> = ({
   onOpenCreateMarkerPanel,
   editingEntityId,
 }) => {
+  const mapCommands = useMapCommandsOptional();
+
   const handleEntityClick = (entity: Entity) => {
     if (entity.type === 'marker' || isTabooZoneEntity(entity)) {
       dispatch(setSelectedEntity(entity.id));
@@ -98,35 +97,25 @@ const EntitiesSidebarPointsSection: FC<EntitiesSidebarPointsSectionProps> = ({
 
   const handleDeleteEntity = async (e: React.MouseEvent, entity: Entity) => {
     e.stopPropagation();
-    if (editingEntityId === entity.id) {
-      await swalInfo("לא ניתן למחוק ישות שנמצאת כרגע בעריכה.", "לא ניתן למחוק");
-      return;
-    }
-    const ok = await swalConfirmDanger(`למחוק את "${entity.name}"?`, {
-      title: "מחיקת ישות",
-      confirmText: "מחק",
-      cancelText: "ביטול",
+    await confirmAndDeleteEntity({
+      entity,
+      editingEntityId,
+      dispatch,
+      mapCommands,
+      selectedEntityId,
     });
-    if (!ok) return;
-    sendDeleteEntity(entity.id);
-    dispatch(removeEntity(entity.id));
-    if (mapServiceRef?.current) mapServiceRef.current.removeEntityFromMap?.(entity.id);
-    if (selectedEntityId === entity.id) dispatch(setSelectedEntity(null));
   };
 
   return (
     <div className={styles.scrollSection}>
       <button type="button" onClick={onBack} className={styles.backLink}>
         <img src={ENTITIES_SIDEBAR_ICONS.back} alt="" className={styles.backIcon} />
-        חזרה
+        {he.common.back}
       </button>
 
-      <div className={styles.dividerHeader}>
-        <div>
-          <h3 className={styles.sectionTitle}>נקודות</h3>
-          <p className={styles.hintText}>לפי סוג · קומפקטי</p>
-        </div>
-        <AppIconButton size="sm" label="נקודה חדשה" onClick={() => onOpenCreateMarkerPanel?.()}>
+      <div className={styles.sectionHeader}>
+        <p className={styles.sectionTitle}>{he.entities.sidebar.points}</p>
+        <AppIconButton size="sm" label={he.entities.sidebar.newPoint} onClick={() => onOpenCreateMarkerPanel?.()}>
           <FaPlus />
         </AppIconButton>
       </div>
@@ -137,7 +126,7 @@ const EntitiesSidebarPointsSection: FC<EntitiesSidebarPointsSectionProps> = ({
         fieldClassName={styles.fieldStack}
         value={pointsSearchQuery}
         onChange={(e) => setPointsSearchQuery(e.target.value)}
-        placeholder="חיפוש…"
+        placeholder={he.common.search}
       />
 
       <div className={styles.list}>
@@ -162,7 +151,7 @@ const EntitiesSidebarPointsSection: FC<EntitiesSidebarPointsSectionProps> = ({
                 </button>
                 <AppIconButton
                   size="sm"
-                  label={allHidden ? "הצג הכל" : "הסתר הכל"}
+                  label={allHidden ? he.common.showAll : he.common.hideAll}
                   onClick={(e) => {
                     e.stopPropagation();
                     setGroupVisibility(list, allHidden);
@@ -173,7 +162,7 @@ const EntitiesSidebarPointsSection: FC<EntitiesSidebarPointsSectionProps> = ({
                 <AppIconButton
                   size="sm"
                   danger
-                  label="מחק קבוצה"
+                  label={he.entities.delete.deleteGroup}
                   onClick={(e) => {
                     e.stopPropagation();
                     deleteGroup(list, group);
@@ -206,7 +195,7 @@ const EntitiesSidebarPointsSection: FC<EntitiesSidebarPointsSectionProps> = ({
                       >
                         <AppIconButton
                           size="sm"
-                          label="מפה"
+                          label={he.common.map}
                           onClick={(e) => {
                             e.stopPropagation();
                             onCenterToEntity(entity);
@@ -217,12 +206,12 @@ const EntitiesSidebarPointsSection: FC<EntitiesSidebarPointsSectionProps> = ({
                         <span className={styles.compactEntityName}>{entity.name}</span>
                         <AppIconButton
                           size="sm"
-                          label={entity.visible ? "הסתר" : "הצג"}
+                          label={entity.visible ? he.common.hide : he.common.show}
                           onClick={(e) => {
                             e.stopPropagation();
                             const nextVisible = !entity.visible;
                             dispatch(toggleEntityVisibility(entity.id));
-                            const map = mapServiceRef?.current?.getMap?.() ?? null;
+                            const map = mapCommands?.getMap() ?? null;
                             setEntityVisibilityOnMap(map, entity.id, nextVisible);
                           }}
                         >
@@ -231,7 +220,7 @@ const EntitiesSidebarPointsSection: FC<EntitiesSidebarPointsSectionProps> = ({
                         <AppIconButton
                           size="sm"
                           danger
-                          label="מחק"
+                          label={he.common.delete}
                           onClick={(e) => handleDeleteEntity(e, entity)}
                         >
                           <FaTrashAlt />

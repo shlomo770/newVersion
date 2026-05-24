@@ -1,5 +1,5 @@
-import { store } from '@app/store';
-import { ENTITY_PAINT_DEFAULTS, entityLayerIdFor } from '@features/map/config';
+import { ENTITY_PAINT_DEFAULTS, entityLayerIdFor } from '@/services/map/config';
+import type { MapServiceRuntime } from './mapServiceRuntime';
 
 /**
  * Thin wrapper around MapLibre layer/source mutation calls used by the
@@ -10,9 +10,11 @@ import { ENTITY_PAINT_DEFAULTS, entityLayerIdFor } from '@features/map/config';
  */
 export class MapLayerManager {
   private map: maplibregl.Map;
+  private readonly runtime: MapServiceRuntime;
 
-  constructor(map: maplibregl.Map) {
+  constructor(map: maplibregl.Map, runtime: MapServiceRuntime) {
     this.map = map;
+    this.runtime = runtime;
   }
 
   /** Used by MapMeasurementService to tear down ephemeral overlay layers. */
@@ -27,15 +29,12 @@ export class MapLayerManager {
     }
   }
 
-  /** Recomputes color/opacity for every entity layer from the current
-   *  Redux entity state. Called by MapService after entity styling
-   *  changes (color picker, transparency slider). */
+  /** Recomputes color/opacity for every entity layer from runtime entity state. */
   public updateEntityColors(): void {
     if (!this.map || !this.map.isStyleLoaded()) return;
 
     try {
-      const state = store.getState();
-      const entities = state.entities.byId;
+      const entities = this.runtime.getEntitiesById();
 
       Object.entries(entities).forEach(([entityId, entity]) => {
         const layerId = entityLayerIdFor(entityId);

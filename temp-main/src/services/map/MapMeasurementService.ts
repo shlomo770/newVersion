@@ -2,7 +2,7 @@ import type { Map as MaplibreMap } from 'maplibre-gl';
 import type { Feature, FeatureCollection, LineString, Point, Polygon } from 'geojson';
 import type { Coordinates } from '@domain/models/coordinates';
 import { closeRing } from '@/utils/geometry';
-import { MEASURE_IDS, MEASURE_VISUALS } from '@features/map/config';
+import { MEASURE_IDS, MEASURE_VISUALS } from '@/services/map/config';
 import { MapLayerManager } from './MapLayerManager';
 
 const POINTS_PAINT = {

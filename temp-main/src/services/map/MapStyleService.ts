@@ -1,4 +1,3 @@
-import { store } from '@app/store';
 import { servers } from '@/config/communication.json';
 import {
   BASEMAP_IDS,
@@ -8,9 +7,10 @@ import {
   BRIGHTNESS_OVERLAY_WORLD_POLYGON,
   INITIAL_STYLE_SERVICE_BASEMAP_ID,
   STYLE_CHANGE_SAFETY_TIMEOUT_MS,
-} from '@features/map/config';
+} from '@/services/map/config';
 import { MapDrawingService } from './MapDrawingService';
 import { MapEntityRenderer } from './MapEntityRenderer';
+import type { MapServiceRuntime } from './mapServiceRuntime';
 
 const DARKNESS_LAYER_ID = BASEMAP_IDS.darknessOverlayLayer;
 const DARKNESS_SOURCE_ID = BASEMAP_IDS.darknessOverlaySource;
@@ -19,6 +19,7 @@ export class MapStyleService {
   private map: maplibregl.Map;
   private drawingService: MapDrawingService;
   private entityRenderer: MapEntityRenderer;
+  private readonly runtime: MapServiceRuntime;
   private styleChangeCallbacks: (() => void)[] = [];
   private isChangingStyle: boolean = false;
   private currentMapType: string = INITIAL_STYLE_SERVICE_BASEMAP_ID;
@@ -27,10 +28,12 @@ export class MapStyleService {
     map: maplibregl.Map,
     drawingService: MapDrawingService,
     entityRenderer: MapEntityRenderer,
+    runtime: MapServiceRuntime,
   ) {
     this.map = map;
     this.drawingService = drawingService;
     this.entityRenderer = entityRenderer;
+    this.runtime = runtime;
   }
 
   public setInitialMapType(mapType: string) {
@@ -68,8 +71,7 @@ export class MapStyleService {
       }
     }, STYLE_CHANGE_SAFETY_TIMEOUT_MS);
 
-    const state = store.getState();
-    const allEntities = Object.values(state.entities.byId);
+    const allEntities = this.runtime.getAllEntities();
     this.drawingService.removeDrawControl();
 
     this.map.setStyle(newStyle);

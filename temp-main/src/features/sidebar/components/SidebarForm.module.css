@@ -1,13 +1,11 @@
 .shell {
   position: fixed;
-  left: 4rem;
+  left: var(--layout-sidebar-rail-width);
   top: var(--layout-status-bar-height);
   height: calc(100% - var(--layout-status-bar-height));
   width: var(--layout-entity-panel-width);
-  background: var(--color-surface-panel);
-  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.2);
-  z-index: 40;
-  padding: var(--space-6);
+  z-index: var(--z-sidebar-panel);
+  padding: var(--theme-spacing-panel-padding, var(--space-4));
 }
 
 .closeButton {

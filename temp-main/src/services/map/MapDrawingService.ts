@@ -17,6 +17,8 @@ export type { DrawingUiState } from './drawing/drawTypes';
  * Orchestrates tactical map drawing (click + finish) with optional MapLibre Draw
  * for polygon/line vertex edit. Draw is lazy-attached with MapLibre-safe styles.
  */
+import type { MapServiceRuntime } from './mapServiceRuntime';
+
 export class MapDrawingService {
   private readonly drawWiring: DrawModeWiring;
   private readonly measurement: MeasurementDrawHandler;
@@ -24,10 +26,14 @@ export class MapDrawingService {
   private callbacks: DrawingCallbacks | null = null;
   private activeFinishEdit: (() => void) | null = null;
 
-  constructor(map: MaplibreMap, entityRenderer: MapEntityRenderer) {
+  constructor(
+    map: MaplibreMap,
+    entityRenderer: MapEntityRenderer,
+    runtime: MapServiceRuntime,
+  ) {
     this.measurement = new MeasurementDrawHandler(map);
-    this.tactical = new TacticalDrawSession(map, entityRenderer, this.measurement);
-    this.drawWiring = new DrawModeWiring(map, {
+    this.tactical = new TacticalDrawSession(map, entityRenderer, this.measurement, runtime);
+    this.drawWiring = new DrawModeWiring(map, runtime, {
       onLibraryTakeover: () => this.tactical.pauseMapListeners(),
       onLibraryRelease: () => this.tactical.resumeMapListeners(),
     });

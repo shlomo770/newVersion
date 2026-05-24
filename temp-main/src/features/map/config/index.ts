@@ -3,7 +3,7 @@
  *
  * Layout:
  *  - `mapLayers.config`   — MapLibre source / layer / image id constants
- *                           plus id builders for per-entity / per-path / per-target overlays.
+ *                           plus id builders for per-entity / per-target overlays.
  *  - `mapVisuals.config`  — paint / layout / animation cadence constants
  *                           for every map subsystem.
  *  - `mapDefaults.config` — initial-state values consumed by Redux slices
@@ -49,13 +49,6 @@ export {
   entityIconLayerIdFor,
   entityLabelSourceIdFor,
   entityLabelLayerIdFor,
-  /* JSON path id builders */
-  JSON_PATH_PREFIXES,
-  jsonPathSourceId,
-  jsonPathLineLayerId,
-  jsonPathPointsSourceId,
-  jsonPathPointsLayerId,
-  jsonPathLabelLayerId,
   /* Per-target dynamic ids */
   PER_TARGET_PREFIXES,
   perTargetAssignmentLineId,
@@ -63,9 +56,6 @@ export {
   /* Marker icon image ids */
   MARKER_ICON_IMAGE_PREFIX,
   markerIconImageId,
-} from './mapLayers.config';
-
-export {
   TARGETS_INIT_CONFIG,
   TARGET_TRAIL_PAINT,
   TARGET_ICON_SIZE_BY_ZOOM,
@@ -92,14 +82,13 @@ export {
   BASEMAP_RETILE_NUDGE,
   MEASURE_VISUALS,
   MAP_LABEL_DEFAULTS,
-  JSON_PATH_VISUALS,
   BASEMAP_RASTER,
   BASEMAP_VECTOR,
   BASEMAP_GLYPHS_URL,
   ENTITY_PAINT_DEFAULTS,
   ENTITY_CATEGORY_DEFAULT_COLORS,
   ENTITY_INBOUND_DEFAULT_COLOR,
-} from './mapVisuals.config';
+} from '@/services/map/config';
 
 export {
   DEFAULT_MAP_CENTER,

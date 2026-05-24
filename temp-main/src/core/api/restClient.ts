@@ -115,7 +115,6 @@ export class RestClient {
     const maxRetries = options.retries ?? this.defaultRetries;
     const url = this.buildUrl(path, options.query);
     let attempt = 0;
-    /* eslint-disable no-constant-condition */
     while (true) {
       try {
         return await this.executeOnce<T>(method, url, options);
@@ -128,7 +127,6 @@ export class RestClient {
         attempt += 1;
       }
     }
-    /* eslint-enable no-constant-condition */
   }
 
   private async executeOnce<T>(

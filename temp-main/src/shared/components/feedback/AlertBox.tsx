@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { he } from '@shared/i18n';
 import styles from './AlertBox.module.css';
 
 export type AlertVariant = 'info' | 'warning' | 'error' | 'success';
@@ -24,7 +25,7 @@ export function AlertBox({
   title,
   message,
   onDismiss,
-  dismissLabel = 'סגור',
+  dismissLabel = he.common.close,
   className = '',
 }: AlertBoxProps) {
   const rootClass = [styles.root, variantClass[variant], className].filter(Boolean).join(' ');

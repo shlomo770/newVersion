@@ -8,23 +8,24 @@ import {
 } from 'react-icons/fa';
 import { PiPolygonFill } from 'react-icons/pi';
 import styles from './entityDisplay.module.css';
+import { he } from '@shared/i18n';
 
 export function getEntityTypeLabel(type: string): string {
   switch (type) {
     case 'circle':
-      return 'מעגל';
+      return he.entities.types.circle;
     case 'ellipse':
-      return 'אליפסה';
+      return he.entities.types.ellipse;
     case 'polygon':
-      return 'פוליגון';
+      return he.entities.types.polygon;
     case 'line':
-      return 'קו';
+      return he.entities.types.line;
     case 'sector':
-      return 'מגזר (Taboo Zone)';
+      return he.entities.types.sector;
     case 'rectangle':
-      return 'מלבן';
+      return he.entities.types.rectangle;
     case 'target':
-      return 'Target';
+      return he.entities.types.target;
     default:
       return type;
   }

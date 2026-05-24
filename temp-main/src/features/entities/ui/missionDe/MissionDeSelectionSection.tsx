@@ -2,15 +2,15 @@ import { FC } from "react";
 import {
   FaPlus,
   FaCrosshairs,
-  FaFilter,
   FaChevronLeft,
   FaListUl,
 } from "react-icons/fa";
 import { MISSION_DE_TABS } from '@/constants/entityCategories';
 import type { Entity } from '@features/entities/store/entitiesSlice';
-import { AppIconButton, cn } from "@shared/ui";
+import { AppIconButton, AppButton, AppInput, AppSelect, cn } from "@shared/ui";
 import type { DisplayFilter } from "./MissionDePanelTypes";
-import { btn, btnEmerald, btnRose, btnSky, inp, missionDeStyles, section, sel } from "./missionDePanelStyles";
+import { missionDeStyles, section } from "./missionDePanelStyles";
+import { he } from '@shared/i18n';
 
 export type MissionDeSelectionSectionProps = {
   selectionOpen: boolean;
@@ -71,8 +71,8 @@ const MissionDeSelectionSection: FC<MissionDeSelectionSectionProps> = ({
           <FaListUl aria-hidden />
         </span>
         <span>
-          <span className={missionDeStyles.sectionTitle}>בחירה מהמערכת</span>
-          <span className={missionDeStyles.sectionSubtitle}>סינון · חיפוש · לחיצה על שורה</span>
+          <span className={missionDeStyles.sectionTitle}>{he.entities.missionDe.selectionTitle}</span>
+          <span className={missionDeStyles.sectionSubtitle}>{he.entities.missionDe.selectionSubtitle}</span>
         </span>
       </span>
       <FaChevronLeft
@@ -87,61 +87,56 @@ const MissionDeSelectionSection: FC<MissionDeSelectionSectionProps> = ({
     {selectionOpen ? (
       <div className={missionDeStyles.toggleBody}>
         <div className={missionDeStyles.filterRow}>
-          <div className={missionDeStyles.filterField}>
-            <span className={missionDeStyles.fieldLabel}>
-              <FaFilter aria-hidden />
-              קטגוריה
-            </span>
-            <select
-              className={sel}
-              value={displayFilter}
-              onChange={(e) => onDisplayFilterChange(e.target.value as DisplayFilter)}
-            >
-              <option value="ALL">הכל</option>
-              {MISSION_DE_TABS.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className={missionDeStyles.searchField}>
-            <span className={missionDeStyles.fieldLabel}>חיפוש</span>
-            <input
-              type="search"
-              className={inp}
-              placeholder="שם, סוג או קטגוריה…"
-              value={searchQ}
-              onChange={(e) => onSearchQChange(e.target.value)}
-            />
-          </div>
+          <AppSelect
+            label={he.entities.missionDe.category}
+            fieldClassName={missionDeStyles.filterField}
+            value={displayFilter}
+            onChange={(e) => onDisplayFilterChange(e.target.value as DisplayFilter)}
+            compact
+          >
+            <option value="ALL">{he.entities.missionDe.all}</option>
+            {MISSION_DE_TABS.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.label}
+              </option>
+            ))}
+          </AppSelect>
+          <AppInput
+            label={he.entities.missionDe.searchLabel}
+            type="search"
+            fieldClassName={missionDeStyles.searchField}
+            placeholder={he.entities.missionDe.searchPlaceholder}
+            value={searchQ}
+            onChange={(e) => onSearchQChange(e.target.value)}
+            compact
+          />
         </div>
         <div className={missionDeStyles.buttonRow}>
-          <button type="button" className={btnSky} onClick={onNewClick}>
-            <FaPlus aria-hidden /> חדש
-          </button>
-          <button type="button" className={btnEmerald} disabled={!canAdd} onClick={onAddSelected}>
-            הוסף למשימה
-          </button>
-          <button type="button" className={btnRose} disabled={!canRemove} onClick={onRemoveSelected}>
-            הסר מהמשימה
-          </button>
-          <button type="button" className={btn} onClick={onSelectAllInView}>
-            כל התצוגה
-          </button>
-          <button type="button" className={btn} onClick={onClearSelection} disabled={selectedCount === 0}>
-            נקה ({selectedCount})
-          </button>
+          <AppButton type="button" size="sm" onClick={onNewClick}>
+            <FaPlus aria-hidden /> {he.common.new}
+          </AppButton>
+          <AppButton type="button" size="sm" variant="success" disabled={!canAdd} onClick={onAddSelected}>
+            {he.entities.missionDe.addToMission}
+          </AppButton>
+          <AppButton type="button" size="sm" variant="danger" disabled={!canRemove} onClick={onRemoveSelected}>
+            {he.entities.missionDe.removeFromMission}
+          </AppButton>
+          <AppButton type="button" size="sm" variant="secondary" onClick={onSelectAllInView}>
+            {he.entities.missionDe.allInView}
+          </AppButton>
+          <AppButton type="button" size="sm" variant="secondary" onClick={onClearSelection} disabled={selectedCount === 0}>
+            {he.entities.missionDe.clearCount(selectedCount)}
+          </AppButton>
         </div>
         <div className={missionDeStyles.metaRow}>
           <span className={missionDeStyles.metaBadge}>
             {filterLabel}
           </span>
           <span>·</span>
-          <span>{tableRows.length} שורות</span>
+          <span>{he.entities.missionDe.rows(tableRows.length)}</span>
           <span>·</span>
           <span className={cn(selectedCount > 0 && missionDeStyles.metaHighlight)}>
-            נבחרו {selectedCount}
+            {he.entities.missionDe.selectedCount(selectedCount)}
           </span>
         </div>
         <div className={missionDeStyles.tableWrap}>
@@ -149,18 +144,18 @@ const MissionDeSelectionSection: FC<MissionDeSelectionSectionProps> = ({
             <thead className={missionDeStyles.tableHead}>
               <tr>
                 <th className={missionDeStyles.tableHeadCell}>#</th>
-                <th className={missionDeStyles.tableHeadCell}>שם</th>
-                <th className={missionDeStyles.tableHeadCell}>סוג</th>
-                <th className={missionDeStyles.tableHeadCell}>קטגוריה</th>
-                <th className={missionDeStyles.tableHeadCell}>מפה</th>
+                <th className={missionDeStyles.tableHeadCell}>{he.entities.missionDe.colName}</th>
+                <th className={missionDeStyles.tableHeadCell}>{he.entities.missionDe.colType}</th>
+                <th className={missionDeStyles.tableHeadCell}>{he.entities.missionDe.colCategory}</th>
+                <th className={missionDeStyles.tableHeadCell}>{he.common.map}</th>
               </tr>
             </thead>
             <tbody>
               {tableRows.length === 0 ? (
                 <tr>
                   <td colSpan={5} className={missionDeStyles.tableEmpty}>
-                    <p className={missionDeStyles.emptyTitle}>ללא תוצאות</p>
-                    <p className={missionDeStyles.emptyHint}>נסו לשנות סינון או את מילות החיפוש</p>
+                    <p className={missionDeStyles.emptyTitle}>{he.entities.missionDe.noResults}</p>
+                    <p className={missionDeStyles.emptyHint}>{he.entities.missionDe.noResultsHint}</p>
                   </td>
                 </tr>
               ) : (
@@ -190,7 +185,7 @@ const MissionDeSelectionSection: FC<MissionDeSelectionSectionProps> = ({
                         <span className={missionDeStyles.nameCell}>
                           {inM ? (
                             <span className={missionDeStyles.inMissionBadge}>
-                              במשימה
+                              {he.entities.missionDe.inMission}
                             </span>
                           ) : null}
                           <span className={missionDeStyles.nameText}>{e.name}</span>
@@ -205,7 +200,7 @@ const MissionDeSelectionSection: FC<MissionDeSelectionSectionProps> = ({
                       <td className={missionDeStyles.tableCell}>
                         <AppIconButton
                           size="sm"
-                          label="מפה"
+                          label={he.common.map}
                           onClick={(ev) => {
                             ev.stopPropagation();
                             onCenterToEntity(e);

@@ -1,5 +1,4 @@
 import maplibregl from "maplibre-gl";
-import type { Feature, FeatureCollection, LineString, Point } from "geojson";
 import type { EntityDrawDraft, EntityType, TacticalEntity } from '@domain/models/entity';
 import type { Coordinates } from '@domain/models/coordinates';
 import { getMapStyle } from '@/utils/mapStyle';
@@ -9,7 +8,11 @@ import { MapDrawingService, type DrawingUiState } from "./MapDrawingService";
 import { MapMeasurementService } from "./MapMeasurementService";
 import { MapStyleService } from "./MapStyleService";
 import type { MapLayerEntity } from './entity-manager/entityManagerTypes';
-import { attachMapErrorHandlers } from '@features/map/utils/mapErrorHandler';
+import { attachMapErrorHandlers } from './mapErrorHandler';
+import {
+  emptyMapServiceRuntime,
+  type MapServiceRuntime,
+} from './mapServiceRuntime';
 
 export class MapService {
   private map: maplibregl.Map | null = null;
@@ -19,7 +22,11 @@ export class MapService {
   private drawingService: MapDrawingService | null = null;
   private measurementService: MapMeasurementService | null = null;
   private styleService: MapStyleService | null = null;
-  private jsonPathsCache: Array<{ id?: string; name?: string; points: Array<Coordinates & { alt?: number }> }> = [];
+  private readonly runtime: MapServiceRuntime;
+
+  constructor(runtime: MapServiceRuntime = emptyMapServiceRuntime) {
+    this.runtime = runtime;
+  }
 
   public onEntityDrawn?: (entity: EntityDrawDraft) => void;
   public onEntityUpdated?: (id: string, coordinates: Coordinates[]) => void;
@@ -66,17 +73,12 @@ export class MapService {
     });
     this.map.addControl(scaleControl, "bottom-left");
 
-    this.layerManager = new MapLayerManager(this.map);
-    this.entityRenderer = new MapEntityRenderer(this.map);
-    this.drawingService = new MapDrawingService(this.map, this.entityRenderer);
+    this.layerManager = new MapLayerManager(this.map, this.runtime);
+    this.entityRenderer = new MapEntityRenderer(this.map, this.runtime);
+    this.drawingService = new MapDrawingService(this.map, this.entityRenderer, this.runtime);
     this.measurementService = new MapMeasurementService(this.map, this.layerManager);
-    this.styleService = new MapStyleService(this.map, this.drawingService, this.entityRenderer);
+    this.styleService = new MapStyleService(this.map, this.drawingService, this.entityRenderer, this.runtime);
     this.styleService.setInitialMapType(initialMapType);
-    this.styleService.onStyleChanged(() => {
-      if (this.jsonPathsCache.length > 0) {
-        this.applyJsonPaths();
-      }
-    });
 
     this.drawingService.initialize({
       onEntityDrawn,
@@ -176,164 +178,6 @@ export class MapService {
 
   public clearMeasurement() {
     this.measurementService?.clearMeasurement();
-  }
-
-  public renderJsonPaths(
-    paths: Array<{ id?: string; name?: string; points: Array<Coordinates & { alt?: number }> }>
-  ) {
-    if (!this.map || !this.layerManager) return;
-    this.jsonPathsCache = paths;
-    if (!this.map.isStyleLoaded?.()) {
-      this.map.once("load", () => this.applyJsonPaths());
-      this.map.once("styledata", () => this.applyJsonPaths());
-      return;
-    }
-    this.applyJsonPaths();
-  }
-
-  private applyJsonPaths() {
-    const map = this.map;
-    if (!map || !this.layerManager) return;
-    if (!map.isStyleLoaded?.()) return;
-    const paths = this.jsonPathsCache || [];
-    this.clearJsonPaths();
-    if (paths.length === 0) return;
-
-    const allPoints: Array<{ lng: number; lat: number }> = [];
-
-    paths.forEach((path, idx) => {
-      const safeId = String(path.id || `path-${idx + 1}`).replace(/[^a-zA-Z0-9_-]/g, "-");
-      const pathId = safeId || `path-${idx + 1}`;
-      const lineSourceId = `json-path-${pathId}`;
-      const lineLayerId = `json-path-line-${pathId}`;
-      const pointSourceId = `json-path-points-${pathId}`;
-      const pointLayerId = `json-path-point-${pathId}`;
-      const labelLayerId = `json-path-label-${pathId}`;
-
-      if (!path.points || path.points.length < 2) return;
-      path.points.forEach((pt) => {
-        if (Number.isFinite(pt.lng) && Number.isFinite(pt.lat)) {
-          allPoints.push({ lng: pt.lng, lat: pt.lat });
-        }
-      });
-
-      const lineData: Feature<LineString> = {
-        type: "Feature",
-        geometry: {
-          type: "LineString",
-          coordinates: path.points.map(pt => [pt.lng, pt.lat])
-        },
-        properties: {
-          name: path.name || pathId
-        }
-      };
-      const existingLineSource = map.getSource(lineSourceId) as maplibregl.GeoJSONSource | undefined;
-      if (existingLineSource) {
-        existingLineSource.setData(lineData);
-      } else {
-        map.addSource(lineSourceId, { type: "geojson", data: lineData });
-      }
-      if (!map.getLayer(lineLayerId)) {
-        map.addLayer({
-          id: lineLayerId,
-          type: "line",
-          source: lineSourceId,
-          paint: {
-            "line-color": "#22c55e",
-            "line-width": 4
-          },
-          layout: {
-            "line-cap": "round",
-            "line-join": "round"
-          }
-        });
-      }
-
-      const pointsData: FeatureCollection<Point> = {
-        type: "FeatureCollection",
-        features: path.points.map((pt, index) => ({
-          type: "Feature",
-          geometry: {
-            type: "Point",
-            coordinates: [pt.lng, pt.lat]
-          },
-          properties: {
-            index,
-            alt: typeof pt.alt === "number" ? pt.alt : undefined
-          }
-        }))
-      };
-      const existingPointSource = map.getSource(pointSourceId) as maplibregl.GeoJSONSource | undefined;
-      if (existingPointSource) {
-        existingPointSource.setData(pointsData);
-      } else {
-        map.addSource(pointSourceId, { type: "geojson", data: pointsData });
-      }
-      if (!map.getLayer(pointLayerId)) {
-        map.addLayer({
-          id: pointLayerId,
-          type: "circle",
-          source: pointSourceId,
-          paint: {
-            "circle-radius": 4,
-            "circle-color": "#22c55e",
-            "circle-stroke-color": "#ffffff",
-            "circle-stroke-width": 1
-          }
-        });
-      }
-      if (!map.getLayer(labelLayerId)) {
-        map.addLayer({
-          id: labelLayerId,
-          type: "symbol",
-          source: pointSourceId,
-          layout: {
-            "text-field": ["case", ["has", "alt"], ["concat", ["to-string", ["get", "alt"]], " m"], ""],
-            "text-font": ["Open Sans Semibold"],
-            "text-size": 12,
-            "text-offset": [0, 1.2],
-            "text-anchor": "top",
-            "text-allow-overlap": true,
-            "text-ignore-placement": true
-          },
-          paint: {
-            "text-color": "#ffffff",
-            "text-halo-color": "#000000",
-            "text-halo-width": 1
-          }
-        });
-      }
-    });
-
-    if (allPoints.length > 0) {
-      const bounds = new maplibregl.LngLatBounds();
-      allPoints.forEach((p) => bounds.extend([p.lng, p.lat]));
-      if (!bounds.isEmpty()) {
-        map.fitBounds(bounds, { padding: 60, duration: 800, maxZoom: 14 });
-      }
-    }
-  }
-
-  public clearJsonPaths() {
-    const map = this.map;
-    if (!map || !this.layerManager) return;
-    const style = map.getStyle();
-    const layers = style?.layers ? style.layers.map((l) => l.id) : [];
-    layers.forEach((layerId) => {
-      if (
-        layerId.startsWith("json-path-line-") ||
-        layerId.startsWith("json-path-point-") ||
-        layerId.startsWith("json-path-label-")
-      ) {
-        this.layerManager?.removeLayerAndSource(layerId);
-      }
-    });
-    const sources = style?.sources ? Object.keys(style.sources) : [];
-    sources.forEach((sourceId) => {
-      if (sourceId.startsWith("json-path-") || sourceId.startsWith("json-path-points-")) {
-        this.layerManager?.removeLayerAndSource(sourceId);
-      }
-    });
   }
 
   public renderAreaMeasurement(points: Coordinates[]) {

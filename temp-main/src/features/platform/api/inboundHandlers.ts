@@ -1,7 +1,7 @@
 import type { MessageRegistry } from '@core/ws/messageRegistry';
 import type { InboundHandlerContext } from '@core/ws/types';
 import { WsMessageName } from '@domain/enums/ws.enum';
-import { CaliModeE } from '@/enums/general.enum';
+import { CaliModeE } from '@domain/enums/general.enum';
 import { GunStatusE, InsStatusE, RadarStatusE } from '@domain/enums/status.enum';
 import {
   mapRadarWireStateToStatus,

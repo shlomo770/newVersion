@@ -9,6 +9,7 @@
  * record edit, no JSX changes.
  */
 
+import { he } from '@shared/i18n';
 import type { ComponentType, SVGProps } from 'react';
 import { TbRoute, TbTag } from 'react-icons/tb';
 import type { RootState } from '@app/store';
@@ -18,14 +19,14 @@ import {
 } from '@features/map/store/filterSlice';
 
 /* ------------------------------------------------------------------ */
-/*  Flyout offsets relative to the launcher                             */
+/*  Flyout layout (anchor-based — positioned under launcher)            */
 /* ------------------------------------------------------------------ */
 
 export const MAP_TOOLBAR_FLYOUT = {
-  main: { top: 155, left: 285, arrow: 25 },
-  brightness: { top: 260, left: 240, arrow: 55 },
-  filter: { top: 260, left: 240, arrow: 55 },
-  measure: { top: 260, left: 240, arrow: 55 },
+  /** Gap between launcher and flyout panel (px). */
+  anchorGapPx: 8,
+  /** Align flyout to launcher start edge — avoids clipping at screen edge. */
+  align: 'start' as const,
 } as const;
 
 /** Drawing modes exposed by the map measurement sub-menu. */
@@ -41,17 +42,17 @@ export interface MeasureMenuItem {
 export const MEASURE_MENU_ITEMS: readonly MeasureMenuItem[] = [
   {
     id: 'measure',
-    label: 'מרחק',
-    title: 'מדידת מרחק בין שתי נקודות',
+    label: he.mapTools.measureDistance.label,
+    title: he.mapTools.measureDistance.title,
   },
   {
     id: 'measure-area',
-    label: 'שטח',
-    title: 'מדידת שטח — לחץ נקודות ואז ✓ לסיום',
+    label: he.mapTools.measureArea.label,
+    title: he.mapTools.measureArea.title,
   },
 ] as const;
 
-export const MEASURE_MENU_TITLE = 'כלי מדידה';
+export const MEASURE_MENU_TITLE = he.mapTools.measureMenuTitle;
 
 export const MAP_TOOLBAR_MENU = {
   minWidthPx: 200,
@@ -97,18 +98,18 @@ export interface TargetFilterItem {
 export const TARGET_FILTER_ITEMS: readonly TargetFilterItem[] = [
   {
     id: 'trails',
-    label: 'שובל מטרות',
+    label: he.mapTools.targetTrails.label,
     ariaLabel: 'Toggle target trails',
-    title: 'הצג / הסתר שובלי מטרות',
+    title: he.mapTools.targetTrails.title,
     icon: TbRoute,
     selector: (s) => s.filter.targetVisibility?.trails ?? true,
     toggleAction: toggleTargetTrailsVisible,
   },
   {
     id: 'labels',
-    label: 'תוויות מטרות',
+    label: he.mapTools.targetLabels.label,
     ariaLabel: 'Toggle target labels',
-    title: 'הצג / הסתר תוויות מטרות',
+    title: he.mapTools.targetLabels.title,
     icon: TbTag,
     selector: (s) => s.filter.targetVisibility?.labels ?? true,
     toggleAction: toggleTargetLabelsVisible,
@@ -116,4 +117,4 @@ export const TARGET_FILTER_ITEMS: readonly TargetFilterItem[] = [
 ];
 
 /** Localized header shown at the top of the filter sub-menu panel. */
-export const TARGET_FILTER_MENU_TITLE = 'סינון מטרות';
+export const TARGET_FILTER_MENU_TITLE = he.mapTools.targetFilterMenuTitle;

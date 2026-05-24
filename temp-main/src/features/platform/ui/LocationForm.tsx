@@ -1,16 +1,18 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import ToggleSwitch from '@shared/components/ToggleSwitch/ToggleSwitch';
+import { AppButton, AppFormStack, AppInput, AppSelect } from '@shared/ui';
 import { useAppSelector } from '@/hooks/useAppSelector';
 import { useAppDispatch } from '@/hooks/useAppDispatch';
 import { updateMyCali, updateMyCoordinates } from '../store/myPositionSlice';
 import { useWebSocket } from '@/hooks/useWebSocket';
-import { WsMessageName } from '@/enums/ws.enum';
-import { CaliModeE, PosTypeE } from '@/enums/general.enum';
+import { WsMessageName } from '@domain/enums/ws.enum';
+import { CaliModeE, PosTypeE } from '@domain/enums/general.enum';
 import { store } from '@app/store';
 import { InsStatusE } from '@domain/enums/status.enum';
 import { servers } from '@/config/communication.json';
 import { toggleCoordinateSystem, setUTMZone } from '@features/map';
 import { formatCoordinates, parseUTMString, utmToWGS84 } from '@/utils/coordinates';
+import { he } from '@shared/i18n';
 import styles from './LocationForm.module.css';
 
 const formatCoord = (n: number, decimals = 6) =>
@@ -164,22 +166,24 @@ export default function LocationForm() {
     });
   }, [dispatch, latInput, lngInput, headInput, altInput, alt, sendMessage]);
 
-  const posSourceLabel = myPosition.use_manual ? 'ידני' : 'TMAPS';
+  const posSourceLabel = myPosition.use_manual
+    ? he.platform.location.posSourceManual
+    : he.platform.location.posSourceTmaps;
 
   return (
-    <div dir="rtl" lang="he" className={styles.form}>
+    <div lang="he" className={styles.form}>
       <header className={styles.header}>
-        <h3 className={styles.title}>מיקום</h3>
-        <p className={styles.subtitle}>מקורות GPS ו־TMAPS, כיול והזנה ידנית</p>
+        <h3 className={styles.title}>{he.platform.location.title}</h3>
+        <p className={styles.subtitle}>{he.platform.location.subtitle}</p>
       </header>
 
       <div className={styles.stack}>
         <div className={insBlocked ? styles.insBlocked : undefined} aria-hidden={insBlocked || undefined}>
-          <SectionCard title="GPS" subtitle={isUTM ? `UTM · ${utmZone}` : 'WGS84'}>
+          <SectionCard title={he.platform.location.gpsSection} subtitle={isUTM ? `UTM · ${utmZone}` : 'WGS84'}>
             <div className={styles.toggleRow}>
-              <span className={styles.toggleLabel}>שימוש ב־GPS</span>
+              <span className={styles.toggleLabel}>{he.platform.location.useGps}</span>
               <div className={styles.toggleWrap} dir="ltr">
-                <span className={styles.toggleState}>{gpsEnabled ? 'כן' : 'לא'}</span>
+                <span className={styles.toggleState}>{gpsEnabled ? he.common.yes : he.common.no}</span>
                 <ToggleSwitch
                   checked={gpsEnabled}
                   onChange={() => {
@@ -187,7 +191,7 @@ export default function LocationForm() {
                     setGpsEnabled(!gpsEnabled);
                   }}
                   size="sm"
-                  ariaLabel="שימוש ב-GPS"
+                  ariaLabel={he.platform.location.useGpsAria}
                 />
               </div>
             </div>
@@ -201,12 +205,12 @@ export default function LocationForm() {
               <span className={styles.coordAlt}>Alt {myPosition.gps_pos.alt}</span>
             </div>
             <div className={styles.statGrid}>
-              <Stat label="Fig of merit" value={myPosition.fig_of_merit} mono />
-              <Stat label="אזור" value={myPosition.zone} mono />
+              <Stat label={he.platform.location.figOfMerit} value={myPosition.fig_of_merit} mono />
+              <Stat label={he.platform.location.zone} value={myPosition.zone} mono />
             </div>
           </SectionCard>
 
-          <SectionCard title="TMAPS">
+          <SectionCard title={he.platform.location.tmapsSection}>
             <div
               className={styles.coordDisplay}
               dir="ltr"
@@ -217,9 +221,9 @@ export default function LocationForm() {
               <span className={styles.coordAlt}>Alt {myPosition.tmaps_pos.alt}</span>
             </div>
             <div className={styles.statList}>
-              <Stat label="מרחק מצטבר" value={myPosition.distance_travelled} mono />
-              <Stat label="כיול אודומטר" value={CaliModeE[myPosition.odo_cali_finished || 0]} />
-              <Stat label="מקור מיקום" value={posSourceLabel} />
+              <Stat label={he.platform.location.cumulativeDistance} value={myPosition.distance_travelled} mono />
+              <Stat label={he.platform.location.odometerCalibration} value={CaliModeE[myPosition.odo_cali_finished || 0]} />
+              <Stat label={he.platform.location.positionSource} value={posSourceLabel} />
             </div>
             <div className={styles.telemetryGrid} dir="ltr">
               {(
@@ -251,7 +255,7 @@ export default function LocationForm() {
               store.dispatch(updateMyCali(CaliModeE.NO));
             }}
           >
-            כיול
+            {he.platform.location.calibrate}
           </button>
           <button
             type="button"
@@ -259,7 +263,7 @@ export default function LocationForm() {
             className={styles.actionButton}
             onClick={() => sendMessage(WsMessageName.StartRealing, {})}
           >
-            Realign
+            {he.platform.location.realign}
           </button>
           <button
             type="button"
@@ -272,92 +276,81 @@ export default function LocationForm() {
             }}
             className={`${styles.actionButton} ${manualOpen ? styles.actionButtonManualActive : ''}`}
           >
-            ידני
+            {he.platform.location.manual}
           </button>
         </div>
 
         {manualOpen && (
           <div className={styles.manualPanel}>
-            <div className={styles.manualTitle}>הזנה ידנית</div>
-            <div className={styles.manualInputs} dir="ltr">
+            <div className={styles.manualTitle}>{he.platform.location.manualEntry}</div>
+            <AppFormStack className={styles.manualInputs} dir="ltr">
               <div className={styles.manualInputRow}>
                 {!isUTM && (
                   <div className={styles.latLngGroup}>
-                    <div className={styles.inputGroup}>
-                      <label className={styles.inputLabel} dir="rtl">
-                        קו רוחב
-                      </label>
-                      <input
-                        value={latInput}
-                        onChange={(e) => setLatInput(e.target.value)}
-                        placeholder="32.0853"
-                        className={styles.input}
-                        inputMode="decimal"
-                        autoComplete="off"
-                        spellCheck={false}
-                        title="Latitude"
-                      />
-                    </div>
-                    <div className={styles.inputGroup}>
-                      <label className={styles.inputLabel} dir="rtl">
-                        קו אורך
-                      </label>
-                      <input
-                        value={lngInput}
-                        onChange={(e) => setLngInput(e.target.value)}
-                        placeholder="34.7818"
-                        className={styles.input}
-                        inputMode="decimal"
-                        autoComplete="off"
-                        spellCheck={false}
-                        title="Longitude"
-                      />
-                    </div>
-                  </div>
-                )}
-                {isUTM && (
-                  <div className={styles.inputGroup}>
-                    <label className={styles.inputLabel} dir="rtl">
-                      UTM
-                    </label>
-                    <input
-                      value={utmInput}
-                      onChange={(e) => {
-                        setUtmInput(e.target.value);
-                        const latLngConvert = utmToWGS84(parseUTMString(e.target.value));
-                        setLatInput(latLngConvert.lat.toString().slice(0, 8));
-                        setLngInput(latLngConvert.lng.toString().slice(0, 8));
-                      }}
-                      className={styles.input}
-                      inputMode="text"
+                    <AppInput
+                      label={he.platform.location.latitude}
+                      value={latInput}
+                      onChange={(e) => setLatInput(e.target.value)}
+                      placeholder="32.0853"
+                      inputMode="decimal"
                       autoComplete="off"
                       spellCheck={false}
-                      title="UTM"
+                      title="Latitude"
+                      center
+                      fieldClassName={styles.inputGroup}
+                    />
+                    <AppInput
+                      label={he.platform.location.longitude}
+                      value={lngInput}
+                      onChange={(e) => setLngInput(e.target.value)}
+                      placeholder="34.7818"
+                      inputMode="decimal"
+                      autoComplete="off"
+                      spellCheck={false}
+                      title="Longitude"
+                      center
+                      fieldClassName={styles.inputGroup}
                     />
                   </div>
                 )}
-                <div className={styles.inputGroupNarrow}>
-                  <label className={styles.inputLabel} dir="rtl">
-                    כיוון
-                  </label>
-                  <input
-                    value={headInput}
-                    onChange={(e) => setHeadInput(Number(e.target.value))}
-                    className={styles.input}
-                    inputMode="decimal"
+                {isUTM && (
+                  <AppInput
+                    label="UTM"
+                    value={utmInput}
+                    onChange={(e) => {
+                      setUtmInput(e.target.value);
+                      const latLngConvert = utmToWGS84(parseUTMString(e.target.value));
+                      setLatInput(latLngConvert.lat.toString().slice(0, 8));
+                      setLngInput(latLngConvert.lng.toString().slice(0, 8));
+                    }}
+                    inputMode="text"
+                    autoComplete="off"
+                    spellCheck={false}
+                    title="UTM"
+                    center
+                    fieldClassName={styles.inputGroup}
                   />
-                </div>
+                )}
+                <AppInput
+                  label={he.platform.location.heading}
+                  type="number"
+                  value={headInput}
+                  onChange={(e) => setHeadInput(Number(e.target.value))}
+                  inputMode="decimal"
+                  center
+                  fieldClassName={styles.inputGroupNarrow}
+                />
               </div>
-            </div>
-            <button type="button" onClick={onConfirmManual} className={styles.confirmButton}>
-              אישור והגשה
-            </button>
+              <AppButton type="button" size="sm" fullWidth onClick={onConfirmManual}>
+                {he.platform.location.confirmSubmit}
+              </AppButton>
+            </AppFormStack>
           </div>
         )}
 
         <div className={styles.coordToggleCard}>
           <div className={styles.coordToggleRow}>
-            <span className={styles.coordToggleLabel}>תצוגת קואורדינטות בממשק</span>
+            <span className={styles.coordToggleLabel}>{he.platform.location.coordDisplayInUi}</span>
             <button
               type="button"
               onClick={() => dispatch(toggleCoordinateSystem())}
@@ -367,27 +360,26 @@ export default function LocationForm() {
             </button>
           </div>
           {isUTM && myPosition.use_manual && (
-            <label className={styles.utmZoneRow}>
-              <span>אזור UTM</span>
-              <select
-                value={utmZone}
-                onChange={(e) => dispatch(setUTMZone(Number(e.target.value)))}
-                className={styles.utmSelect}
-              >
-                {[33, 34, 35, 36, 37, 38].map((z) => (
-                  <option key={z} value={z}>
-                    {z}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <AppSelect
+              compact
+              label={he.platform.location.utmZone}
+              fieldClassName={styles.utmZoneRow}
+              value={utmZone}
+              onChange={(e) => dispatch(setUTMZone(Number(e.target.value)))}
+            >
+              {[33, 34, 35, 36, 37, 38].map((z) => (
+                <option key={z} value={z}>
+                  {z}
+                </option>
+              ))}
+            </AppSelect>
           )}
         </div>
       </div>
 
       {insBlocked && (
         <p className={styles.insWarning}>
-          אין תקשורת TMAPS — נתוני GPS/TMAPS אינם מתעדכנים. הזנה ידנית והחלפת תצוגת קואורדינטות זמינות.
+          {he.platform.location.insNoCommWarning}
         </p>
       )}
     </div>

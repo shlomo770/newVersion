@@ -8,17 +8,15 @@ import EntityEditPanel from './EntityEditPanel';
 import EntityCreationPanel from './EntityCreationPanel';
 import EntityMarkerCreationPanel from './EntityMarkerCreationPanel';
 import { useAppDispatch } from '@/hooks/useAppDispatch';
-import { setCreationForm } from '@features/entities/store/entitiesSlice';
+import { setCreationForm, setActiveEditEntityId } from '@features/entities/store/entitiesSlice';
 import { EntityCategoryEnum } from '@domain/enums/entity.enum';
 import type { MapService } from '@/services/map/MapService';
 
 interface EntitiesManagerProps {
   map: maplibregl.Map;
   mapServiceRef?: React.MutableRefObject<MapService | null>;
-  /** When provided, sidebar open state is controlled externally. */
   isSidebarOpen?: boolean;
   onSidebarOpenChange?: (open: boolean) => void;
-  /** Suppress the built-in folder FAB (when rendered elsewhere). */
   hideOwnButton?: boolean;
 }
 
@@ -44,16 +42,16 @@ const EntitiesManager: FC<EntitiesManagerProps> = ({
   const [isEditPanelOpen, setIsEditPanelOpen] = useState(false);
   const [isCreationPanelOpen, setIsCreationPanelOpen] = useState(false);
   const [isMarkerCreationOpen, setIsMarkerCreationOpen] = useState(false);
-  const [editingEntityId, setEditingEntityId] = useState<string | null>(null);
-  const entities = useAppSelector(state => state.entities.byId);
-  const editingEntity = editingEntityId ? entities[editingEntityId] : null;
+  const activeEditEntityId = useAppSelector((state) => state.entities.activeEditEntityId);
+  const entities = useAppSelector((state) => state.entities.byId);
+  const editingEntity = activeEditEntityId ? entities[activeEditEntityId] : null;
 
   const handleToggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
   const handleEditEntity = (entity: Entity) => {
-    setEditingEntityId(entity.id);
+    dispatch(setActiveEditEntityId(entity.id));
     setIsEditPanelOpen(true);
     setIsCreationPanelOpen(false);
     setIsMarkerCreationOpen(false);
@@ -61,7 +59,7 @@ const EntitiesManager: FC<EntitiesManagerProps> = ({
 
   const handleCloseEditPanel = () => {
     setIsEditPanelOpen(false);
-    setEditingEntityId(null);
+    dispatch(setActiveEditEntityId(null));
   };
 
   const handleOpenAreas = () => {
@@ -79,7 +77,7 @@ const EntitiesManager: FC<EntitiesManagerProps> = ({
     setIsCreationPanelOpen(true);
     setIsMarkerCreationOpen(false);
     setIsEditPanelOpen(false);
-    setEditingEntityId(null);
+    dispatch(setActiveEditEntityId(null));
   };
 
   const clickToHandleCenterToEntity = (entity: Entity) => {
@@ -98,14 +96,16 @@ const EntitiesManager: FC<EntitiesManagerProps> = ({
         onOpenCreatePanelWithCategory={handleOpenCreateWithCategory}
         onRequestCloseEditPanel={handleCloseEditPanel}
         onOpenCreateMarkerPanel={handleOpenMarkers}
-        editingEntityId={isEditPanelOpen ? editingEntityId : null}
-        mapServiceRef={mapServiceRef} />
+        editingEntityId={isEditPanelOpen ? activeEditEntityId : null}
+        mapServiceRef={mapServiceRef}
+      />
       <EntityEditPanel
         entity={editingEntity}
         isOpen={isEditPanelOpen}
         onClose={handleCloseEditPanel}
         onCenterToEntity={clickToHandleCenterToEntity}
-        mapServiceRef={mapServiceRef} />
+        mapServiceRef={mapServiceRef}
+      />
       {isCreationPanelOpen && (
         <EntityCreationPanel
           isOpen={isCreationPanelOpen}
@@ -122,4 +122,4 @@ const EntitiesManager: FC<EntitiesManagerProps> = ({
   );
 };
 
-export default EntitiesManager; 
+export default EntitiesManager;

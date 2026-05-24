@@ -1,6 +1,6 @@
 import type { Map as MaplibreMap } from 'maplibre-gl';
 import type { Feature } from 'geojson';
-import { store } from '@app/store';
+import type { MapServiceRuntime } from '../mapServiceRuntime';
 import { convertFeatureToCoordinates } from '../Helpers';
 import {
   attachDrawControl,
@@ -26,6 +26,7 @@ type DrawUpdateEvent = { features: Feature[] };
  */
 export class DrawModeWiring {
   private readonly map: MaplibreMap;
+  private readonly runtime: MapServiceRuntime;
   private readonly sessionGate: DrawLibrarySessionGate;
   private draw: MapDrawControl | null = null;
   private attached = false;
@@ -36,8 +37,13 @@ export class DrawModeWiring {
   private boundUpdate?: (event: DrawUpdateEvent) => void;
   private drawEventsBound = false;
 
-  constructor(map: MaplibreMap, hooks: DrawLibrarySessionHooks = {}) {
+  constructor(
+    map: MaplibreMap,
+    runtime: MapServiceRuntime,
+    hooks: DrawLibrarySessionHooks = {},
+  ) {
     this.map = map;
+    this.runtime = runtime;
     this.sessionGate = new DrawLibrarySessionGate(hooks);
   }
 
@@ -88,7 +94,7 @@ export class DrawModeWiring {
 
       const properties =
         this.activeLibraryType === 'marker'
-          ? { iconChar: store.getState().entities.selectedMarkerIcon || 'E7BA' }
+          ? { iconChar: this.runtime.getSelectedMarkerIcon() }
           : {};
 
       if (this.activeLibraryType === 'marker') {

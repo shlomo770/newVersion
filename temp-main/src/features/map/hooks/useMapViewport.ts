@@ -24,7 +24,7 @@ export function useMapViewport({
 
   const mapState = useAppSelector((state) => state.map);
   const settings = useAppSelector((state) => state.settings);
-  const drawingMode = useAppSelector((state) => state.entities.drawingMode);
+  const drawingMode = useAppSelector((state) => state.mapInteraction.drawingMode);
   const entitiesForMap = useAppSelector(selectDisplayedEntitiesOnMap);
 
   const selectedMapTypeObj = useMemo(

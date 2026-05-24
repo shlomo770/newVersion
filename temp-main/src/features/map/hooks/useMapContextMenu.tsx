@@ -10,9 +10,12 @@ import { useAppSelector } from '@/hooks/useAppSelector';
 import { MapContextMenu } from '../components/MapContextMenu';
 import { MapTargetSelectionMenu } from '../components/MapTargetSelectionMenu';
 import { updateTarget } from '@features/targets/store/targetsSlice';
-import { TargetStateString } from '@/enums/target.enum';
+import { setActiveEditEntityId } from '@features/entities/store/entitiesSlice';
+import { confirmAndDeleteEntity } from '@features/entities/lib/entityDelete';
+import { TargetStateString } from '@domain/enums/target.enum';
 import { ENTITY_LAYER_PREFIXES } from '@features/map/config';
-import { isTabooZoneEntity } from '@features/entities/ui/entitiesSidebar/entitiesSidebarUtils';
+import { isTabooZoneEntity } from '@features/entities/lib/entityGuards';
+import { useMapCommandsOptional } from '@features/map';
 import type { MapService } from '@/services/map/MapService';
 import {
   TARGET_LAYER_IDS,
@@ -31,6 +34,8 @@ export interface MapContextMenuActions {
   onAllocateTarget: (targetId: string) => void;
   onSetTargetIdentity: (targetId: string, identity: boolean) => void;
   mapServiceRef?: MutableRefObject<MapService | null>;
+  /** Fired on every map click (after target hit-testing). */
+  onMapClick?: () => void;
 }
 
 /**
@@ -41,12 +46,16 @@ export function useMapContextMenu(
   actions: MapContextMenuActions,
 ) {
   const dispatch = useAppDispatch();
+  const { onAllocateTarget, onSetTargetIdentity, mapServiceRef, onMapClick } = actions;
   const entitiesById = useAppSelector((state) => state.entities.byId);
+  const activeEditEntityId = useAppSelector((state) => state.entities.activeEditEntityId);
+  const selectedEntityId = useAppSelector((state) => state.entities.selectedId);
   const targetsState = useAppSelector(
     (state) => state.targets,
     (left, right) => left.byId === right.byId && left.allIds.length === right.allIds.length,
   );
-  const drawingMode = useAppSelector((state) => state.entities.drawingMode);
+  const drawingMode = useAppSelector((state) => state.mapInteraction.drawingMode);
+  const mapCommands = useMapCommandsOptional();
 
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const [targetSelectionMenu, setTargetSelectionMenu] = useState<TargetSelectionState | null>(
@@ -136,6 +145,8 @@ export function useMapContextMenu(
     };
 
     const handleMapClick = (e: MapMouseEvent) => {
+      onMapClick?.();
+
       const availableTargetLayers = TARGET_LAYER_IDS.filter((layerId) => map.getLayer(layerId));
       if (availableTargetLayers.length === 0) {
         closeMenus();
@@ -220,20 +231,49 @@ export function useMapContextMenu(
         map.off('touchmove', handleTouchMove);
       }
     };
-  }, [map, entitiesById, targetsState.byId, drawingMode, closeMenus]);
+  }, [map, entitiesById, targetsState.byId, drawingMode, closeMenus, onMapClick]);
+
+  const handleDeleteEntity = useCallback(async () => {
+    if (!contextMenu?.entityId || contextMenu.isTarget) return;
+    const storeEntity = entitiesById[contextMenu.entityId];
+    if (!storeEntity || isTabooZoneEntity(storeEntity)) {
+      setContextMenu(null);
+      return;
+    }
+    await confirmAndDeleteEntity({
+      entity: storeEntity,
+      editingEntityId: activeEditEntityId,
+      dispatch,
+      mapCommands,
+      selectedEntityId,
+      onEditClosed: () => dispatch(setActiveEditEntityId(null)),
+    });
+    setContextMenu(null);
+  }, [
+    contextMenu,
+    entitiesById,
+    activeEditEntityId,
+    dispatch,
+    mapCommands,
+    selectedEntityId,
+  ]);
 
   const handleEditEntity = useCallback(() => {
-    if (!contextMenu?.entityId || !actions.mapServiceRef?.current) return;
+    if (!contextMenu?.entityId) return;
     const storeEntity = entitiesById[contextMenu.entityId];
     if (storeEntity && isTabooZoneEntity(storeEntity)) {
       setContextMenu(null);
       return;
     }
     if (storeEntity) {
-      actions.mapServiceRef.current.setEditMode(contextMenu.entityId, storeEntity);
+      if (mapCommands) {
+        mapCommands.setEditMode(contextMenu.entityId, storeEntity);
+      } else {
+        mapServiceRef?.current?.setEditMode(contextMenu.entityId, storeEntity);
+      }
     }
     setContextMenu(null);
-  }, [actions.mapServiceRef, contextMenu, entitiesById]);
+  }, [mapCommands, mapServiceRef, contextMenu, entitiesById]);
 
   const handleDesignateTarget = useCallback(() => {
     if (!contextMenu?.entityId) return;
@@ -254,17 +294,17 @@ export function useMapContextMenu(
     if (!contextMenu?.entityId) return;
     const target = targetsState.byId[contextMenu.entityId];
     if (target) {
-      actions.onSetTargetIdentity(target.id, !target.friend);
+      onSetTargetIdentity(target.id, !target.friend);
     }
     setContextMenu(null);
-  }, [actions, contextMenu, targetsState.byId]);
+  }, [onSetTargetIdentity, contextMenu, targetsState.byId]);
 
   const handleAllocateTarget = useCallback(() => {
     if (contextMenu?.entityId) {
-      actions.onAllocateTarget(contextMenu.entityId);
+      onAllocateTarget(contextMenu.entityId);
     }
     setContextMenu(null);
-  }, [actions, contextMenu]);
+  }, [onAllocateTarget, contextMenu]);
 
   const contextMenuHost = (
     <>
@@ -290,7 +330,7 @@ export function useMapContextMenu(
             targetsState.byId[contextMenu.entityId]?.friend,
         )}
         onEdit={handleEditEntity}
-        onDelete={() => setContextMenu(null)}
+        onDelete={handleDeleteEntity}
         onAllocateTarget={handleAllocateTarget}
         onDesignateTarget={handleDesignateTarget}
         onToggleFriend={handleToggleFriend}

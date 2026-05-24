@@ -13,6 +13,7 @@ import { EntityCategoryEnum } from '@domain/enums/entity.enum';
 import type { Coordinates } from '@domain/models/coordinates';
 import type { MapService } from '@/services/map/MapService';
 import { AppButton, AppFloatingPanel, AppIconButton, AppInput, AppSelect } from '@shared/ui';
+import { he } from '@shared/i18n';
 import { swalWarning } from '@/utils/swalDialog';
 import styles from './EntityEditPanel.module.css';
 
@@ -70,7 +71,7 @@ const EntityEditPanel: FC<EntityEditPanelProps> = ({
 
     // Polygon must have at least 3 points
     if (entity.type === 'polygon' && editingCoords.length < 3) {
-      await swalWarning('פוליגון חייב לכלול לפחות 3 נקודות.', 'עריכת פוליגון');
+      await swalWarning(he.entities.panels.polygonMinPoints, he.entities.panels.polygonEditTitle);
       return;
     }
 
@@ -145,17 +146,17 @@ const EntityEditPanel: FC<EntityEditPanelProps> = ({
   if (!isOpen || !entity) return null;
 
   return (
-    <AppFloatingPanel open={isOpen} onClose={handleCancel} title="Editing Entity" position="left">
+    <AppFloatingPanel open={isOpen} onClose={handleCancel} title={he.entities.panels.editTitle} position="left">
       <div className={styles.formStack}>
         <AppInput
           compact
-          label="Name"
+          label={he.entities.panels.name}
           value={entity?.name || ''}
           onChange={(e) => handleFormChange({ name: e.target.value })}
         />
         <AppInput
           compact
-          label="Height"
+          label={he.entities.panels.height}
           type="number"
           value={heightMeters}
           onChange={(e) => handleHeightChange(Number(e.target.value))}
@@ -164,7 +165,7 @@ const EntityEditPanel: FC<EntityEditPanelProps> = ({
         <div className={styles.row}>
           <AppSelect
             compact
-            label="Type"
+            label={he.entities.panels.category}
             fieldClassName={styles.rowGrow}
             value={entity?.category || 'FREE'}
             onChange={(e) => handleFormChange({ category: Number(e.target.value) })}
@@ -180,14 +181,14 @@ const EntityEditPanel: FC<EntityEditPanelProps> = ({
             value={entity?.color || '#3b82f6'}
             onChange={(e) => handleFormChange({ color: e.target.value })}
             className={styles.colorInput}
-            aria-label="Entity color"
+            aria-label={he.entities.panels.colorAria}
           />
         </div>
 
         {entity && hasTransparency(entity) ? (
           <div>
             <label className={styles.rowLabel}>
-              Opacity {Math.round(entity.transparency * 100)}%
+              {he.entities.panels.transparency} {Math.round(entity.transparency * 100)}%
             </label>
             <input
               type="range"
@@ -207,11 +208,11 @@ const EntityEditPanel: FC<EntityEditPanelProps> = ({
           </AppButton>
 
           <AppButton variant="secondary" fullWidth onClick={handleSubmit}>
-            שליחה
+            {he.entities.panels.send}
           </AppButton>
 
           <AppButton variant="ghost" fullWidth onClick={() => setShowCoordinates(!showCoordinates)}>
-            {showCoordinates ? 'Hide' : 'Show'} Points
+            {showCoordinates ? he.entities.panels.hidePoints : he.entities.panels.showPoints}
           </AppButton>
 
           {showCoordinates && entity?.coordinates ? (
@@ -251,7 +252,7 @@ const EntityEditPanel: FC<EntityEditPanelProps> = ({
                     />
                     {canDelete ? (
                       <AppIconButton
-                        label="מחק נקודה"
+                        label={he.entities.delete.deletePoint}
                         size="sm"
                         danger
                         onClick={() => {
@@ -268,10 +269,10 @@ const EntityEditPanel: FC<EntityEditPanelProps> = ({
 
               <div className={styles.actionsStack}>
                 <AppButton variant="primary" fullWidth onClick={applyCoordinateChanges}>
-                  Ok
+                  {he.common.ok}
                 </AppButton>
                 <AppButton variant="ghost" fullWidth onClick={onClose}>
-                  Cancel
+                  {he.common.cancel}
                 </AppButton>
               </div>
             </div>

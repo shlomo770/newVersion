@@ -1,5 +1,6 @@
 import React from 'react';
 import { AppButton } from '@shared/ui';
+import { he } from '@shared/i18n';
 import styles from './ErrorBoundary.module.css';
 
 interface Props {
@@ -51,15 +52,13 @@ class ErrorBoundary extends React.Component<Props, State> {
               </svg>
             </div>
 
-            <h2 className={styles.title}>Something went wrong</h2>
+            <h2 className={styles.title}>{he.errors.boundaryTitle}</h2>
 
-            <p className={styles.message}>
-              An unexpected error occurred. Please try refreshing the page.
-            </p>
+            <p className={styles.message}>{he.errors.boundaryMessage}</p>
 
             <div className={styles.actions}>
               <AppButton fullWidth onPointerDown={() => window.location.reload()}>
-                Refresh Page
+                {he.errors.refreshPage}
               </AppButton>
 
               <AppButton
@@ -67,13 +66,13 @@ class ErrorBoundary extends React.Component<Props, State> {
                 variant="secondary"
                 onPointerDown={() => this.setState({ hasError: false })}
               >
-                Try Again
+                {he.errors.tryAgain}
               </AppButton>
             </div>
 
             {this.state.error ? (
               <details className={styles.details}>
-                <summary className={styles.detailsSummary}>Error Details</summary>
+                <summary className={styles.detailsSummary}>{he.errors.errorDetails}</summary>
                 <pre className={styles.errorPre}>{this.state.error.toString()}</pre>
               </details>
             ) : null}

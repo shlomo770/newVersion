@@ -146,6 +146,10 @@ export interface ThemeConfig {
     sidebarRailWidth: string;
     sidebarPanelWidth: string;
     entityPanelWidth: string;
+    /** Top offset for map FAB dock (entities / tools / video) — clears status-bar flyouts. */
+    mapActionDockTop: string;
+    /** Left inset for map FAB dock. */
+    mapActionDockLeft: string;
   };
 
   motion: {
@@ -314,6 +318,8 @@ export const theme: ThemeConfig = {
     sidebarRailWidth: '4rem',
     sidebarPanelWidth: '350px',
     entityPanelWidth: '350px',
+    mapActionDockTop: '3.25rem',
+    mapActionDockLeft: '0.5rem',
   },
 
   motion: {

@@ -1,10 +1,5 @@
 import type { CaliModeE } from '@domain/enums/general.enum';
-import type {
-  EntityType,
-  TacticalEntity,
-  MapState,
-  MyPositionState,
-} from '@domain/models';
+import type { TacticalEntity } from '@domain/models';
 
 export type {
   Coordinates,
@@ -45,24 +40,5 @@ export type {
 } from '@domain/models/los';
 
 export type { PanelType } from '@domain/models/panel';
-
-export interface EntityState {
-  byId: Record<string, Entity>;
-  allIds: string[];
-  groupedByType: Record<EntityType, string[]>;
-  selectedEntityId: string | null;
-  drawingMode: EntityType | null;
-}
-
-export interface RootState {
-  entities: EntityState;
-  map: MapState;
-  myPosition: MyPositionState;
-}
-
-export interface DrawMode {
-  type: EntityType;
-  isActive: boolean;
-}
 
 export type { CaliModeE };

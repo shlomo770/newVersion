@@ -30,7 +30,6 @@ export const MAP_TOOL_ICONS = {
   launcher: './icons/Map_512.png',
   brightness: './icons/brightness_512.png',
   ruler: './icons/ruler_512.png',
-  jsonImport: './icons/endpoints.png',
   video: './icons/VideoStreaming_512.png',
 } as const;
 

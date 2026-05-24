@@ -20,18 +20,7 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    include: [
-      '@deck.gl/core',
-      '@deck.gl/layers',
-      '@deck.gl/mapbox',
-      '@deck.gl/react',
-      '@deck.gl/extensions',
-      '@luma.gl/core',
-      '@luma.gl/engine',
-      '@luma.gl/shadertools',
-      '@luma.gl/webgl',
-      'geotiff',
-    ],
+    include: [],
   },
   worker: {
     format: 'es',

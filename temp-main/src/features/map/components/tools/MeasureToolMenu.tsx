@@ -2,7 +2,7 @@ import type { FC } from 'react';
 import { TbRulerMeasure, TbDimensions } from 'react-icons/tb';
 import { useAppSelector } from '@/hooks/useAppSelector';
 import { useAppDispatch } from '@/hooks/useAppDispatch';
-import { setDrawingMode } from '@features/entities';
+import { setDrawingMode } from '@features/map';
 import {
   MEASURE_MENU_ITEMS,
   MEASURE_MENU_TITLE,
@@ -22,7 +22,7 @@ const MEASURE_ICONS: Record<MeasureToolMode, FC<{ size?: number; className?: str
 
 const MeasureToolMenu: FC<MeasureToolMenuProps> = ({ onClose }) => {
   const dispatch = useAppDispatch();
-  const drawingMode = useAppSelector((state) => state.entities.drawingMode);
+  const drawingMode = useAppSelector((state) => state.mapInteraction.drawingMode);
 
   const handleSelect = (mode: MeasureToolMode) => {
     if (drawingMode === mode) {

@@ -1,10 +1,12 @@
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import type { PanelType } from '@/types';
 import MapPageContainer from './MapPageContainer';
 import { ErrorBoundary } from '@shared/components';
 import { SidebarContainer } from '@features/sidebar';
 import { TargetPanel } from '@features/targets';
 import { StatusBar } from '@features/status-bar';
 import { AppShell, MainLayout } from '@app/layouts';
+import { MapCommandsProvider } from '@features/map';
 import { useMapPageSession } from './hooks/useMapPageSession';
 
 /**
@@ -13,16 +15,16 @@ import { useMapPageSession } from './hooks/useMapPageSession';
  */
 export function MapPage() {
   const session = useMapPageSession();
-  const mapSiderToggleRef = useRef<(() => void) | null>(null);
+  const [activeSidebarPanel, setActiveSidebarPanel] = useState<PanelType>(null);
 
   const handleStatusBarMenu = useCallback(() => {
     session.toggleSidebar();
-    mapSiderToggleRef.current?.();
   }, [session.toggleSidebar]);
 
-  const registerMapSiderToggle = useCallback((toggle: () => void) => {
-    mapSiderToggleRef.current = toggle;
-  }, []);
+  const handleCloseSidebar = useCallback(() => {
+    session.closeSidebar();
+    setActiveSidebarPanel(null);
+  }, [session.closeSidebar]);
 
   const statusBar = useMemo(
     () => <StatusBar onMenuClick={handleStatusBarMenu} mapServiceRef={session.mapServiceRef} />,
@@ -31,40 +33,48 @@ export function MapPage() {
 
   return (
     <ErrorBoundary>
-      <AppShell>
-        <MainLayout
-          statusBar={statusBar}
-          map={
-            <MapPageContainer
-              isMeasuring={session.isMeasuring}
-              measurementMode={
-                session.drawingMode === 'measure' || session.drawingMode === 'measure-area'
-                  ? session.drawingMode
-                  : null
-              }
-              measurePoints={session.measurePoints}
-              setIsMeasuring={() => {}}
-              setMeasurePoints={session.setMeasurePoints}
-              focusEntityRef={session.focusEntityRef}
-              mapServiceRef={session.mapServiceRef}
-              onRegisterMapSiderToggle={registerMapSiderToggle}
-              onAbortTarget={session.handleAbortTarget}
-              handleTargetInfo={session.handleTargetInfo}
-              onHamburgerClick={session.toggleSidebar}
-            />
-          }
-          settingsSidebar={
-            <SidebarContainer isOpen={session.isSidebarOpen} onClose={session.closeSidebar} />
-          }
-          targetsPanel={
-            <TargetPanel
-              mapServiceRef={session.mapServiceRef}
-              onAttackTarget={session.handleAttackTarget}
-              onAbortTarget={session.handleAbortTarget}
-            />
-          }
-        />
-      </AppShell>
+      <MapCommandsProvider mapServiceRef={session.mapServiceRef}>
+        <AppShell>
+          <MainLayout
+            statusBar={statusBar}
+            map={
+              <MapPageContainer
+                isMeasuring={session.isMeasuring}
+                measurementMode={
+                  session.drawingMode === 'measure' || session.drawingMode === 'measure-area'
+                    ? session.drawingMode
+                    : null
+                }
+                measurePoints={session.measurePoints}
+                setIsMeasuring={() => {}}
+                setMeasurePoints={session.setMeasurePoints}
+                focusEntityRef={session.focusEntityRef}
+                mapServiceRef={session.mapServiceRef}
+                onAbortTarget={session.handleAbortTarget}
+                handleTargetInfo={session.handleTargetInfo}
+                onHamburgerClick={session.toggleSidebar}
+                isSidebarOpen={session.isSidebarOpen}
+                activeSidebarPanel={activeSidebarPanel}
+                onCloseSidebar={handleCloseSidebar}
+              />
+            }
+            settingsSidebar={
+              <SidebarContainer
+                isOpen={session.isSidebarOpen}
+                activePanel={activeSidebarPanel}
+                onActivePanelChange={setActiveSidebarPanel}
+              />
+            }
+            targetsPanel={
+              <TargetPanel
+                mapServiceRef={session.mapServiceRef}
+                onAttackTarget={session.handleAttackTarget}
+                onAbortTarget={session.handleAbortTarget}
+              />
+            }
+          />
+        </AppShell>
+      </MapCommandsProvider>
     </ErrorBoundary>
   );
 }

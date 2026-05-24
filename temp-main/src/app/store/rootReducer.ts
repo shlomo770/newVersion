@@ -8,6 +8,7 @@ import {
   coordinatesReducer,
   elevationReducer,
   losReducer,
+  mapInteractionReducer,
 } from '@features/map';
 import { targetsReducer } from '@features/targets';
 import {
@@ -31,6 +32,7 @@ export const rootReducer = combineReducers({
   myPosition: myPositionReducer,
   coordinates: coordinatesReducer,
   los: losReducer,
+  mapInteraction: mapInteractionReducer,
   settings: settingsReducer,
   elevation: elevationReducer,
   systemState: systemStateReducer,

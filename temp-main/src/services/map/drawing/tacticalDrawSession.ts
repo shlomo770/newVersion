@@ -6,7 +6,7 @@ import type {
   MapMouseEvent,
 } from 'maplibre-gl';
 import type * as GeoJSON from 'geojson';
-import { store } from '@app/store';
+import type { MapServiceRuntime } from '../mapServiceRuntime';
 import { createCirclePolygon, createEllipsePolygon, getEntityAnchor } from '@shared/lib/geo';
 import type { Coordinates } from '@domain/models/coordinates';
 import type { EntityDrawDraft, TacticalEntity } from '@domain/models/entity';
@@ -56,6 +56,7 @@ export class TacticalDrawSession {
   private readonly map: MaplibreMap;
   private readonly entityRenderer: MapEntityRenderer;
   private readonly measurement: MeasurementDrawHandler;
+  private readonly runtime: MapServiceRuntime;
   private onUiStateChanged?: (state: DrawingUiState | null) => void;
 
   private mode: DrawSessionMode = 'none';
@@ -73,10 +74,12 @@ export class TacticalDrawSession {
     map: MaplibreMap,
     entityRenderer: MapEntityRenderer,
     measurement: MeasurementDrawHandler,
+    runtime: MapServiceRuntime,
   ) {
     this.map = map;
     this.entityRenderer = entityRenderer;
     this.measurement = measurement;
+    this.runtime = runtime;
   }
 
   setUiListener(listener: (state: DrawingUiState | null) => void): void {
@@ -273,7 +276,7 @@ export class TacticalDrawSession {
 
     if (this.activeType === 'marker') {
       const point = { lng: e.lngLat.lng, lat: e.lngLat.lat };
-      const iconCode = store.getState().entities.selectedMarkerIcon || 'E7BA';
+      const iconCode = this.runtime.getSelectedMarkerIcon();
       this.markerHandler?.({
         type: 'marker',
         coordinates: [point],

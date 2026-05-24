@@ -3,7 +3,7 @@ import { PiPolygonFill } from 'react-icons/pi';
 import { FaCircleNotch, FaEllipsisH, FaChartPie } from 'react-icons/fa';
 import { useAppDispatch } from '@/hooks/useAppDispatch';
 import type { EntityType } from '@domain/models/entity';
-import { setDrawingMode } from '@features/entities/store/entitiesSlice';
+import { setDrawingMode } from '@features/map';
 import FlyoutMenu from '@shared/components/overlay/FlyoutMenu';
 import styles from './EntityPanels.module.css';
 

@@ -2,8 +2,9 @@ import { FC } from "react";
 import { FaClipboardList, FaCrosshairs, FaInbox, FaTrashAlt } from "react-icons/fa";
 import { MISSION_DE_TABS } from '@/constants/entityCategories';
 import type { Entity } from '@features/entities/store/entitiesSlice';
-import { AppIconButton, cn } from "@shared/ui";
-import { btn, btnRose, missionDeStyles, section } from "./missionDePanelStyles";
+import { AppButton, AppIconButton, cn } from "@shared/ui";
+import { missionDeStyles, section } from "./missionDePanelStyles";
+import { he } from '@shared/i18n';
 
 export type MissionDeTreeSectionProps = {
   memberIds: string[];
@@ -35,38 +36,35 @@ const MissionDeTreeSection: FC<MissionDeTreeSectionProps> = ({
           <FaClipboardList aria-hidden />
         </span>
         <div>
-          <span className={missionDeStyles.sectionTitle}>במשימה</span>
+          <span className={missionDeStyles.sectionTitle}>{he.entities.missionDe.treeTitle}</span>
           <span className={missionDeStyles.sectionSubtitle}>
-            לפי קטגוריה · לחיצה על שורה לבחירה
+            {he.entities.missionDe.treeSubtitle}
           </span>
         </div>
       </div>
       <div className={missionDeStyles.headerActions}>
         <span className={missionDeStyles.countBadge}>
-          {memberIds.length} סה״כ
+          {he.entities.missionDe.totalCount(memberIds.length)}
         </span>
         {treeSelectedIds.size > 0 ? (
           <>
             <span className={missionDeStyles.countBadgeActive}>
-              נבחרו {treeSelectedIds.size}
+              {he.entities.missionDe.selectedCount(treeSelectedIds.size)}
             </span>
-            <button
+            <AppButton
               type="button"
-              title="הסר מהמשימה את הנבחרים"
-              className={btnRose}
+              size="sm"
+              variant="danger"
+              title={he.entities.missionDe.removeSelectedTitle}
               disabled={treeSelectedIds.size === 0}
               onClick={onDeleteTreeSelected}
             >
               <FaTrashAlt aria-hidden />
-              מחיקה
-            </button>
-            <button
-              type="button"
-              className={btn}
-              onClick={onClearTreeSelection}
-            >
-              נקה בחירה
-            </button>
+              {he.common.delete}
+            </AppButton>
+            <AppButton type="button" size="sm" variant="secondary" onClick={onClearTreeSelection}>
+              {he.entities.missionDe.clearTreeSelection}
+            </AppButton>
           </>
         ) : null}
       </div>
@@ -75,9 +73,9 @@ const MissionDeTreeSection: FC<MissionDeTreeSectionProps> = ({
       {memberIds.length === 0 ? (
         <div className={missionDeStyles.emptyState}>
           <FaInbox className={missionDeStyles.emptyIcon} aria-hidden />
-          <p className={missionDeStyles.emptyTitle}>אין ישויות במשימה</p>
+          <p className={missionDeStyles.emptyTitle}>{he.entities.missionDe.emptyMission}</p>
           <p className={missionDeStyles.emptyHint}>
-            פתחו את «בחירה» למטה והוסיפו ישויות מהמערכת
+            {he.entities.missionDe.emptyMissionHint}
           </p>
         </div>
       ) : (
@@ -124,7 +122,7 @@ const MissionDeTreeSection: FC<MissionDeTreeSectionProps> = ({
                           </span>
                           <button
                             type="button"
-                            title="הסר מהמשימה"
+                            title={he.entities.missionDe.removeOneTitle}
                             className={missionDeStyles.removeBtn}
                             onClick={(ev) => {
                               ev.stopPropagation();
@@ -135,7 +133,7 @@ const MissionDeTreeSection: FC<MissionDeTreeSectionProps> = ({
                           </button>
                           <AppIconButton
                             size="sm"
-                            label="מפה"
+                            label={he.common.map}
                             onClick={(ev) => {
                               ev.stopPropagation();
                               onCenterToEntity(e);
@@ -158,7 +156,7 @@ const MissionDeTreeSection: FC<MissionDeTreeSectionProps> = ({
             >
               <summary className={cn(missionDeStyles.treeSummary, missionDeStyles.treeSummaryWarning)}>
                 <span className={missionDeStyles.treeSummaryInner}>
-                  <span>אחר</span>
+                  <span>{he.entities.missionDe.other}</span>
                   <span className={missionDeStyles.typeBadgeWarning}>
                     {otherCount}
                   </span>
@@ -197,7 +195,7 @@ const MissionDeTreeSection: FC<MissionDeTreeSectionProps> = ({
                       </button>
                       <AppIconButton
                         size="sm"
-                        label="מפה"
+                        label={he.common.map}
                         onClick={(ev) => {
                           ev.stopPropagation();
                           onCenterToEntity(e);

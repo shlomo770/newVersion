@@ -1,16 +1,17 @@
 import type { Map as MaplibreMap } from 'maplibre-gl';
 import type { TacticalEntity } from '@domain/models/entity';
-import { store } from '@app/store';
 import { MapEntityManager } from './MapEntityManager';
-import { selectDisplayedEntitiesOnMap } from '@features/entities';
+import type { MapServiceRuntime } from './mapServiceRuntime';
 import type { MapLayerEntity } from './entity-manager/entityManagerTypes';
 
 export class MapEntityRenderer {
   private map: MaplibreMap;
   private entityManager: MapEntityManager;
+  private readonly runtime: MapServiceRuntime;
 
-  constructor(map: MaplibreMap) {
+  constructor(map: MaplibreMap, runtime: MapServiceRuntime) {
     this.map = map;
+    this.runtime = runtime;
     this.entityManager = new MapEntityManager(map);
   }
 
@@ -54,7 +55,7 @@ export class MapEntityRenderer {
   public reloadAllEntities() {
     if (!this.map) return;
     this.clearAllEntitiesFromMap();
-    const entitiesForMap = selectDisplayedEntitiesOnMap(store.getState());
+    const entitiesForMap = this.runtime.getEntitiesForMap();
     Object.values(entitiesForMap).forEach((e) => {
       if (e) this.addEntityToMap(e);
     });

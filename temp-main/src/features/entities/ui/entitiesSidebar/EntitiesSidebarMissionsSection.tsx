@@ -13,6 +13,7 @@ import type { EntityCategoryEnum } from '@domain/enums/entity.enum';
 import { WsMessageName } from '@domain/enums/ws.enum';
 import type { OutboundMessageMap, OutboundMessageName } from '@/services/webSocket/wsTypes';
 import { swalConfirmDanger } from "@/utils/swalDialog";
+import { he } from '@shared/i18n';
 import { AppIconButton, AppInput, cn } from "@shared/ui";
 import { ENTITIES_SIDEBAR_ICONS } from "@/config";
 import styles from "./EntitiesSidebar.shared.module.css";
@@ -65,21 +66,14 @@ const EntitiesSidebarMissionsSection: FC<EntitiesSidebarMissionsSectionProps> = 
   <div className={styles.section}>
     <button type="button" onClick={onBackToRoot} className={styles.backLink}>
       <img src={ENTITIES_SIDEBAR_ICONS.back} alt="" className={styles.backIcon} />
-      חזרה
+      {he.common.back}
     </button>
 
     {!activeMissionName ? (
       <>
-        <div className={styles.infoBox}>
-          <p className={styles.infoText}>
-            לחץ על + ליצירת משימה חדשה, ולאחר מכן פתח משימה כדי להוסיף ישויות. ניתן לבחור מאזורים, נקודות וסוגי ישות (פוליגון, קו, מרקר).
-            לאחר סיום — שמור משימה לשרת או שמור עותק.
-          </p>
-        </div>
-
         <div className={styles.sectionHeader}>
-          <p className={styles.sectionTitle}>רשימת משימות</p>
-          <AppIconButton size="sm" label="משימה חדשה" onClick={createLocalMission}>
+          <p className={styles.sectionTitle}>{he.entities.sidebar.missions}</p>
+          <AppIconButton size="sm" label={he.entities.newMission} onClick={createLocalMission}>
             <FaPlus />
           </AppIconButton>
         </div>
@@ -89,13 +83,13 @@ const EntitiesSidebarMissionsSection: FC<EntitiesSidebarMissionsSectionProps> = 
           fieldClassName={styles.fieldStack}
           value={missionSearchQuery}
           onChange={(e) => setMissionSearchQuery(e.target.value)}
-          placeholder="חיפוש לפי שם משימה..."
+          placeholder={he.entities.sidebar.missionSearchPlaceholder}
         />
 
         <div className={styles.list}>
           {filteredMissions.length === 0 ? (
             <div className={styles.emptyText}>
-              {sortedMissions.length === 0 ? "אין משימות עדיין" : "לא נמצאו משימות"}
+              {sortedMissions.length === 0 ? he.entities.sidebar.noMissionsYet : he.entities.sidebar.noMissionsFound}
             </div>
           ) : (
             filteredMissions.map((mission) => (
@@ -115,20 +109,20 @@ const EntitiesSidebarMissionsSection: FC<EntitiesSidebarMissionsSectionProps> = 
                     }
                   }}
                   className={styles.missionNameBtn}
-                  title="פתח משימה"
+                  title={he.entities.sidebar.openMission}
                 >
                   {mission.name}
                 </button>
                 <AppIconButton
                   size="sm"
                   danger
-                  label="מחק משימה"
+                  label={he.entities.delete.deleteMission}
                   onClick={async (e) => {
                     e.stopPropagation();
-                    const ok = await swalConfirmDanger(`למחוק את המשימה "${mission.name}"?`, {
-                      title: "מחיקת משימה",
-                      confirmText: "מחק",
-                      cancelText: "ביטול",
+                    const ok = await swalConfirmDanger(he.entities.delete.confirmDeleteMission(mission.name), {
+                      title: he.entities.delete.deleteMissionTitle,
+                      confirmText: he.common.delete,
+                      cancelText: he.common.cancel,
                     });
                     if (!ok) return;
                     sendMessage(WsMessageName.DeleteMission, { mission_id: mission.id });
@@ -147,16 +141,11 @@ const EntitiesSidebarMissionsSection: FC<EntitiesSidebarMissionsSectionProps> = 
         <button
           type="button"
           onClick={() => dispatch(setActiveMissionId(null))}
-          className={styles.linkText}
+          className={styles.backLink}
         >
-          ← חזרה לרשימת משימות
+          <img src={ENTITIES_SIDEBAR_ICONS.back} alt="" className={styles.backIcon} />
+          {he.entities.sidebar.backToList}
         </button>
-        <p className={styles.hintText}>
-          עריכת משימה: הוסף מאזורים, נקודות וישויות, סדר וסנן, שמור לשרת. השתמש בכפתורי הפעולות.
-        </p>
-        <p className={styles.hintText}>
-          שמירת עותק יוצרת משימה חדשה. שמירה לשרת שולחת את הנתונים לשרת. ניתן גם ללחוץ על &quot;שמור עותק&quot;.
-        </p>
       </div>
     )}
     {activeMissionName && activeMissionId ? (

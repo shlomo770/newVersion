@@ -1,7 +1,7 @@
 import type { Map as MaplibreMap } from 'maplibre-gl';
 import { calculateCenter } from '@shared/lib/geo';
 import { formatEntityCategoryLabel } from '@/constants/entityCategories';
-import { MAP_LABEL_DEFAULTS } from '@features/map/config';
+import { MAP_LABEL_DEFAULTS } from '@/services/map/config';
 import {
   entityLabelLayerId,
   entityLabelSourceId,

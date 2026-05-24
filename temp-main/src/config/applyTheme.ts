@@ -1,4 +1,5 @@
 import { theme, type ThemeConfig } from './theme.config';
+import { form } from './form.config';
 
 type CssVarMap = Record<string, string | number>;
 
@@ -131,6 +132,8 @@ export function buildThemeCssVars(config: ThemeConfig = theme): CssVarMap {
     '--layout-sidebar-offset': layout.sidebarPanelWidth,
     '--layout-entity-panel-width': layout.entityPanelWidth,
     '--layout-sidebar-rail-width': layout.sidebarRailWidth,
+    '--layout-map-action-dock-top': layout.mapActionDockTop,
+    '--layout-map-action-dock-left': layout.mapActionDockLeft,
     '--layout-radius-sm': radius.sm,
     '--layout-radius-md': radius.md,
     '--layout-radius-lg': radius.lg,
@@ -176,6 +179,29 @@ export function buildThemeCssVars(config: ThemeConfig = theme): CssVarMap {
     '--component-input-height-sm': components.input.heightSm,
     '--modal-scrim-opacity': components.modal.scrimOpacity,
     '--modal-blur': components.modal.blur,
+
+    /* ── Form design system (form.config.ts) ── */
+    '--form-stack-gap': form.stackGap,
+    '--form-field-gap': form.fieldGap,
+    '--form-actions-gap': form.actionsGap,
+    '--form-label-size': form.label.fontSize,
+    '--form-label-weight': form.label.fontWeight,
+    '--form-control-font-size': form.control.fontSize,
+    '--form-control-font-size-compact': form.control.fontSizeCompact,
+    '--form-control-min-height': form.control.minHeight,
+    '--form-control-min-height-compact': form.control.minHeightCompact,
+    '--form-control-padding-x': form.control.paddingX,
+    '--form-control-padding-y': form.control.paddingY,
+    '--form-control-padding-x-compact': form.control.paddingXCompact,
+    '--form-control-padding-y-compact': form.control.paddingYCompact,
+    '--form-control-radius': form.control.radius,
+    '--form-control-focus-ring': form.control.focusRingWidth,
+    '--form-button-font-size-sm': form.button.fontSizeSm,
+    '--form-button-font-size-md': form.button.fontSizeMd,
+    '--form-button-font-size-lg': form.button.fontSizeLg,
+    '--form-section-padding': form.section.padding,
+    '--form-section-radius': form.section.radius,
+    '--form-section-gap': form.section.gap,
   };
 }
 

@@ -14,7 +14,6 @@ export interface EntitiesState {
   selectedId: string | null;
   isCreating: boolean;
   creationType: Entity['type'] | null;
-  drawingMode: Entity['type'] | 'measure' | 'measure-area' | null;
   /** שמות משימות ממוינים — להצגה בסטטוס־בר */
   missionsList: string[];
   /** משימות מלאות לפי מזהה (שם, ישויות + סוג גיאומטרי) */
@@ -26,6 +25,8 @@ export interface EntitiesState {
   creationName: string;
   creationCategory: EntityCategoryEnum;
   creationHeight: number;
+  /** Entity currently open in the edit panel (for delete guards). */
+  activeEditEntityId: string | null;
 }
 
 function rebuildMissionsList(missionsById: Record<string, Mission>): string[] {
@@ -63,7 +64,6 @@ const initialState: EntitiesState = {
   selectedId: null,
   isCreating: false,
   creationType: null,
-  drawingMode: null,
   missionsList: [],
   missionsById: {},
   activeMissionId: null,
@@ -72,7 +72,8 @@ const initialState: EntitiesState = {
   selectedMarkerIcon: null,
   creationName: '',
   creationCategory: EntityCategoryEnum.FREE,
-  creationHeight: 0
+  creationHeight: 0,
+  activeEditEntityId: null,
 };
 
 const entitiesSlice = createSlice({
@@ -149,6 +150,10 @@ const entitiesSlice = createSlice({
 
     setSelectedEntity: (state, action: PayloadAction<string | null>) => {
       state.selectedId = action.payload;
+    },
+
+    setActiveEditEntityId: (state, action: PayloadAction<string | null>) => {
+      state.activeEditEntityId = action.payload;
     },
 
     setMissionList: (state, action: PayloadAction<string[]>) => {
@@ -323,10 +328,6 @@ const entitiesSlice = createSlice({
         state.allIds.push(entity.id);
       });
     },
-    setDrawingMode: (state, action: PayloadAction<Entity['type'] | 'measure' | 'measure-area' | null>) => {
-      state.drawingMode = action.payload;
-    },
-
     setSelectedMarkerIcon: (state, action: PayloadAction<string | null>) => {
       state.selectedMarkerIcon = action.payload;
     },
@@ -349,11 +350,11 @@ const entitiesSlice = createSlice({
       }
       state.isCreating = false;
       state.creationType = null;
-      state.drawingMode = null;
       state.selectedMarkerIcon = null;
       state.creationName = '';
       state.creationCategory = EntityCategoryEnum.FREE;
       state.creationHeight = 0;
+      state.activeEditEntityId = null;
     }
   }
 });
@@ -363,10 +364,10 @@ export const {
   updateEntity,
   removeEntity,
   setSelectedEntity,
+  setActiveEditEntityId,
   toggleEntityVisibility,
   confirmEntityCreated,
   setCreationMode,
-  setDrawingMode,
   setSelectedMarkerIcon,
   setCreationForm,
   setEntities,

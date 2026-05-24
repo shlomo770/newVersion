@@ -1,5 +1,6 @@
-import { FC } from "react";
-import { inp, missionDeStyles, section } from "./missionDePanelStyles";
+import { FC } from 'react';
+import { AppInput } from '@shared/ui';
+import { missionDeStyles, section } from './missionDePanelStyles';
 
 export type MissionDeNameSectionProps = {
   editMissionName: string;
@@ -15,22 +16,18 @@ const MissionDeNameSection: FC<MissionDeNameSectionProps> = ({
   onEnterBlur,
 }) => (
   <div className={section}>
-    <div className={missionDeStyles.nameFieldRow}>
-      <label className={missionDeStyles.fieldLabel}>
-        שם משימה
-      </label>
-      <input
-        type="text"
-        value={editMissionName}
-        onChange={(e) => onEditChange(e.target.value)}
-        onBlur={onCommitRename}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") onEnterBlur(e.target as HTMLInputElement);
-        }}
-        className={inp}
-        autoComplete="off"
-      />
-    </div>
+    <AppInput
+      label="שם משימה"
+      type="text"
+      value={editMissionName}
+      onChange={(e) => onEditChange(e.target.value)}
+      onBlur={onCommitRename}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') onEnterBlur(e.target as HTMLInputElement);
+      }}
+      autoComplete="off"
+      fieldClassName={missionDeStyles.nameFieldRow}
+    />
   </div>
 );
 

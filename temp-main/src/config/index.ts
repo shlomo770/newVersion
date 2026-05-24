@@ -17,6 +17,7 @@
  */
 
 export { theme, type ThemeConfig, type ThemeMode } from './theme.config';
+export { form, type FormConfig } from './form.config';
 export { applyTheme, buildThemeCssVars } from './applyTheme';
 export {
   MAP_TOOL_ICONS,

@@ -2,7 +2,7 @@ import type { Map as MaplibreMap } from 'maplibre-gl';
 import { createMarkerIconImageData, getMarkerIconImageId } from '@/constants/markerIcons';
 import { hasTransparency } from '@domain/models/entity';
 import type { EntityType, MarkerEntityProperties } from '@domain/models/entity';
-import { ENTITY_PAINT_DEFAULTS } from '@features/map/config';
+import { ENTITY_PAINT_DEFAULTS } from '@/services/map/config';
 import type { MapLayerEntity } from './entityManagerTypes';
 
 export type EntityLayerPaint = Record<string, string | number | boolean | maplibregl.ExpressionSpecification>;

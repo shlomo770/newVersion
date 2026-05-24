@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { Coordinates } from '@domain/models/coordinates';
-import { TargetStateString } from '@/enums/target.enum';
+import { TargetStateString } from '@domain/enums/target.enum';
 import { TARGET_TRAIL_WINDOW_MS } from '../config/targetRuntime.config';
 
 const STATUS_FOR_ASSIGNED = TargetStateString.designated;

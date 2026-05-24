@@ -4,9 +4,11 @@ import { useAppSelector } from '@/hooks/useAppSelector';
 import { useAppDispatch } from '@/hooks/useAppDispatch';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { RadarStateE } from '@domain/enums/status.enum';
-import { WsMessageName } from '@/enums/ws.enum';
+import { WsMessageName } from '@domain/enums/ws.enum';
 import { hydrateFormFromServer, updateFormValue } from '../store/radarSlice';
 import { buildSetRadarParamsPayload, RADAR_PARAM_KEYS } from '@domain/mappers/radarWire.mapper';
+import { AppButton, AppFormStack, AppInput, AppSelect, cn } from '@shared/ui';
+import { he } from '@shared/i18n';
 import styles from './RadarForm.module.css';
 
 const FREQ_OPTIONS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
@@ -32,23 +34,23 @@ function RadarForm() {
   return (
     <div className={styles.form}>
       <div className={styles.header}>
-        <h3 className={styles.title}>מכ״ם — פרמטרים</h3>
+        <h3 className={styles.title}>{he.platform.radar.title}</h3>
         <p className={styles.subtitle}>
-          <span className={styles.subtitleDraft}>טיוטה</span> — מה שאתה עורך.{' '}
+          <span className={styles.subtitleDraft}>{he.platform.radar.draftHint}</span> — {he.platform.radar.draftDesc}{' '}
           <span className={styles.subtitleSep}>|</span>{' '}
-          <span className={styles.subtitleServer}>במכשיר</span> — אושר מהשרת לאחרונה.
+          <span className={styles.subtitleServer}>{he.platform.radar.serverHint}</span> — {he.platform.radar.serverDesc}
         </p>
       </div>
 
-      <div className={styles.fields}>
+      <AppFormStack className={styles.fields}>
         <div className={styles.modeCard}>
           <div className={styles.modeRow}>
-            <span className={styles.modeLabel}>מצב מבצעי</span>
+            <span className={styles.modeLabel}>{he.platform.radar.operationalMode}</span>
             <div className={styles.modeValueWrap}>
               <span
                 className={`${styles.modeValue} ${isOperate ? styles.modeValueActive : ''}`}
               >
-                {isOperate ? 'מבצעי' : modeLabel(formValues.mode)}
+                {isOperate ? he.platform.radar.operational : modeLabel(formValues.mode)}
               </span>
               <ToggleSwitch
                 checked={isOperate}
@@ -61,25 +63,25 @@ function RadarForm() {
                   )
                 }
                 size="sm"
-                ariaLabel="החלפת מצב מבצעי"
+                ariaLabel={he.platform.radar.toggleOperational}
               />
             </div>
           </div>
           <div className={styles.modeMeta}>
-            <span>טיוטה: {modeLabel(formValues.mode)}</span>
-            <span className={styles.modeMetaServer}>במכשיר: {modeLabel(serverValues.mode)}</span>
+            <span>{he.platform.radar.draftValue}: {modeLabel(formValues.mode)}</span>
+            <span className={styles.modeMetaServer}>{he.platform.radar.serverValue}: {modeLabel(serverValues.mode)}</span>
           </div>
           {mismatches.mode && (
-            <p className={styles.mismatchHint}>ערך השליחה שונה ממה שהמכשיר דיווח</p>
+            <p className={styles.mismatchHint}>{he.platform.radar.mismatch}</p>
           )}
         </div>
 
         <div className={styles.fieldGrid}>
           <FieldBlock
-            label="סוג משימה"
+            label={he.platform.radar.missionType}
             mismatch={!!mismatches.missionCategory}
             draft={
-              <select
+              <AppSelect
                 value={String(formValues.missionCategory)}
                 onChange={(e) =>
                   dispatch(
@@ -89,23 +91,22 @@ function RadarForm() {
                     }),
                   )
                 }
-                className={styles.select}
               >
                 {MISSION_OPTIONS.map((v) => (
                   <option key={v} value={v}>
                     {v}
                   </option>
                 ))}
-              </select>
+              </AppSelect>
             }
             serverText={String(serverValues.missionCategory)}
           />
 
           <FieldBlock
-            label="תדר (מדד)"
+            label={he.platform.radar.freqIndex}
             mismatch={!!mismatches.freqIndex}
             draft={
-              <select
+              <AppSelect
                 value={String(formValues.freqIndex)}
                 onChange={(e) =>
                   dispatch(
@@ -115,26 +116,26 @@ function RadarForm() {
                     }),
                   )
                 }
-                className={styles.select}
               >
                 {FREQ_OPTIONS.map((v) => (
                   <option key={v} value={v}>
                     {v}
                   </option>
                 ))}
-              </select>
+              </AppSelect>
             }
             serverText={String(serverValues.freqIndex)}
           />
 
           <div className={styles.fieldGridTwo}>
             <FieldBlock
-              label="גובה מינימלי"
+              label={he.platform.radar.minElevation}
               mismatch={!!mismatches.min_elevation}
               draft={
-                <input
+                <AppInput
                   type="text"
                   inputMode="numeric"
+                  center
                   value={String(formValues.min_elevation)}
                   onChange={(e) => {
                     const raw = e.target.value.replace(/\D/g, '');
@@ -145,18 +146,18 @@ function RadarForm() {
                       }),
                     );
                   }}
-                  className={styles.input}
                 />
               }
               serverText={String(serverValues.min_elevation)}
             />
             <FieldBlock
-              label="גיזרת החסמה"
+              label={he.platform.radar.blankingSectors}
               mismatch={!!mismatches.blanking_sectors}
               draft={
-                <input
+                <AppInput
                   type="text"
                   inputMode="numeric"
+                  center
                   value={String(formValues.blanking_sectors)}
                   onChange={(e) => {
                     const raw = e.target.value.replace(/\D/g, '');
@@ -167,7 +168,6 @@ function RadarForm() {
                       }),
                     );
                   }}
-                  className={styles.input}
                 />
               }
               serverText={String(serverValues.blanking_sectors)}
@@ -175,20 +175,21 @@ function RadarForm() {
           </div>
         </div>
 
-        <div className={styles.actions}>
-          <button
+        <AppFormStack actions>
+          <AppButton
             type="button"
+            variant="secondary"
+            size="sm"
             onClick={() => dispatch(hydrateFormFromServer())}
             disabled={!hasPending}
-            className={styles.resetButton}
           >
-            איפוס לערכי השרת
-          </button>
-          <button type="button" onClick={sendParams} disabled={!hasPending} className={styles.submitButton}>
-            שלח להגדרה
-          </button>
-        </div>
-      </div>
+            {he.platform.radar.resetToServer}
+          </AppButton>
+          <AppButton type="button" size="sm" onClick={sendParams} disabled={!hasPending}>
+            {he.platform.radar.sendForConfig}
+          </AppButton>
+        </AppFormStack>
+      </AppFormStack>
     </div>
   );
 }
@@ -202,10 +203,10 @@ interface FieldBlockProps {
 
 function FieldBlock({ label, mismatch, draft, serverText }: FieldBlockProps) {
   return (
-    <div className={`${styles.fieldBlock} ${mismatch ? styles.fieldBlockMismatch : ''}`}>
+    <div className={cn(styles.fieldBlock, mismatch && styles.fieldBlockMismatch)}>
       <div className={styles.fieldHeader}>
         <span className={styles.fieldLabel}>{label}</span>
-        <span className={styles.fieldServer}>במכשיר: {serverText}</span>
+        <span className={styles.fieldServer}>{he.platform.radar.serverValue}: {serverText}</span>
       </div>
       {draft}
     </div>

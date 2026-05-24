@@ -1,8 +1,10 @@
+import { he } from '@shared/i18n';
 import type { FC, ReactNode } from 'react';
 import { IoClose } from 'react-icons/io5';
 import { RadarForm, LocationForm } from '@features/platform';
 import { FaultsList } from '@features/faults';
 import type { PanelType } from '@/types';
+import { cn } from '@shared/ui';
 import styles from './SidebarForm.module.css';
 
 export interface SidebarFormProps {
@@ -20,12 +22,12 @@ const SidebarForm: FC<SidebarFormProps> = ({ type, onClose }) => {
       case 'location':
         return <LocationForm />;
       default:
-        return <div className={styles.unknownPanel}>Unknown panel type</div>;
+        return <div className={styles.unknownPanel}>{he.errors.unknownPanel}</div>;
     }
   };
 
   return (
-    <div className={styles.shell}>
+    <div className={cn('jbk-sidebar-panel', styles.shell)}>
       <button type="button" onClick={onClose} className={styles.closeButton} aria-label="Close panel">
         <IoClose size={24} />
       </button>

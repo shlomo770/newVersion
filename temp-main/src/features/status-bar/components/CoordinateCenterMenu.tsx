@@ -12,6 +12,7 @@ import { TbGps } from 'react-icons/tb';
 import { useAppSelector } from '@/hooks/useAppSelector';
 import { MAP_PAN_TO_DURATION_MS } from '@features/map/config';
 import { STATUS_BAR_ICONS } from '@/config';
+import { useMapCommandsOptional, type MapCommands } from '@features/map';
 import type { MapService } from '@/services/map/MapService';
 import { COORDINATE_CENTER_UI } from '../config/statusBar.config';
 import {
@@ -25,20 +26,24 @@ import styles from './CoordinateCenterMenu.module.css';
 export interface CoordinateCenterMenuProps {
   anchorRef: RefObject<HTMLElement | null>;
   menuRef: RefObject<HTMLDivElement>;
-  mapServiceRef: MutableRefObject<MapService | null>;
+  /** @deprecated Prefer MapCommandsProvider — kept for legacy callers. */
+  mapServiceRef?: MutableRefObject<MapService | null>;
   onClose?: () => void;
 }
 
 function panMapTo(
-  mapServiceRef: MutableRefObject<MapService | null>,
   lat: number,
   lng: number,
+  mapCommands: MapCommands | null,
+  mapServiceRef?: MutableRefObject<MapService | null>,
 ): boolean {
   if (!isValidMapCoordinate(lat, lng)) return false;
-  mapServiceRef.current
-    ?.getMap()
-    ?.panTo([lng, lat], { duration: MAP_PAN_TO_DURATION_MS });
-  return true;
+  if (mapCommands) {
+    mapCommands.panTo(lng, lat, { duration: MAP_PAN_TO_DURATION_MS });
+    return true;
+  }
+  mapServiceRef?.current?.getMap()?.panTo([lng, lat], { duration: MAP_PAN_TO_DURATION_MS });
+  return Boolean(mapServiceRef?.current);
 }
 
 const CoordinateCenterMenu: FC<CoordinateCenterMenuProps> = ({
@@ -50,13 +55,14 @@ const CoordinateCenterMenu: FC<CoordinateCenterMenuProps> = ({
   const gpsCenterCoords = useAppSelector(selectGpsCenterCoords);
   const displayCoords = useAppSelector(selectStatusBarDisplayCoords);
   const hasValidGpsCenter = useAppSelector(selectHasValidGpsCenter);
+  const mapCommands = useMapCommandsOptional();
   const [menuStyle, setMenuStyle] = useState({ top: 0, left: 0 });
 
   const updatePosition = useCallback(() => {
     const anchor = anchorRef.current;
     if (!anchor) return;
     const rect = anchor.getBoundingClientRect();
-    setMenuStyle({ top: rect.bottom + 6, left: rect.right });
+    setMenuStyle({ top: rect.bottom + COORDINATE_CENTER_UI.menuOffsetTopPx, left: rect.right });
   }, [anchorRef]);
 
   useLayoutEffect(() => {
@@ -74,15 +80,15 @@ const CoordinateCenterMenu: FC<CoordinateCenterMenuProps> = ({
 
   const handleCenterDisplay = useCallback(() => {
     if (!displayCoords) return;
-    if (!panMapTo(mapServiceRef, displayCoords.lat, displayCoords.lng)) return;
+    if (!panMapTo(displayCoords.lat, displayCoords.lng, mapCommands, mapServiceRef)) return;
     onClose?.();
-  }, [displayCoords, mapServiceRef, onClose]);
+  }, [displayCoords, mapCommands, mapServiceRef, onClose]);
 
   const handleCenterGps = useCallback(() => {
     if (!gpsCenterCoords) return;
-    if (!panMapTo(mapServiceRef, gpsCenterCoords.lat, gpsCenterCoords.lng)) return;
+    if (!panMapTo(gpsCenterCoords.lat, gpsCenterCoords.lng, mapCommands, mapServiceRef)) return;
     onClose?.();
-  }, [gpsCenterCoords, mapServiceRef, onClose]);
+  }, [gpsCenterCoords, mapCommands, mapServiceRef, onClose]);
 
   return createPortal(
     <div

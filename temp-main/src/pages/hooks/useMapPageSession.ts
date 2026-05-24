@@ -30,7 +30,7 @@ export interface MapPageSessionState {
 
 export function useMapPageSession(): MapPageSessionState {
   const [measurePoints, setMeasurePoints] = useState<{ lng: number; lat: number }[]>([]);
-  const drawingMode = useAppSelector((state) => state.entities.drawingMode);
+  const drawingMode = useAppSelector((state) => state.mapInteraction.drawingMode);
   const isMeasuring = drawingMode === 'measure' || drawingMode === 'measure-area';
   const [isVisible, setIsVisible] = useState(true);
   const { allocateTarget, abortTarget, setTargetInfo } = useTargetCommands();
