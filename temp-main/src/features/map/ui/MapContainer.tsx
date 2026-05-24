@@ -11,10 +11,7 @@ import {
   type SetStateAction,
 } from 'react';
 import type { Map as MaplibreMap } from 'maplibre-gl';
-import { useAppSelector } from '@/hooks/useAppSelector';
-import { useAppDispatch } from '@/hooks/useAppDispatch';
 import { EntitiesManager } from '@features/entities';
-import { setDrawingMode } from '@features/entities';
 import type { TacticalEntity } from '@domain/models/entity';
 import { MapService } from '@/services/map/MapService';
 import { MapFacade } from '../services/MapFacade';
@@ -62,15 +59,13 @@ const MapContainer: FC<MapContainerProps> = memo((props) => {
   const internalFacadeRef = useRef<MapFacade | null>(null);
   const mapFacadeRef = props.mapFacadeRef ?? internalFacadeRef;
 
-  const dispatch = useAppDispatch();
-  const drawingMode = useAppSelector((state) => state.entities.drawingMode);
-
   const {
     mapFacade,
     mapInstance,
     mapReady,
     drawUiState,
     brightness,
+    drawingMode,
   } = useMapViewport({
     mapContainerRef,
     externalFacadeRef: mapFacadeRef,
@@ -114,7 +109,6 @@ const MapContainer: FC<MapContainerProps> = memo((props) => {
 
   const handleFinishMeasure = () => {
     finishMeasurement();
-    dispatch(setDrawingMode(null));
   };
 
   const mapObject = useMemo(() => mapInstance, [mapInstance]);

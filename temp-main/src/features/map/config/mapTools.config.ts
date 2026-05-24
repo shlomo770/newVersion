@@ -25,7 +25,33 @@ export const MAP_TOOLBAR_FLYOUT = {
   main: { top: 155, left: 285, arrow: 25 },
   brightness: { top: 260, left: 240, arrow: 55 },
   filter: { top: 260, left: 240, arrow: 55 },
+  measure: { top: 260, left: 240, arrow: 55 },
 } as const;
+
+/** Drawing modes exposed by the map measurement sub-menu. */
+export type MeasureToolMode = 'measure' | 'measure-area';
+
+export interface MeasureMenuItem {
+  id: MeasureToolMode;
+  label: string;
+  title: string;
+}
+
+/** Rows in the ruler / measurement sub-flyout. */
+export const MEASURE_MENU_ITEMS: readonly MeasureMenuItem[] = [
+  {
+    id: 'measure',
+    label: 'מרחק',
+    title: 'מדידת מרחק בין שתי נקודות',
+  },
+  {
+    id: 'measure-area',
+    label: 'שטח',
+    title: 'מדידת שטח — לחץ נקודות ואז ✓ לסיום',
+  },
+] as const;
+
+export const MEASURE_MENU_TITLE = 'כלי מדידה';
 
 export const MAP_TOOLBAR_MENU = {
   minWidthPx: 200,

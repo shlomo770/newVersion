@@ -9,10 +9,10 @@ import { useAppSelector } from '@/hooks/useAppSelector';
 import { useAppDispatch } from '@/hooks/useAppDispatch';
 import { setBrightness, setZoom } from '@features/map/store/mapSlice';
 import { toggleTargetPanelVisible } from '@features/map/store/filterSlice';
-import { setDrawingMode } from '@features/entities';
 import { FlyoutMenu } from '@shared/components';
 import BaseMapSelector from '../BaseMapSelector';
 import TargetFilterMenu from './TargetFilterMenu';
+import MeasureToolMenu from './MeasureToolMenu';
 import type { MapFacade, JsonPathInput } from '@features/map/services/MapFacade';
 import { MAP_TOOLBAR_FLYOUT, BRIGHTNESS_CONFIG } from '@features/map/config';
 import { MAP_TOOL_ICONS } from '@/config';
@@ -114,6 +114,7 @@ const MapControls: React.FC<MapControlsProps> = ({ mapFacadeRef }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isOpenBrightness, setIsOpenBrightness] = useState(false);
   const [isOpenFilter, setIsOpenFilter] = useState(false);
+  const [isOpenMeasure, setIsOpenMeasure] = useState(false);
   const [isMapSelectorOpen, setIsMapSelectorOpen] = useState(false);
   const buttonRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -124,7 +125,8 @@ const MapControls: React.FC<MapControlsProps> = ({ mapFacadeRef }) => {
   const panelVisible = useAppSelector(
     (state) => state.filter.targetVisibility?.panel ?? true,
   );
-  const isMeasuringDistance = drawingMode === 'measure';
+  const isMeasuring =
+    drawingMode === 'measure' || drawingMode === 'measure-area';
 
   // Closing the main flyout MUST always close every sub-flyout — otherwise
   // a stale sub-popup can float on the map alone.
@@ -132,6 +134,7 @@ const MapControls: React.FC<MapControlsProps> = ({ mapFacadeRef }) => {
     setIsOpen(false);
     setIsOpenBrightness(false);
     setIsOpenFilter(false);
+    setIsOpenMeasure(false);
     setIsMapSelectorOpen(false);
   }, []);
 
@@ -139,6 +142,7 @@ const MapControls: React.FC<MapControlsProps> = ({ mapFacadeRef }) => {
     if (!isOpen) {
       setIsOpenBrightness(false);
       setIsOpenFilter(false);
+      setIsOpenMeasure(false);
       setIsMapSelectorOpen(false);
     }
   }, [isOpen]);
@@ -153,10 +157,8 @@ const MapControls: React.FC<MapControlsProps> = ({ mapFacadeRef }) => {
     dispatch(setBrightness(value));
   };
 
-  const handleRulerToggle = () => {
-    const newMode = isMeasuringDistance ? null : 'measure';
-    dispatch(setDrawingMode(newMode));
-    closeAllFlyouts();
+  const handleMeasureMenuToggle = () => {
+    setIsOpenMeasure((open) => !open);
   };
 
   const handleMapTypeToggle = () => {
@@ -256,13 +258,25 @@ const MapControls: React.FC<MapControlsProps> = ({ mapFacadeRef }) => {
 
       <FlyoutMenu
         anchorRef={buttonRef}
+        isOpen={isOpenMeasure}
+        placement="bottom"
+        top={MAP_TOOLBAR_FLYOUT.measure.top}
+        left={MAP_TOOLBAR_FLYOUT.measure.left}
+        arow={MAP_TOOLBAR_FLYOUT.measure.arrow}
+        onClose={() => setIsOpenMeasure(false)}
+      >
+        <MeasureToolMenu onClose={() => setIsOpenMeasure(false)} />
+      </FlyoutMenu>
+
+      <FlyoutMenu
+        anchorRef={buttonRef}
         isOpen={isOpen}
         placement="bottom"
         top={MAP_TOOLBAR_FLYOUT.main.top}
         left={MAP_TOOLBAR_FLYOUT.main.left}
         arow={MAP_TOOLBAR_FLYOUT.main.arrow}
         onClose={() => {
-          if (isOpenBrightness || isMapSelectorOpen || isOpenFilter) return;
+          if (isOpenBrightness || isMapSelectorOpen || isOpenFilter || isOpenMeasure) return;
           setIsOpen(false);
         }}
       >
@@ -296,16 +310,18 @@ const MapControls: React.FC<MapControlsProps> = ({ mapFacadeRef }) => {
 
             <button
               type="button"
-              className={`${styles.menuItem} ${isMeasuringDistance ? styles.menuItemActive : ''}`}
+              className={`${styles.menuItem} ${isMeasuring || isOpenMeasure ? styles.menuItemActive : ''}`}
               onClick={(e) => {
                 e.stopPropagation();
-                handleRulerToggle();
+                handleMeasureMenuToggle();
               }}
-              title="Ruler"
+              title="Measurement tools"
+              aria-haspopup="menu"
+              aria-expanded={isOpenMeasure}
             >
               <img src={MAP_TOOL_ICONS.ruler} alt="" className={styles.menuItemIcon} />
               <span className={styles.menuItemLabel}>מדידות</span>
-              {isMeasuringDistance ? <div className={styles.activeDot} /> : null}
+              {isMeasuring ? <div className={styles.activeDot} /> : null}
             </button>
 
             <button

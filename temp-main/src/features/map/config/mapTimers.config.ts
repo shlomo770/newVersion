@@ -37,6 +37,9 @@ export const BASEMAP_RECENTER_DELAY_MS = 200;
 /*  User interaction                                                    */
 /* ------------------------------------------------------------------ */
 
+/** Finger movement (px) that cancels long-press context menu. */
+export const MAP_TOUCH_LONG_PRESS_CANCEL_PX = 10;
+
 /** Long-press duration before the map context menu opens. */
 export const MAP_CONTEXT_MENU_LONG_PRESS_MS = 500;
 

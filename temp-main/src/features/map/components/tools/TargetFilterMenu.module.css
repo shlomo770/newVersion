@@ -27,6 +27,7 @@
   justify-content: space-between;
   gap: var(--space-3);
   width: 100%;
+  min-height: 2.75rem;
   padding: var(--space-2) var(--space-3);
   border: none;
   border-radius: var(--theme-radius-sm, var(--layout-radius-sm));
@@ -36,6 +37,8 @@
   cursor: pointer;
   transition: background 0.15s ease;
   text-align: right;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .row:hover {

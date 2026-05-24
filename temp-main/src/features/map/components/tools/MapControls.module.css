@@ -13,6 +13,8 @@
     background var(--duration-fast) var(--ease-default),
     border-color var(--duration-fast) var(--ease-default);
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .launcher:hover {
@@ -57,6 +59,9 @@
   cursor: pointer;
   transition: background 0.15s ease;
   min-width: 56px;
+  min-height: 56px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .menuItem:hover {

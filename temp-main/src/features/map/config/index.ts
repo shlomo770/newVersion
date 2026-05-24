@@ -126,6 +126,7 @@ export {
   STYLE_CHANGE_SAFETY_TIMEOUT_MS,
   BASEMAP_RECENTER_DELAY_MS,
   MAP_CONTEXT_MENU_LONG_PRESS_MS,
+  MAP_TOUCH_LONG_PRESS_CANCEL_PX,
   MAP_TARGET_SELECTION_CLOSE_MS,
   STATUS_BAR_ELEVATION_DEBOUNCE_MS,
 } from './mapTimers.config';
@@ -135,7 +136,11 @@ export {
   MAP_TOOLBAR_MENU,
   TARGET_FILTER_ITEMS,
   TARGET_FILTER_MENU_TITLE,
+  MEASURE_MENU_ITEMS,
+  MEASURE_MENU_TITLE,
   type FilterItemIcon,
   type FilterItemToggleAction,
   type TargetFilterItem,
+  type MeasureToolMode,
+  type MeasureMenuItem,
 } from './mapTools.config';

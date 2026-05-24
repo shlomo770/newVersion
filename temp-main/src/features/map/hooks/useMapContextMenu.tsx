@@ -22,6 +22,10 @@ import {
   type ContextMenuState,
   type TargetSelectionState,
 } from './mapContextMenuUtils';
+import {
+  MAP_CONTEXT_MENU_LONG_PRESS_MS,
+  MAP_TOUCH_LONG_PRESS_CANCEL_PX,
+} from '@features/map/config';
 
 export interface MapContextMenuActions {
   onAllocateTarget: (targetId: string) => void;
@@ -178,7 +182,7 @@ export function useMapContextMenu(
           touch?.clientX ?? e.point.x,
           touch?.clientY ?? e.point.y,
         );
-      }, 500);
+      }, MAP_CONTEXT_MENU_LONG_PRESS_MS);
     };
 
     const handleTouchEnd = () => {
@@ -192,7 +196,7 @@ export function useMapContextMenu(
     const handleTouchMove = (e: MapTouchEvent) => {
       if (!touchStartPoint) return;
       const distance = Math.hypot(e.point.x - touchStartPoint.x, e.point.y - touchStartPoint.y);
-      if (distance > 10) handleTouchEnd();
+      if (distance > MAP_TOUCH_LONG_PRESS_CANCEL_PX) handleTouchEnd();
     };
 
     if (!drawingMode) {

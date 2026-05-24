@@ -118,6 +118,7 @@ export function useMapViewport({
     mapReady,
     drawUiState,
     brightness: mapState.brightness,
+    drawingMode,
     mapState,
   };
 }

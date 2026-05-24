@@ -3,24 +3,24 @@ import { useEffect, type RefObject } from 'react';
 export interface UseClickOutsideOptions {
   /** When false, listeners are not attached. Default true. */
   enabled?: boolean;
-  /** Mouse event used for detection. Default `mousedown`. */
-  eventType?: 'mousedown' | 'mouseup' | 'pointerdown';
+  /** Pointer event used for detection. Default `pointerdown` (mouse + touch). */
+  eventType?: 'mousedown' | 'mouseup' | 'pointerdown' | 'touchstart';
 }
 
 /**
- * Invokes `handler` when the user clicks outside all elements referenced by `refs`.
+ * Invokes `handler` when the user clicks/taps outside all elements referenced by `refs`.
  */
 export function useClickOutside(
   refs: ReadonlyArray<RefObject<HTMLElement | null>>,
   handler: () => void,
   options: UseClickOutsideOptions = {},
 ): void {
-  const { enabled = true, eventType = 'mousedown' } = options;
+  const { enabled = true, eventType = 'pointerdown' } = options;
 
   useEffect(() => {
     if (!enabled) return;
 
-    const onPointer = (event: MouseEvent) => {
+    const onPointer = (event: Event) => {
       const target = event.target;
       if (!(target instanceof Node)) return;
 

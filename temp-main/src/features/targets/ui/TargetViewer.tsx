@@ -63,15 +63,15 @@ export function TargetViewer({
 
   useEffect(() => {
     if (!isOpenCard) return;
-    const onDocMouseDown = (e: MouseEvent) => {
+    const onDocPointerDown = (e: PointerEvent) => {
       const node = e.target as Node;
       if (expandedCardRef.current?.contains(node)) return;
       const panel = document.querySelector(TARGETS_DOCK_SELECTOR);
       if (panel?.contains(node)) return;
       closeExpandedCard();
     };
-    document.addEventListener('mousedown', onDocMouseDown, true);
-    return () => document.removeEventListener('mousedown', onDocMouseDown, true);
+    document.addEventListener('pointerdown', onDocPointerDown, true);
+    return () => document.removeEventListener('pointerdown', onDocPointerDown, true);
   }, [isOpenCard, closeExpandedCard]);
 
   useEffect(() => {
