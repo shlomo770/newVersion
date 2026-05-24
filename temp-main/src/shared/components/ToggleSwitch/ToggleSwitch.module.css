@@ -3,7 +3,7 @@
   display: inline-flex;
   align-items: center;
   border-radius: 9999px;
-  border: 1px solid #919191;
+  border: 1px solid var(--theme-color-border, var(--color-border-panel));
   transition: background var(--duration-slow) var(--ease-default),
     box-shadow var(--duration-slow) var(--ease-default),
     opacity var(--duration-fast) var(--ease-default);

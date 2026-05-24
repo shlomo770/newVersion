@@ -1,8 +1,1 @@
-export type PanelType =
-  | 'radar'
-  | 'failures'
-  | 'mode'
-  | 'settings'
-  | 'location'
-  | 'serverMessages'
-  | null;
+export type PanelType = 'radar' | 'failures' | 'location' | null;

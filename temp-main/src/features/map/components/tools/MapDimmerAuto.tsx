@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { Map as MaplibreMap } from 'maplibre-gl';
+import { MAP_DIMMER_IDS, MAP_DIMMER_VISUALS } from '@features/map/config';
 
 type MapDimmerAutoProps = {
   map: MaplibreMap;
@@ -8,47 +9,54 @@ type MapDimmerAutoProps = {
   id?: string;
 };
 
-const LAYER_ID = 'dim-world-layer';
-const SOURCE_ID = 'dim-world-layer-src';
+/** World-spanning polygon used as the dimmer surface — sized to the
+ *  Web Mercator clip range so it covers any zoom level. */
+const DIM_WORLD_POLYGON: GeoJSON.FeatureCollection = {
+  type: 'FeatureCollection',
+  features: [
+    {
+      type: 'Feature',
+      properties: {},
+      geometry: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [-179.999, -85],
+            [-179.999, 85],
+            [179.999, 85],
+            [179.999, -85],
+            [-179.999, -85],
+          ],
+        ],
+      },
+    },
+  ],
+};
+
+const clampOpacity = (n: number): number =>
+  Number.isFinite(n) ? Math.max(0, Math.min(1, n)) : 0;
 
 export default function MapDimmerAuto({
   map,
   opacity = 0,
-  color = '#000',
-  id = LAYER_ID,
+  color = MAP_DIMMER_VISUALS.defaultFillColor,
+  id = MAP_DIMMER_IDS.layer,
 }: MapDimmerAutoProps) {
   const inited = useRef(false);
   const last = useRef<number>(-1);
-  const clamp = (n: number) => (Number.isFinite(n) ? Math.max(0, Math.min(1, n)) : 0);
 
   const ensure = () => {
     if (!map.isStyleLoaded()) return;
-    if (!map.getSource(SOURCE_ID)) {
-      const data: GeoJSON.FeatureCollection = {
-        type: 'FeatureCollection',
-        features: [
-          {
-            type: 'Feature',
-            properties: {},
-            geometry: {
-              type: 'Polygon',
-              coordinates: [
-                [
-                  [-179.999, -85],
-                  [-179.999, 85],
-                  [179.999, 85],
-                  [179.999, -85],
-                  [-179.999, -85],
-                ],
-              ],
-            },
-          },
-        ],
-      };
-      map.addSource(SOURCE_ID, { type: 'geojson', data });
+    if (!map.getSource(MAP_DIMMER_IDS.source)) {
+      map.addSource(MAP_DIMMER_IDS.source, { type: 'geojson', data: DIM_WORLD_POLYGON });
     }
     if (!map.getLayer(id)) {
-      map.addLayer({ id, type: 'fill', source: SOURCE_ID, paint: { 'fill-color': color, 'fill-opacity': 0 } });
+      map.addLayer({
+        id,
+        type: 'fill',
+        source: MAP_DIMMER_IDS.source,
+        paint: { 'fill-color': color, 'fill-opacity': 0 },
+      });
       last.current = 0;
     }
     map.setPaintProperty(id, 'fill-color', color);
@@ -106,7 +114,7 @@ export default function MapDimmerAuto({
         /* ignore */
       }
       try {
-        if (map.getSource(SOURCE_ID)) map.removeSource(SOURCE_ID);
+        if (map.getSource(MAP_DIMMER_IDS.source)) map.removeSource(MAP_DIMMER_IDS.source);
       } catch {
         /* ignore */
       }
@@ -117,7 +125,7 @@ export default function MapDimmerAuto({
 
   useEffect(() => {
     if (!map?.getLayer(id)) return;
-    const v = clamp(opacity);
+    const v = clampOpacity(opacity);
     if (last.current !== v) {
       map.setPaintProperty(id, 'fill-opacity', v);
       last.current = v;

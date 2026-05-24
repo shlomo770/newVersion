@@ -19,6 +19,9 @@ import type { OutboundMessageMap, OutboundMessageName } from '@/services/webSock
 import { sendDeleteEntity } from '@features/entities/api/outboundBuilders';
 import { swalConfirmDanger, swalInfo } from '@/utils/swalDialog';
 import type { MapService } from '@/services/map/MapService';
+import { AppButton, AppIconButton, AppInput, cn } from "@shared/ui";
+import { ENTITIES_SIDEBAR_ICONS } from "@/config";
+import styles from "./EntitiesSidebar.shared.module.css";
 
 export type EntitiesSidebarAreasSectionProps = {
   onBack: () => void;
@@ -100,34 +103,28 @@ const EntitiesSidebarAreasSection: FC<EntitiesSidebarAreasSectionProps> = ({
   };
 
   return (
-    <div className="flex flex-1 flex-col overflow-y-auto p-3">
-      <button
-        type="button"
-        onClick={onBack}
-        className="mb-3 flex items-center gap-2 text-sm text-gray-400 hover:text-white"
-      >
-        <img src="./icons/back_arrow512.png" alt="" className="h-4 w-4 invert opacity-70" />
+    <div className={styles.scrollSection}>
+      <button type="button" onClick={onBack} className={styles.backLink}>
+        <img src={ENTITIES_SIDEBAR_ICONS.back} alt="" className={styles.backIcon} />
         חזרה
       </button>
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <p className="px-1 text-xs uppercase tracking-wide text-gray-500">Existing areas</p>
-        <button
-          type="button"
-          onClick={() => onOpenCreatePanel?.()}
-          className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-600 text-white shadow transition-colors hover:bg-sky-500"
-          title="יצירת ישות חדשה"
-        >
-          <FaPlus className="h-4 w-4" />
-        </button>
+
+      <div className={styles.sectionHeader}>
+        <p className={styles.sectionTitle}>Existing areas</p>
+        <AppIconButton size="sm" label="יצירת ישות חדשה" onClick={() => onOpenCreatePanel?.()}>
+          <FaPlus />
+        </AppIconButton>
       </div>
-      <input
-        type="text"
+
+      <AppInput
+        compact
+        fieldClassName={styles.fieldStack}
         value={areaSearchQuery}
         onChange={(e) => setAreaSearchQuery(e.target.value)}
         placeholder="חיפוש לפי שם ישות..."
-        className="mb-2 w-full rounded-lg border border-gray-600 bg-gray-800 px-3 py-1.5 text-sm text-white placeholder-gray-400 focus:border-sky-500 focus:outline-none"
       />
-      <div className="space-y-2">
+
+      <div className={styles.listSpaced}>
         {Object.entries(filteredAreaByCategory).map(([cat, types]) => {
           const catList = Object.values(types).flat();
           const catCount = catList.length;
@@ -137,58 +134,52 @@ const EntitiesSidebarAreasSection: FC<EntitiesSidebarAreasSectionProps> = ({
             !!editingEntityId && catList.some((e) => e.id === editingEntityId);
           return (
             <div key={cat}>
-              <div className="flex items-center gap-1 overflow-hidden rounded-lg bg-gray-800/60">
+              <div className={cn(styles.groupCard, styles.groupHeader)}>
                 <button
                   type="button"
                   onClick={() => {
                     setOpenAreaCategory(isCatOpen ? null : cat);
                     setOpenAreaTypeKey(null);
                   }}
-                  className="flex min-w-0 flex-1 items-center justify-between px-3 py-2 text-right text-sm text-gray-100 transition-colors hover:bg-gray-700/70"
+                  className={styles.groupToggle}
                 >
-                  <span className="flex min-w-0 items-center gap-2">
+                  <span className={styles.groupToggleInner}>
                     <EntityCategoryBadge category={cat} />
-                    <span className="inline-flex h-6 min-w-[24px] items-center justify-center rounded bg-sky-500/20 text-xs font-semibold text-sky-300">
-                      {catCount}
-                    </span>
-                    <span className="truncate font-medium">{cat}</span>
+                    <span className={styles.badge}>{catCount}</span>
+                    <span className={styles.entityName}>{cat}</span>
                   </span>
-                  <span className="shrink-0 text-xs text-gray-400">{isCatOpen ? "▲" : "▼"}</span>
+                  <span className={styles.groupChevron}>{isCatOpen ? "▲" : "▼"}</span>
                 </button>
-                <button
-                  type="button"
+                <AppIconButton
+                  size="sm"
+                  label={allHidden ? "הצג כולם" : "הסתר כולם"}
                   onClick={(e) => {
                     e.stopPropagation();
                     setGroupVisibility(catList, allHidden);
                   }}
-                  className="rounded p-2 text-gray-400 hover:bg-gray-700/70 hover:text-white"
-                  title={allHidden ? "הצג כולם" : "הסתר כולם"}
                 >
-                  {allHidden ? <FaEye className="h-3.5 w-3.5" /> : <FaEyeSlash className="h-3.5 w-3.5" />}
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteGroup(catList, `קטגוריה ${cat}`);
-                  }}
-                  disabled={hasEditingInCategory}
-                  className={`rounded p-2 ${hasEditingInCategory
-                    ? "cursor-not-allowed text-gray-600"
-                    : "text-gray-400 hover:bg-red-900/20 hover:text-red-400"
-                    }`}
-                  title={
+                  {allHidden ? <FaEye /> : <FaEyeSlash />}
+                </AppIconButton>
+                <AppIconButton
+                  size="sm"
+                  danger
+                  label={
                     hasEditingInCategory
                       ? "לא ניתן למחוק קטגוריה כשישות בתוכה בעריכה"
                       : "מחק קטגוריה"
                   }
+                  disabled={hasEditingInCategory}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteGroup(catList, `קטגוריה ${cat}`);
+                  }}
                 >
-                  <FaTrashAlt className="h-3.5 w-3.5" />
-                </button>
+                  <FaTrashAlt />
+                </AppIconButton>
               </div>
 
               {isCatOpen && (
-                <div className="mt-1 space-y-1 border-l border-gray-700/60 ps-2">
+                <div className={styles.groupChildren}>
                   {Object.entries(types).map(([type, list]) => {
                     const typeKey = `${cat}:${type}`;
                     const isTypeOpen = openAreaTypeKey === typeKey;
@@ -199,58 +190,52 @@ const EntitiesSidebarAreasSection: FC<EntitiesSidebarAreasSectionProps> = ({
                       !!editingEntityId && list.some((e) => e.id === editingEntityId);
                     return (
                       <div key={typeKey}>
-                        <div className="flex items-center gap-1 overflow-hidden rounded-lg bg-gray-900/20">
+                        <div className={cn(styles.groupCard, styles.groupCardNested, styles.groupHeader)}>
                           <button
                             type="button"
                             onClick={() => setOpenAreaTypeKey(isTypeOpen ? null : typeKey)}
-                            className="flex min-w-0 flex-1 items-center justify-between px-3 py-2 text-right text-sm text-gray-100 transition-colors hover:bg-gray-800/40"
+                            className={styles.groupToggle}
                           >
-                            <span className="flex min-w-0 items-center gap-2">
-                              <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-gray-800/60 text-gray-300">
+                            <span className={styles.groupToggleInner}>
+                              <span className={styles.glyphBox}>
                                 <EntityTypeGlyph type={type} />
                               </span>
-                              <span className="inline-flex h-5 min-w-[18px] items-center justify-center rounded bg-gray-800/60 text-[11px] font-semibold text-gray-300">
-                                {typeCount}
-                              </span>
-                              <span className="truncate">{typeLabel}</span>
+                              <span className={cn(styles.badge, styles.badgeSm)}>{typeCount}</span>
+                              <span className={styles.entityName}>{typeLabel}</span>
                             </span>
-                            <span className="shrink-0 text-xs text-gray-400">{isTypeOpen ? "▲" : "▼"}</span>
+                            <span className={styles.groupChevron}>{isTypeOpen ? "▲" : "▼"}</span>
                           </button>
-                          <button
-                            type="button"
+                          <AppIconButton
+                            size="sm"
+                            label={typeAllHidden ? "הצג כולם" : "הסתר כולם"}
                             onClick={(e) => {
                               e.stopPropagation();
                               setGroupVisibility(list, typeAllHidden);
                             }}
-                            className="rounded p-1.5 text-gray-400 hover:bg-gray-800/60 hover:text-white"
-                            title={typeAllHidden ? "הצג כולם" : "הסתר כולם"}
                           >
-                            {typeAllHidden ? <FaEye className="h-3 w-3" /> : <FaEyeSlash className="h-3 w-3" />}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              deleteGroup(list, `סוג ${typeLabel}`);
-                            }}
-                            disabled={hasEditingInType}
-                            className={`rounded p-1.5 ${hasEditingInType
-                              ? "cursor-not-allowed text-gray-600"
-                              : "text-gray-400 hover:bg-red-900/20 hover:text-red-400"
-                              }`}
-                            title={
+                            {typeAllHidden ? <FaEye /> : <FaEyeSlash />}
+                          </AppIconButton>
+                          <AppIconButton
+                            size="sm"
+                            danger
+                            label={
                               hasEditingInType
                                 ? "לא ניתן למחוק סוג כשישות בתוכו בעריכה"
                                 : "מחק סוג"
                             }
+                            disabled={hasEditingInType}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteGroup(list, `סוג ${typeLabel}`);
+                            }}
                           >
-                            <FaTrashAlt className="h-3 w-3" />
-                          </button>
+                            <FaTrashAlt />
+                          </AppIconButton>
                         </div>
 
                         {isTypeOpen && (
                           <ul
-                            className="mt-1 space-y-1.5"
+                            className={styles.entityList}
                             onMouseLeave={() => {
                               if (activeMissionName) dispatch(setPreviewEntityId(null));
                             }}
@@ -264,63 +249,47 @@ const EntitiesSidebarAreasSection: FC<EntitiesSidebarAreasSectionProps> = ({
                                     if (activeMissionName) dispatch(setPreviewEntityId(entity.id));
                                   }}
                                   onClick={() => handleEntityClick(entity)}
-                                  className={`group flex w-full cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 transition-all ${isSelected
-                                    ? "border-sky-500/50 bg-sky-600/30 text-white"
-                                    : "border-transparent bg-gray-700/40 text-gray-200 hover:bg-gray-600/50"
-                                    } ${!entity.visible ? "opacity-60" : ""}`}
+                                  className={cn(
+                                    styles.entityRow,
+                                    isSelected ? styles.entityRowSelected : styles.entityRowDefault,
+                                    !entity.visible && styles.entityRowHidden,
+                                  )}
                                 >
-                                  <div className="min-w-0 flex-1">
-                                    <div className="truncate text-sm font-medium">{entity.name}</div>
-                                  </div>
-                                  <div
-                                    className={`flex items-center gap-0.5 transition-opacity ${isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                                      }`}
-                                  >
-                                    <button
-                                      type="button"
+                                  <div className={styles.entityName}>{entity.name}</div>
+                                  <div className={styles.entityActions}>
+                                    <AppIconButton
+                                      size="sm"
+                                      label="מרכז למפה"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         onCenterToEntity(entity);
                                       }}
-                                      className="rounded p-1.5 text-gray-400 hover:bg-gray-600 hover:text-white"
-                                      title="מרכז למפה"
                                     >
-                                      <FaCrosshairs className="h-4 w-4" />
-                                    </button>
-                                    <button
-                                      type="button"
+                                      <FaCrosshairs />
+                                    </AppIconButton>
+                                    <AppIconButton
+                                      size="sm"
+                                      label={entity.visible ? "הסתר" : "הצג"}
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         applyVisibility(entity, !entity.visible);
                                       }}
-                                      className={`rounded p-1.5 ${entity.visible
-                                        ? "text-green-400 hover:bg-green-900/30"
-                                        : "text-red-400 hover:bg-red-900/30"
-                                        }`}
-                                      title={entity.visible ? "הסתר" : "הצג"}
                                     >
-                                      {entity.visible ? (
-                                        <FaEye className="h-4 w-4" />
-                                      ) : (
-                                        <FaEyeSlash className="h-4 w-4" />
-                                      )}
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={(e) => handleDeleteEntity(e, entity)}
-                                      disabled={editingEntityId === entity.id}
-                                      className={`rounded p-1.5 ${editingEntityId === entity.id
-                                        ? "cursor-not-allowed text-gray-600"
-                                        : "text-gray-400 hover:bg-red-900/30 hover:text-red-400"
-                                        }`}
-                                      title={
+                                      {entity.visible ? <FaEye /> : <FaEyeSlash />}
+                                    </AppIconButton>
+                                    <AppIconButton
+                                      size="sm"
+                                      danger
+                                      label={
                                         editingEntityId === entity.id
                                           ? "לא ניתן למחוק ישות שנמצאת בעריכה"
                                           : "מחק"
                                       }
+                                      disabled={editingEntityId === entity.id}
+                                      onClick={(e) => handleDeleteEntity(e, entity)}
                                     >
-                                      <FaTrashAlt className="h-4 w-4" />
-                                    </button>
+                                      <FaTrashAlt />
+                                    </AppIconButton>
                                   </div>
                                 </li>
                               );
@@ -336,25 +305,26 @@ const EntitiesSidebarAreasSection: FC<EntitiesSidebarAreasSectionProps> = ({
           );
         })}
       </div>
+
       {entityOpen && selectedEntityId === entityOpen.id && (
-        <div className="mt-3 rounded-lg border border-gray-600/50 bg-gray-700/30 px-3 py-2 text-sm text-gray-300">
-          <div className="flex items-center justify-between gap-2">
-            <div className="min-w-0">
-              <span className="text-gray-500">נבחר: </span>
-              <span className="font-medium">{entityOpen.name}</span>
+        <div className={styles.selectedFooter}>
+          <div className={styles.selectedFooterRow}>
+            <div className={styles.entityName}>
+              <span className={styles.selectedLabel}>נבחר: </span>
+              <span className={styles.selectedName}>{entityOpen.name}</span>
               {entityOpen.category && (
-                <span className="text-gray-400"> · {entityOpen.category}</span>
+                <span className={styles.selectedMeta}> · {entityOpen.category}</span>
               )}
             </div>
-            <button
-              type="button"
+            <AppButton
+              variant="secondary"
+              size="sm"
               onClick={() => openDuplicatePanel(entityOpen)}
-              className="inline-flex items-center gap-1 rounded bg-sky-700/40 px-2 py-1 text-xs text-sky-200 hover:bg-sky-600/50"
               title="שכפל ישות"
             >
-              <FaCopy className="h-3 w-3" />
+              <FaCopy />
               שכפל
-            </button>
+            </AppButton>
           </div>
         </div>
       )}

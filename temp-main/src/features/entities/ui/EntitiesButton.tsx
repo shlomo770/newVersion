@@ -1,25 +1,26 @@
 import { FC } from 'react';
 import { useAppDispatch } from '@/hooks/useAppDispatch';
 import { setSelectedEntity } from '@features/entities/store/entitiesSlice';
+import { ENTITIES_SIDEBAR_ICONS } from '@/config';
+import styles from './EntitiesButton.module.css';
 
 interface EntitiesButtonProps {
-    onToggleSidebar: () => void;
+  onToggleSidebar: () => void;
 }
 
 const EntitiesButton: FC<EntitiesButtonProps> = ({ onToggleSidebar }) => {
-    const dispatch = useAppDispatch();
-    const handleClick = () => {
-        dispatch(setSelectedEntity(null));
-        onToggleSidebar();
-    };
+  const dispatch = useAppDispatch();
 
-    return (
-        <button
-            onClick={handleClick}
-            className="absolute top-14 z-30 p-4 bg-[#1f2937d6] mt-4 ml-1 rounded-full">
-            <img src="./icons/folder_closed_512.png" alt="folder" className='w-10' />
-        </button>
-    );
+  const handleClick = () => {
+    dispatch(setSelectedEntity(null));
+    onToggleSidebar();
+  };
+
+  return (
+    <button type="button" onClick={handleClick} className={styles.fab} aria-label="Entities">
+      <img src={ENTITIES_SIDEBAR_ICONS.fab} alt="" className={styles.fabIcon} />
+    </button>
+  );
 };
 
-export default EntitiesButton; 
+export default EntitiesButton;

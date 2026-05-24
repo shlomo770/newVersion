@@ -5,7 +5,6 @@ import { registerPlatformInboundHandlers } from '@features/platform/api/inboundH
 import { registerMapInboundHandlers } from '@features/map/api/inboundHandlers';
 import { registerFaultsInboundHandlers } from '@features/faults/api/inboundHandlers';
 import { registerConfirmInboundHandlers } from '@features/confirm/api/inboundHandlers';
-import { registerWsDebugInboundHandlers } from '@features/ws-debug/api/inboundHandlers';
 import { WsMessageName } from '@domain/enums/ws.enum';
 
 let bootstrapped = false;
@@ -27,7 +26,6 @@ export function registerInboundHandlers(): void {
   registerMapInboundHandlers(globalMessageRegistry);
   registerFaultsInboundHandlers(globalMessageRegistry);
   registerConfirmInboundHandlers(globalMessageRegistry);
-  registerWsDebugInboundHandlers(globalMessageRegistry);
   registerNoopHandlers();
 
   bootstrapped = true;

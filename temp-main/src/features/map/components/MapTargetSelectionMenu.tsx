@@ -55,7 +55,7 @@ export const MapTargetSelectionMenu: FC<MapTargetSelectionMenuProps> = ({
             onPointerDown={() => onSelectTarget(target.id)}
           >
             <span className={target.friend ? styles.dotFriendly : styles.dotHostile} />
-            <span className="font-medium">{target.id}</span>
+            <span className={styles.itemLabel}>{target.id}</span>
             <span className={styles.typeHint}>({target.type})</span>
           </button>
         ))}

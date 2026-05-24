@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
 import type { RootState } from '@app/store';
 import { ErrorSeverityE, ErrorStateE } from '@domain/enums/general.enum';
 
@@ -155,46 +155,67 @@ export const {
 
 export default faultsSlice.reducer;
 
-export const selectCategories = (state: RootState): string[] =>
-  Object.keys(state.faults.byCategory);
+export const selectCategories = createSelector(
+  [(state: RootState) => state.faults.byCategory],
+  (byCategory) => Object.keys(byCategory),
+);
 
-export const selectAllFaultsFlat = (state: RootState): Fault[] =>
-  flattenAll(state.faults.byCategory);
+export const selectAllFaultsFlat = createSelector(
+  [(state: RootState) => state.faults.byCategory],
+  (byCategory) => flattenAll(byCategory),
+);
 
-export const selectFilteredFaults = (state: RootState): Fault[] => {
-  const st = state.faults;
-  const all = flattenAll(st.byCategory);
-  return applyFilters(all, st.filters).sort(sortForList);
-};
+export const selectFilteredFaults = createSelector(
+  [
+    (state: RootState) => state.faults.byCategory,
+    (state: RootState) => state.faults.filters,
+  ],
+  (byCategory, filters) => {
+    const all = flattenAll(byCategory);
+    return applyFilters(all, filters).sort(sortForList);
+  },
+);
 
-export const selectMasterCautionOn = (state: RootState): boolean => {
-  const st = state.faults;
-  const all = flattenAll(st.byCategory);
-  return all.some((f) => isCritical(f) && !st.ui.acknowledged[f.id]);
-};
+export const selectMasterCautionOn = createSelector(
+  [
+    (state: RootState) => state.faults.byCategory,
+    (state: RootState) => state.faults.ui.acknowledged,
+  ],
+  (byCategory, acknowledged) => {
+    const all = flattenAll(byCategory);
+    return all.some((f) => isCritical(f) && !acknowledged[f.id]);
+  },
+);
 
-export const selectPopupQueue = (state: RootState): Fault[] => {
-  const st = state.faults;
-  const all = flattenAll(st.byCategory);
-  const t = nowMs();
+export const selectPopupQueue = createSelector(
+  [
+    (state: RootState) => state.faults.byCategory,
+    (state: RootState) => state.faults.ui.acknowledged,
+    (state: RootState) => state.faults.ui.dismissedUntil,
+    (state: RootState) => state.faults.ui.popupCursor,
+  ],
+  (byCategory, acknowledged, dismissedUntil, popupCursor) => {
+    const all = flattenAll(byCategory);
+    const t = nowMs();
 
-  const candidates = all.filter((f) => {
-    if (!isActiveState(f.state)) return false;
-    if (st.ui.acknowledged[f.id]) return false;
-    const until = st.ui.dismissedUntil[f.id];
-    if (until && until > t) return false;
-    return true;
-  });
+    const candidates = all.filter((f) => {
+      if (!isActiveState(f.state)) return false;
+      if (acknowledged[f.id]) return false;
+      const until = dismissedUntil[f.id];
+      if (until && until > t) return false;
+      return true;
+    });
 
-  candidates.sort((a, b) => {
-    const ac = isCritical(a) ? 0 : 1;
-    const bc = isCritical(b) ? 0 : 1;
-    if (ac !== bc) return ac - bc;
-    if (a.severity !== b.severity) return b.severity - a.severity;
-    return b.lastSeen - a.lastSeen;
-  });
+    candidates.sort((a, b) => {
+      const ac = isCritical(a) ? 0 : 1;
+      const bc = isCritical(b) ? 0 : 1;
+      if (ac !== bc) return ac - bc;
+      if (a.severity !== b.severity) return b.severity - a.severity;
+      return b.lastSeen - a.lastSeen;
+    });
 
-  if (candidates.length <= 1) return candidates;
-  const shift = st.ui.popupCursor % candidates.length;
-  return candidates.slice(shift).concat(candidates.slice(0, shift));
-};
+    if (candidates.length <= 1) return candidates;
+    const shift = popupCursor % candidates.length;
+    return candidates.slice(shift).concat(candidates.slice(0, shift));
+  },
+);

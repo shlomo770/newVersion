@@ -3,7 +3,6 @@ import { IoClose } from 'react-icons/io5';
 import { RadarForm, LocationForm } from '@features/platform';
 import { FaultsList } from '@features/faults';
 import type { PanelType } from '@/types';
-import ServerMessagesPanel from './ServerMessagesPanel';
 import styles from './SidebarForm.module.css';
 
 export interface SidebarFormProps {
@@ -20,8 +19,6 @@ const SidebarForm: FC<SidebarFormProps> = ({ type, onClose }) => {
         return <FaultsList />;
       case 'location':
         return <LocationForm />;
-      case 'serverMessages':
-        return <ServerMessagesPanel />;
       default:
         return <div className={styles.unknownPanel}>Unknown panel type</div>;
     }

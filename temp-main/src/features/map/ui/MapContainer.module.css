@@ -27,6 +27,22 @@
   pointer-events: auto;
 }
 
+.mapActionDock {
+  position: absolute;
+  top: calc(var(--layout-status-bar-height) + var(--space-4));
+  left: var(--space-3);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--space-2);
+  z-index: var(--z-map-hud);
+  pointer-events: none;
+}
+
+.mapActionDock > * {
+  pointer-events: auto;
+}
+
 .layerSlot {
   position: absolute;
   inset: 0;

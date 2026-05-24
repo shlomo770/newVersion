@@ -1,0 +1,71 @@
+.shapeGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.shapeButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border-radius: var(--theme-radius-md, var(--layout-radius-md));
+  border: 1px solid var(--theme-color-border, var(--color-border-panel));
+  background: var(--theme-color-bg-input, var(--color-surface-input-dark));
+  color: var(--theme-color-text-primary, var(--color-text-primary));
+  cursor: pointer;
+  transition:
+    background var(--duration-fast) var(--ease-default),
+    border-color var(--duration-fast) var(--ease-default),
+    opacity var(--duration-fast) var(--ease-default);
+}
+
+.shapeButton:hover:not(:disabled) {
+  border-color: var(--theme-color-accent, var(--color-brand-primary));
+  background: color-mix(in srgb, var(--theme-color-bg-input) 85%, var(--theme-color-accent));
+}
+
+.shapeButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.shapeLabel {
+  font-size: var(--theme-font-size-xs, 0.75rem);
+}
+
+.tabooHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tabooTitle {
+  font-size: var(--theme-font-size-sm, 0.875rem);
+  font-weight: 500;
+  color: var(--theme-color-text-label, var(--color-text-muted));
+}
+
+.backLink {
+  border: none;
+  background: transparent;
+  color: var(--theme-color-text-muted, var(--color-text-muted));
+  font-size: var(--theme-font-size-sm, 0.875rem);
+  cursor: pointer;
+}
+
+.backLink:hover {
+  color: var(--theme-color-text-inverse, var(--color-white));
+}
+
+.degreeRow {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.formStack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-spacing-form-gap, var(--space-2));
+}

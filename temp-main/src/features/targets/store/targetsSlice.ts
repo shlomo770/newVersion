@@ -1,5 +1,13 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { Coordinates } from '@domain/models/coordinates';
+import { TargetStateString } from '@/enums/target.enum';
+import { TARGET_TRAIL_WINDOW_MS } from '../config/targetRuntime.config';
+
+const STATUS_FOR_ASSIGNED = TargetStateString.designated;
+const LOCKED_STATUS_VALUES: ReadonlySet<string> = new Set([
+  TargetStateString.track,
+  TargetStateString.arm,
+]);
 
 export interface Target {
   id: string;
@@ -53,8 +61,8 @@ const targetsSlice = createSlice({
 
     updateTarget: (state, action: PayloadAction<Target>) => {
       const target = action.payload;
-      const isAssigned = target.status === 'designated' ? true : false;
-      const isLocked = target.status === 'track' || target.status === 'arm' ? true : false;
+      const isAssigned = target.status === STATUS_FOR_ASSIGNED;
+      const isLocked = LOCKED_STATUS_VALUES.has(target.status);
       const newTrailPoint = {
         lat: target.coordinates.lat,
         lng: target.coordinates.lng,
@@ -64,8 +72,8 @@ const targetsSlice = createSlice({
       if (state.byId[target.id]) {
         const existing = state.byId[target.id];
         const updatedTrail = [...(existing.trail || []), newTrailPoint];
-        const thirtySecondsAgo = Date.now() - 30000;
-        const filteredTrail = updatedTrail.filter(p => p.timestamp >= thirtySecondsAgo);
+        const trailCutoff = Date.now() - TARGET_TRAIL_WINDOW_MS;
+        const filteredTrail = updatedTrail.filter(p => p.timestamp >= trailCutoff);
 
         state.byId[target.id] = {
           ...existing,
@@ -157,15 +165,14 @@ const targetsSlice = createSlice({
       const { id, lineLayerId } = action.payload;
       if (state.byId[id]) state.byId[id].lineLayerId = lineLayerId;
       if (state.byId[id]) state.byId[id].isAssigned = true;
-      if (state.byId[id]) state.byId[id].status = 'designated';
-      // if (state.byId[id]) state.byId[id].isRecommended = true;
+      if (state.byId[id]) state.byId[id].status = STATUS_FOR_ASSIGNED;
     },
 
     setTargetIconLayer: (state, action: PayloadAction<{ id: string; iconLayerId: string }>) => {
       const { id, iconLayerId } = action.payload;
       if (state.byId[id]) state.byId[id].iconLayerId = iconLayerId;
       if (state.byId[id]) state.byId[id].isLocked = true;
-      if (state.byId[id]) state.byId[id].status = 'designated';
+      if (state.byId[id]) state.byId[id].status = STATUS_FOR_ASSIGNED;
     },
 
     clearTargetLayers: (state, action: PayloadAction<string>) => {

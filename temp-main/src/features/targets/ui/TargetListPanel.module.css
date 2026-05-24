@@ -1,0 +1,105 @@
+.dock {
+  position: fixed;
+  right: 0;
+  top: var(--layout-status-bar-height);
+  width: 250px;
+  z-index: var(--z-target-panel);
+}
+
+.scroll {
+  overflow-y: auto;
+}
+
+.scrollCompact {
+  max-height: 600px;
+}
+
+.scrollExpanded {
+  max-height: 95vh;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 2px;
+  padding: 2px 4px;
+  border-radius: var(--theme-radius-sm, var(--layout-radius-sm));
+  background: var(--theme-color-bg-panel-translucent, var(--color-surface-panel-translucent));
+}
+
+.toolbarExpanded {
+  margin: var(--space-2);
+}
+
+.toolbarSection {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.toolbarButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border: none;
+  background: transparent;
+  color: var(--theme-color-text-inverse, var(--color-white));
+  font-size: var(--theme-font-size-sm, 0.875rem);
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: var(--theme-radius-sm, var(--layout-radius-sm));
+  transition: background 0.15s ease;
+}
+
+.toolbarButton:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.toggleButton {
+  padding: var(--space-2);
+  border: none;
+  background: transparent;
+  color: var(--theme-color-text-inverse, var(--color-white));
+  font-weight: 800;
+  cursor: pointer;
+  border-radius: var(--theme-radius-sm, var(--layout-radius-sm));
+  transition: background 0.15s ease;
+}
+
+.toggleButton:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.hideButton {
+  /* Width/height/colors come from AppIconButton's variant styles —
+   * we only need to pin the inline alignment here. */
+  align-self: center;
+}
+
+.compactGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2px;
+  margin-right: 2px;
+}
+
+.compactCell {
+  display: flex;
+  justify-content: space-between;
+  border-radius: var(--theme-radius-md, var(--layout-radius-md));
+  background: var(--theme-color-bg-panel-translucent, var(--color-surface-panel-translucent));
+}
+
+.expandedList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}

@@ -4,6 +4,7 @@ import { useAppDispatch } from '@/hooks/useAppDispatch';
 import { useAppSelector } from '@/hooks/useAppSelector';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { WsMessageName } from '@/enums/ws.enum';
+import { AppButton } from '@shared/ui';
 import { closePrompt } from '../store/confirmSlice';
 import styles from './ConfirmPromptInsLocation.module.css';
 
@@ -42,12 +43,12 @@ export function ConfirmPromptInsLocation() {
             </div>
           </div>
           <div className={styles.actions}>
-            <button type="button" onClick={() => confirmLocation(true)} className={styles.confirmButton}>
+            <AppButton size="sm" onClick={() => confirmLocation(true)}>
               {confirmText}
-            </button>
-            <button type="button" onClick={() => confirmLocation(false)} className={styles.cancelButton}>
+            </AppButton>
+            <AppButton size="sm" variant="ghost" onClick={() => confirmLocation(false)}>
               {cancelText}
-            </button>
+            </AppButton>
           </div>
         </div>
       </div>

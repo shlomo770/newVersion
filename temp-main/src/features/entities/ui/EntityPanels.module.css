@@ -1,0 +1,38 @@
+.flyoutMenu {
+  min-width: 200px;
+  padding: var(--space-1);
+  border-radius: var(--theme-radius-lg, var(--layout-radius-lg));
+  border: 1px solid var(--theme-color-border-subtle, var(--color-border-zinc));
+  background: var(--theme-color-bg-panel, var(--color-surface-panel));
+  box-shadow: var(--theme-shadow-floating, var(--shadow-floating));
+  color: var(--theme-color-text-primary, var(--color-text-primary));
+}
+
+.flyoutActions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+}
+
+.shapeBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border: none;
+  border-radius: var(--theme-radius-md, var(--layout-radius-md));
+  background: transparent;
+  color: var(--theme-color-text-primary, var(--color-text-primary));
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-default);
+}
+
+.shapeBtn:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.shapeLabel {
+  font-size: var(--theme-font-size-xs, 0.75rem);
+}

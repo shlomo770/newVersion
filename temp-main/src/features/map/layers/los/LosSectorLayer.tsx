@@ -4,6 +4,12 @@ import type { GeoJSONSource } from 'maplibre-gl';
 import { useAppSelector } from '@/hooks/useAppSelector';
 import type { LosState } from '@features/map/store/losSlice';
 import {
+  LOS_IDS,
+  LOS_VISUALS,
+  losRayLayerId,
+  losRaySourceId,
+} from '@features/map/config';
+import {
   EMPTY_FEATURE_COLLECTION,
   featureCollection,
   lineStringFeature,
@@ -12,12 +18,6 @@ import {
 } from '../shared/geoJson';
 import { safeRemoveLayer, safeRemoveSource, useMapStyleReady } from '../shared/useMapStyleReady';
 import { createSectorPolygonCoords, losHasRenderableData, rayToLineCoords } from './losGeo';
-
-const SECTOR_SOURCE_ID = 'los-sector-source';
-const SECTOR_FILL_LAYER_ID = 'los-sector-fill-layer';
-const SECTOR_OUTLINE_LAYER_ID = 'los-sector-outline-layer';
-const RAY_SOURCE_PREFIX = 'los-ray-source-';
-const RAY_LAYER_PREFIX = 'los-ray-layer-';
 
 interface LosSectorLayerProps {
   map: MaplibreMap;
@@ -33,20 +33,20 @@ function syncLosLayers(map: MaplibreMap, los: LosState, fillColor: string): void
 
   const active = losHasRenderableData(los);
   if (!active || !los.center) {
-    const sectorSource = map.getSource(SECTOR_SOURCE_ID) as GeoJSONSource | undefined;
+    const sectorSource = map.getSource(LOS_IDS.sectorSource) as GeoJSONSource | undefined;
     if (sectorSource) {
       sectorSource.setData(EMPTY_FEATURE_COLLECTION);
     }
     const style = map.getStyle();
     const layers = style?.layers ?? [];
     for (const layer of layers) {
-      if (layer.id.startsWith(RAY_LAYER_PREFIX)) {
+      if (layer.id.startsWith(LOS_IDS.rayLayerPrefix)) {
         safeRemoveLayer(map, layer.id);
       }
     }
     const sources = style?.sources ? Object.keys(style.sources) : [];
     for (const sourceId of sources) {
-      if (sourceId.startsWith(RAY_SOURCE_PREFIX)) {
+      if (sourceId.startsWith(LOS_IDS.raySourcePrefix)) {
         safeRemoveSource(map, sourceId);
       }
     }
@@ -59,56 +59,54 @@ function syncLosLayers(map: MaplibreMap, los: LosState, fillColor: string): void
       ? featureCollection([polygonFeature(ring)])
       : EMPTY_FEATURE_COLLECTION;
 
-  if (!map.getSource(SECTOR_SOURCE_ID)) {
-    map.addSource(SECTOR_SOURCE_ID, { type: 'geojson', data: sectorData });
+  if (!map.getSource(LOS_IDS.sectorSource)) {
+    map.addSource(LOS_IDS.sectorSource, { type: 'geojson', data: sectorData });
   } else {
-    (map.getSource(SECTOR_SOURCE_ID) as GeoJSONSource).setData(sectorData);
+    (map.getSource(LOS_IDS.sectorSource) as GeoJSONSource).setData(sectorData);
   }
 
-  if (!map.getLayer(SECTOR_FILL_LAYER_ID)) {
+  if (!map.getLayer(LOS_IDS.sectorFillLayer)) {
     map.addLayer({
-      id: SECTOR_FILL_LAYER_ID,
+      id: LOS_IDS.sectorFillLayer,
       type: 'fill',
-      source: SECTOR_SOURCE_ID,
+      source: LOS_IDS.sectorSource,
       paint: {
         'fill-color': fillColor,
-        'fill-opacity': 0.15,
+        'fill-opacity': LOS_VISUALS.fillOpacity,
       },
     });
   } else {
-    map.setPaintProperty(SECTOR_FILL_LAYER_ID, 'fill-color', fillColor);
+    map.setPaintProperty(LOS_IDS.sectorFillLayer, 'fill-color', fillColor);
   }
 
-  if (!map.getLayer(SECTOR_OUTLINE_LAYER_ID)) {
+  if (!map.getLayer(LOS_IDS.sectorOutlineLayer)) {
     map.addLayer({
-      id: SECTOR_OUTLINE_LAYER_ID,
+      id: LOS_IDS.sectorOutlineLayer,
       type: 'line',
-      source: SECTOR_SOURCE_ID,
+      source: LOS_IDS.sectorSource,
       paint: {
         'line-color': fillColor,
-        'line-width': 3,
+        'line-width': LOS_VISUALS.outlineWidth,
       },
     });
   } else {
-    map.setPaintProperty(SECTOR_OUTLINE_LAYER_ID, 'line-color', fillColor);
+    map.setPaintProperty(LOS_IDS.sectorOutlineLayer, 'line-color', fillColor);
   }
 
   const blockedRays = los.rays.filter((r) => r.blocked);
   const style = map.getStyle();
   const existingRayLayers = (style?.layers ?? [])
     .map((l) => l.id)
-    .filter((id) => id.startsWith(RAY_LAYER_PREFIX));
+    .filter((id) => id.startsWith(LOS_IDS.rayLayerPrefix));
 
   for (let i = blockedRays.length; i < existingRayLayers.length; i++) {
-    const layerId = `${RAY_LAYER_PREFIX}${i}`;
-    const sourceId = `${RAY_SOURCE_PREFIX}${i}`;
-    safeRemoveLayer(map, layerId);
-    safeRemoveSource(map, sourceId);
+    safeRemoveLayer(map, losRayLayerId(i));
+    safeRemoveSource(map, losRaySourceId(i));
   }
 
   blockedRays.forEach((ray, index) => {
-    const sourceId = `${RAY_SOURCE_PREFIX}${index}`;
-    const layerId = `${RAY_LAYER_PREFIX}${index}`;
+    const sourceId = losRaySourceId(index);
+    const layerId = losRayLayerId(index);
     const lineCoords = rayToLineCoords(los.center!, ray, los.radiusMeters);
     const lineData = featureCollection([lineStringFeature(lineCoords, { id: `ray-${index}` })]);
 
@@ -124,9 +122,9 @@ function syncLosLayers(map: MaplibreMap, los: LosState, fillColor: string): void
         type: 'line',
         source: sourceId,
         paint: {
-          'line-color': '#ef4444',
-          'line-width': 3,
-          'line-opacity': 1,
+          'line-color': LOS_VISUALS.blockedRayColor,
+          'line-width': LOS_VISUALS.blockedRayWidth,
+          'line-opacity': LOS_VISUALS.blockedRayOpacity,
         },
       });
     }
@@ -145,17 +143,17 @@ export default function LosSectorLayer({ map }: LosSectorLayerProps) {
       syncLosLayers(map, los, losSectorColor);
       return () => {
         installedRef.current = false;
-        safeRemoveLayer(map, SECTOR_OUTLINE_LAYER_ID);
-        safeRemoveLayer(map, SECTOR_FILL_LAYER_ID);
-        safeRemoveSource(map, SECTOR_SOURCE_ID);
+        safeRemoveLayer(map, LOS_IDS.sectorOutlineLayer);
+        safeRemoveLayer(map, LOS_IDS.sectorFillLayer);
+        safeRemoveSource(map, LOS_IDS.sectorSource);
         const style = map.getStyle();
         for (const layer of style?.layers ?? []) {
-          if (layer.id.startsWith(RAY_LAYER_PREFIX)) {
+          if (layer.id.startsWith(LOS_IDS.rayLayerPrefix)) {
             safeRemoveLayer(map, layer.id);
           }
         }
         for (const sourceId of Object.keys(style?.sources ?? {})) {
-          if (sourceId.startsWith(RAY_SOURCE_PREFIX)) {
+          if (sourceId.startsWith(LOS_IDS.raySourcePrefix)) {
             safeRemoveSource(map, sourceId);
           }
         }

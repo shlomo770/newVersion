@@ -5,6 +5,7 @@ import {
   normalizeInboundRadarParamsWire,
   type RadarParamsPatch,
 } from '@domain/mappers/radarWire.mapper';
+import { RADAR_DEFAULTS } from '@features/map/config';
 
 export type { RadarState, RadarValues };
 
@@ -72,30 +73,24 @@ function syncFormAfterServerPatch(
   }
 }
 
+const makeDefaultRadarValues = (): RadarValues => ({
+  state: RadarStatusE.NO_COMM,
+  mode: RadarStateE.STANDBY,
+  workRoom: RADAR_DEFAULTS.workRoom,
+  freqIndex: RADAR_DEFAULTS.freqIndex,
+  missionCategory: RADAR_DEFAULTS.missionCategory,
+  min_elevation: RADAR_DEFAULTS.minElevation,
+  blanking_sectors: RADAR_DEFAULTS.blankingSectors,
+});
+
 const getInitialState = (): RadarState => ({
-  serverValues: {
-    state: RadarStatusE.NO_COMM,
-    mode: RadarStateE.STANDBY,
-    workRoom: 1,
-    freqIndex: 0,
-    missionCategory: 1,
-    min_elevation: 0,
-    blanking_sectors: 0,
-  },
-  formValues: {
-    state: RadarStatusE.NO_COMM,
-    mode: RadarStateE.STANDBY,
-    workRoom: 1,
-    freqIndex: 0,
-    missionCategory: 1,
-    min_elevation: 0,
-    blanking_sectors: 0,
-  },
+  serverValues: makeDefaultRadarValues(),
+  formValues: makeDefaultRadarValues(),
   mismatches: {},
   isFormOpen: false,
   status: RadarStatusE.NO_COMM,
   radarNonCoverage: [],
-  radarRange: 5000,
+  radarRange: RADAR_DEFAULTS.radarRange,
 });
 
 const initialState: RadarState = getInitialState();

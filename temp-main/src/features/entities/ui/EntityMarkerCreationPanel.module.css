@@ -1,0 +1,65 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-1);
+}
+
+.iconOption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  border-radius: var(--theme-radius-lg, var(--layout-radius-lg));
+  border: 1px solid transparent;
+  background: var(--theme-color-bg-input, var(--color-surface-input-dark));
+  padding: var(--space-1);
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) var(--ease-default),
+    background var(--duration-fast) var(--ease-default);
+}
+
+.iconOption:hover {
+  border-color: var(--theme-color-border, var(--color-border-panel));
+  background: color-mix(in srgb, var(--theme-color-bg-input) 88%, var(--theme-color-accent));
+}
+
+.iconOptionSelected {
+  border-color: color-mix(in srgb, var(--theme-color-primary) 50%, transparent);
+  background: var(--theme-color-primary-muted, var(--color-brand-primary-muted));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--theme-color-primary) 30%, transparent);
+}
+
+.iconGlyph {
+  display: flex;
+  height: 1.5rem;
+  width: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8125rem;
+  line-height: 1;
+  color: var(--theme-color-text-primary, var(--color-text-primary));
+}
+
+.iconLabel {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.5rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--theme-color-text-muted, var(--color-text-muted));
+}
+
+.hint {
+  margin-top: 2px;
+  font-size: 0.625rem;
+  color: var(--theme-color-text-muted, var(--color-text-muted));
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-spacing-form-gap, var(--space-2));
+}

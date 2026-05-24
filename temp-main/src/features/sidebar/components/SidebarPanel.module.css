@@ -4,7 +4,7 @@
   top: var(--layout-status-bar-height);
   height: calc(100% - var(--layout-status-bar-height));
   width: 4rem;
-  background: rgba(30, 30, 30, 0.88);
+  background: var(--theme-color-bg-rail, rgba(15, 23, 42, 0.92));
   box-shadow: 4px 0 12px rgba(0, 0, 0, 0.2);
   z-index: 50;
   display: flex;
@@ -26,7 +26,7 @@
   background: transparent;
   border: none;
   cursor: pointer;
-  color: #9ca3af;
+  color: var(--theme-color-text-muted, var(--color-text-muted));
 }
 
 .item:hover {
@@ -36,7 +36,7 @@
 
 .itemActive {
   color: var(--color-white);
-  background: #3a3a3a;
+  background: color-mix(in srgb, var(--theme-color-bg-panel) 85%, var(--theme-color-accent));
 }
 
 .iconWrap {

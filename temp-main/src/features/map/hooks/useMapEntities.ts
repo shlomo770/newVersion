@@ -6,6 +6,7 @@ import type { TacticalEntity } from '@domain/models/entity';
 import type { Coordinates } from '@domain/models/coordinates';
 import { buildGeometryForUpdate } from '@/services/entities/EntityGeometryService';
 import { sendUpdateEntity } from '@features/entities';
+import { ENTITY_LAYER_PREFIXES } from '@features/map/config';
 import type { MapFacade } from '../services/MapFacade';
 
 type UseMapEntitiesParams = {
@@ -30,16 +31,14 @@ export function useMapEntities({ mapFacadeRef, entitiesById }: UseMapEntitiesPar
       facade.removeEntityFromMap(id);
     });
 
+    const { iconLayer, layer: fillLayer, labelLayer, source, labelSource } = ENTITY_LAYER_PREFIXES;
     const styleLayers = map.getStyle()?.layers ?? [];
     for (const layer of styleLayers) {
       const layerId = layer.id;
-      const iconPrefix = 'entity-icon-layer-';
-      const fillPrefix = 'entity-layer-';
-      const labelPrefix = 'entity-label-layer-';
       let entityId: string | null = null;
-      if (layerId.startsWith(iconPrefix)) entityId = layerId.slice(iconPrefix.length);
-      else if (layerId.startsWith(fillPrefix)) entityId = layerId.slice(fillPrefix.length);
-      else if (layerId.startsWith(labelPrefix)) entityId = layerId.slice(labelPrefix.length);
+      if (layerId.startsWith(iconLayer)) entityId = layerId.slice(iconLayer.length);
+      else if (layerId.startsWith(fillLayer)) entityId = layerId.slice(fillLayer.length);
+      else if (layerId.startsWith(labelLayer)) entityId = layerId.slice(labelLayer.length);
       if (entityId && !currentIds.has(entityId)) {
         facade.removeEntityFromMap(entityId);
       }
@@ -47,9 +46,9 @@ export function useMapEntities({ mapFacadeRef, entitiesById }: UseMapEntitiesPar
 
     const styleSources = map.getStyle()?.sources ?? {};
     for (const sourceId of Object.keys(styleSources)) {
-      if (!sourceId.startsWith('entity-')) continue;
-      if (sourceId.startsWith('entity-label-')) continue;
-      const entityId = sourceId.slice('entity-'.length);
+      if (!sourceId.startsWith(source)) continue;
+      if (sourceId.startsWith(labelSource)) continue;
+      const entityId = sourceId.slice(source.length);
       if (!entityId || currentIds.has(entityId)) continue;
       facade.removeEntityFromMap(entityId);
     }

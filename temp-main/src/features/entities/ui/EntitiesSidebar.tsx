@@ -1,4 +1,4 @@
-import React, { FC, useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { FC, useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useAppSelector } from '@/hooks/useAppSelector';
 import { useAppDispatch } from '@/hooks/useAppDispatch';
 import {
@@ -17,10 +17,18 @@ import { selectActiveMissionName } from '@features/entities/store/selectors';
 import { useWebSocket } from '@core/api/hooks/useWebSocket';
 import { store } from '@app/store';
 import { MARKER_ICONS } from '@/constants/markerIcons';
+import { ENTITIES_SIDEBAR_ICONS } from '@/config';
 import { WsMessageName } from '@domain/enums/ws.enum';
 import { ENTITY_CATEGORY_OPTIONS } from '@/constants/entityCategories';
 import { sendSaveEntity, sendDeleteEntity, buildSaveMissionEntitiesField } from '@features/entities/api/outboundBuilders';
 import { EntityCategoryEnum } from '@domain/enums/entity.enum';
+import {
+  AppButton,
+  AppFloatingPanel,
+  AppIconButton,
+  AppInput,
+  AppSelect,
+} from '@shared/ui';
 import EntitiesSidebarHome from './entitiesSidebar/EntitiesSidebarHome';
 import EntitiesSidebarMissionsSection from './entitiesSidebar/EntitiesSidebarMissionsSection';
 import EntitiesSidebarAreasSection from './entitiesSidebar/EntitiesSidebarAreasSection';
@@ -30,6 +38,7 @@ import { setEntityVisibilityOnMap } from '@/utils/mapEntityLayerVisibility';
 import type { MinimalMap } from '@/utils/mapEntityLayerVisibility';
 import { swalConfirmDanger, swalInfo } from '@/utils/swalDialog';
 import type { MapService } from '@/services/map/MapService';
+import styles from './entitiesSidebar/EntitiesSidebar.shared.module.css';
 
 interface EntitiesSidebarProps {
   isOpen: boolean;
@@ -91,16 +100,10 @@ const EntitiesSidebar: FC<EntitiesSidebarProps> = ({
       setEntityOpen(null);
       return;
     }
-
     const selectedEntity = entities.allIds
       .map((id) => entities.byId[id])
       .find((entity) => entity?.id === selectedEntityId);
-
-    if (selectedEntity) {
-      setEntityOpen(selectedEntity);
-    } else {
-      setEntityOpen(null);
-    }
+    setEntityOpen(selectedEntity ?? null);
   }, [entities, selectedEntityId]);
 
   const areaEntities = useMemo(() => {
@@ -119,9 +122,8 @@ const EntitiesSidebar: FC<EntitiesSidebarProps> = ({
       out[cat][type].push(ent);
     }
     for (const cat of Object.keys(out)) {
-      const types = out[cat];
-      for (const type of Object.keys(types)) {
-        types[type].sort((a, b) => a.name.localeCompare(b.name));
+      for (const type of Object.keys(out[cat])) {
+        out[cat][type].sort((a, b) => a.name.localeCompare(b.name));
       }
     }
     return out;
@@ -171,11 +173,9 @@ const EntitiesSidebar: FC<EntitiesSidebarProps> = ({
     (list: Entity[], visible: boolean) => {
       list.forEach((e) => dispatch(updateEntity({ id: e.id, visible })));
       const map = mapServiceRef?.current?.getMap?.() as MinimalMap | null | undefined;
-      if (map) {
-        list.forEach((e) => setEntityVisibilityOnMap(map, e.id, visible));
-      }
+      if (map) list.forEach((e) => setEntityVisibilityOnMap(map, e.id, visible));
     },
-    [dispatch, mapServiceRef]
+    [dispatch, mapServiceRef],
   );
 
   const deleteGroup = useCallback(
@@ -186,7 +186,7 @@ const EntitiesSidebar: FC<EntitiesSidebarProps> = ({
       }
       const ok = await swalConfirmDanger(
         `למחוק את <strong>${label}</strong> (${list.length} פריטים)?`,
-        { title: 'מחיקת קבוצה', confirmText: 'מחק', cancelText: 'ביטול', richText: true }
+        { title: 'מחיקת קבוצה', confirmText: 'מחק', cancelText: 'ביטול', richText: true },
       );
       if (!ok) return;
       list.forEach((e) => {
@@ -196,7 +196,7 @@ const EntitiesSidebar: FC<EntitiesSidebarProps> = ({
       });
       if (list.some((e) => e.id === selectedEntityId)) dispatch(setSelectedEntity(null));
     },
-    [editingEntityId, sendMessage, dispatch, mapServiceRef, selectedEntityId]
+    [editingEntityId, dispatch, mapServiceRef, selectedEntityId],
   );
 
   const handleMissionMemberIdsChange = useCallback(
@@ -211,7 +211,7 @@ const EntitiesSidebar: FC<EntitiesSidebarProps> = ({
         .filter((r): r is { id: string; type: Entity['type'] } => Boolean(r));
       dispatch(setMissionEntityRefs({ missionId: activeMissionId, entityRefs: refs }));
     },
-    [activeMissionId, dispatch]
+    [activeMissionId, dispatch],
   );
 
   const createLocalMission = useCallback(() => {
@@ -242,7 +242,7 @@ const EntitiesSidebar: FC<EntitiesSidebarProps> = ({
       }
       return true;
     },
-    [dispatch]
+    [dispatch],
   );
 
   const saveMissionToServer = useCallback(
@@ -251,7 +251,6 @@ const EntitiesSidebar: FC<EntitiesSidebarProps> = ({
       const mission = ent.missionsById[missionId];
       if (!mission) return;
       localDraftMissionNamesRef.current.delete(mission.name);
-
       let refs = [...mission.entityRefs];
       if (explicitIds) {
         refs = explicitIds
@@ -261,7 +260,6 @@ const EntitiesSidebar: FC<EntitiesSidebarProps> = ({
           })
           .filter((r): r is { id: string; type: Entity['type'] } => Boolean(r));
       }
-
       dispatch(setMissionEntityRefs({ missionId, entityRefs: refs }));
       sendMessage(WsMessageName.SaveMission, {
         mission_id: mission.id,
@@ -270,7 +268,7 @@ const EntitiesSidebar: FC<EntitiesSidebarProps> = ({
       });
       dispatch(setActiveMissionId(missionId));
     },
-    [dispatch, sendMessage]
+    [dispatch, sendMessage],
   );
 
   const saveMissionCopyToServer = useCallback(async () => {
@@ -351,88 +349,73 @@ const EntitiesSidebar: FC<EntitiesSidebarProps> = ({
 
   const sortedMissions = useMemo(
     () => Object.values(missionsById).sort((a, b) => a.name.localeCompare(b.name, 'he')),
-    [missionsById]
+    [missionsById],
   );
-  const sortedMissionNames = useMemo(
-    () => sortedMissions.map((m) => m.name),
-    [sortedMissions]
-  );
-  const missionSearchLower = missionSearchQuery.trim().toLowerCase();
+
+  const sortedMissionNames = useMemo(() => sortedMissions.map((m) => m.name), [sortedMissions]);
+
   const filteredMissions = useMemo(() => {
-    if (!missionSearchLower) return sortedMissions;
-    return sortedMissions.filter((m) => m.name.toLowerCase().includes(missionSearchLower));
-  }, [sortedMissions, missionSearchLower]);
+    const q = missionSearchQuery.trim().toLowerCase();
+    if (!q) return sortedMissions;
+    return sortedMissions.filter((m) => m.name.toLowerCase().includes(q));
+  }, [sortedMissions, missionSearchQuery]);
+
   if (!isOpen) return null;
+
+  const headerTitle = isMissionsOpen ? 'Missions' : isPointsOpen ? 'Points' : 'Entities';
+
   return (
-    <div className="fixed left-0 top-[60px] z-50 flex h-full min-w-[280px] max-w-[340px] w-[300px] flex-col border-r border-gray-700/50 bg-[#1a1d24] shadow-xl">
-      {duplicateSourceEntity && (
-        <div className="fixed left-[340px] top-24 z-[1000] w-[330px] rounded border border-gray-700/70 bg-[#1f2937] p-5 shadow-lg">
-          <div className="mb-4 border-b border-gray-600 pb-2 text-center">
-            <h3 className="text-lg font-semibold text-white">שכפול ישות</h3>
-          </div>
-          <div className="mb-3">
-            <label className="mb-1 block text-sm font-medium text-sky-100">שם חדש</label>
-            <input
-              type="text"
-              value={duplicateName}
-              onChange={(e) => setDuplicateName(e.target.value)}
-              className="input-dark w-full"
-              autoFocus
-            />
-          </div>
-          <div className="mb-4">
-            <label className="mb-1 block text-sm font-medium text-sky-100">קטגוריה</label>
-            <select
-              value={duplicateCategory}
-              onChange={(e) => setDuplicateCategory(e.target.value as unknown as EntityCategoryEnum)}
-              className="input-dark w-full"
-            >
-              {ENTITY_CATEGORY_OPTIONS.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
+    <div className={styles.shell}>
+      <AppFloatingPanel
+        open={Boolean(duplicateSourceEntity)}
+        onClose={() => {
+          setDuplicateSourceEntity(null);
+          setDuplicateName('');
+          setDuplicateCategory(EntityCategoryEnum.FREE);
+        }}
+        title="שכפול ישות"
+        position="left"
+      >
+        <div className={styles.fieldStack}>
+          <AppInput label="שם חדש" value={duplicateName} onChange={(e) => setDuplicateName(e.target.value)} autoFocus />
+          <AppSelect
+            label="קטגוריה"
+            value={duplicateCategory}
+            onChange={(e) => setDuplicateCategory(Number(e.target.value) as EntityCategoryEnum)}
+          >
+            {ENTITY_CATEGORY_OPTIONS.map((opt) => (
+              <option key={opt} value={opt}>
+                {EntityCategoryEnum[opt]}
+              </option>
+            ))}
+          </AppSelect>
+          <div className={styles.sectionHeader}>
+            <AppButton
+              variant="ghost"
+              size="sm"
               onClick={() => {
                 setDuplicateSourceEntity(null);
                 setDuplicateName('');
                 setDuplicateCategory(EntityCategoryEnum.FREE);
               }}
-              className="rounded-lg bg-gray-700 px-3 py-1.5 text-sm text-white hover:bg-gray-600"
             >
               ביטול
-            </button>
-            <button
-              type="button"
-              onClick={handleDuplicateSave}
-              disabled={!duplicateName.trim()}
-              className="rounded-lg bg-sky-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-500 disabled:cursor-not-allowed disabled:opacity-60"
-            >
+            </AppButton>
+            <AppButton size="sm" onClick={handleDuplicateSave} disabled={!duplicateName.trim()}>
               שמור שכפול
-            </button>
+            </AppButton>
           </div>
         </div>
-      )}
+      </AppFloatingPanel>
 
-      <div className="flex items-center gap-2 border-b border-gray-700/50 px-4 py-3">
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-700/50 hover:text-white"
-          title="סגור"
-        >
-          <img src="./icons/back_arrow512.png" alt="" className="h-5 w-5" />
-        </button>
-        <span className="text-base font-semibold text-white">
-          {isMissionsOpen ? 'Missions' : isPointsOpen ? 'Points' : 'Entities'}
-        </span>
-        {isEntityOpen && !isPointsOpen && !isMissionsOpen && (
-          <span className="text-xs text-gray-400">/ Areas</span>
-        )}
+      <div className={styles.header}>
+        <AppIconButton label="סגור" size="sm" onClick={onClose}>
+          <img src={ENTITIES_SIDEBAR_ICONS.back} alt="" className={styles.backIcon} />
+        </AppIconButton>
+        <span className={styles.headerTitle}>{headerTitle}</span>
+        {isEntityOpen && !isPointsOpen && !isMissionsOpen ? (
+          <span className={styles.headerBreadcrumb}>/ Areas</span>
+        ) : null}
       </div>
 
       {!isEntityOpen && !isPointsOpen && !isMissionsOpen ? (

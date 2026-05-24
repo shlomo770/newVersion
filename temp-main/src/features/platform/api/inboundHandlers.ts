@@ -53,6 +53,19 @@ function readLatLng(raw: unknown): LatLngWire | null {
 function parsePositionPayload(data: unknown): PositionPayload | null {
   const d = asRecord(data);
   if (!d) return null;
+
+  // Legacy mock server: { valid: { lat, lng }, heading }
+  const legacyValid = readLatLng(d.valid);
+  if (legacyValid) {
+    const heading = Number.isFinite(Number(d.heading)) ? Number(d.heading) : undefined;
+    return {
+      tmaps_pos: legacyValid,
+      heading,
+      use_manual: false,
+      use_gps: false,
+    };
+  }
+
   const gps_pos = readLatLng(d.gps_pos) ?? undefined;
   const tmaps_pos = readLatLng(d.tmaps_pos) ?? undefined;
   const manualRaw = asRecord(d.manual_pos);
@@ -187,6 +200,7 @@ function handleGunBitStatus(data: unknown, { store }: InboundHandlerContext): vo
 export function registerPlatformInboundHandlers(registry: MessageRegistry): void {
   registry.registerMany({
     [WsMessageName.Position]: handlePosition,
+    [WsMessageName.PositionWire]: handlePosition,
     [WsMessageName.OdoCaliFinished]: handleOdoCaliFinished,
     [WsMessageName.Gun_Params]: handleGunParams,
     [WsMessageName.RadarStatus]: handleRadarStatus,

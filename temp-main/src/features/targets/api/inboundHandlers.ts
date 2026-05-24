@@ -11,12 +11,17 @@ import {
   markTargetAsDestroyed,
   removeTarget,
 } from '../store/targetsSlice';
+import { targetsInboundRuntime } from './targetsRuntime';
 import {
-  targetsInboundRuntime,
   TARGETS_UPDATE_THROTTLE_MS,
   TARGETS_CLEANUP_MS,
   TARGETS_RECONCILE_GRACE,
-} from './targetsRuntime';
+  TARGETS_INBOUND_CLEANUP_INTERVAL_MS,
+} from '../config/targetRuntime.config';
+import {
+  perTargetAssignmentLineId,
+  perTargetLockIconId,
+} from '@features/map/config';
 
 function asRecord(data: unknown): Record<string, unknown> | null {
   if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
@@ -24,8 +29,10 @@ function asRecord(data: unknown): Record<string, unknown> | null {
 }
 
 function readTargetId(record: Record<string, unknown>): string | null {
-  const id = record.targetId ?? record.id;
-  return typeof id === 'string' && id.trim() ? id.trim() : null;
+  const id = record.targetId ?? record.id ?? record.tgt_id;
+  if (typeof id === 'string' && id.trim()) return id.trim();
+  if (typeof id === 'number' && Number.isFinite(id)) return String(id);
+  return null;
 }
 
 function parseTargetWireEntry(raw: unknown): Record<string, unknown> | null {
@@ -70,7 +77,7 @@ function ensureTargetsCleanupLoop(store: InboundHandlerContext['store']): void {
       targetsInboundRuntime.cleanupInterval = null;
       targetsInboundRuntime.cleanupStarted = false;
     }
-  }, 1000);
+  }, TARGETS_INBOUND_CLEANUP_INTERVAL_MS);
   targetsInboundRuntime.cleanupStarted = true;
 }
 
@@ -86,7 +93,7 @@ function handleTargetsData(data: unknown, { store }: InboundHandlerContext): voi
     const td = parseTargetWireEntry(entry);
     if (!td) continue;
 
-    const id = typeof td.id === 'string' ? td.id : null;
+    const id = readTargetId(td);
     const coordinates = td.coordinates;
     const heading = td.heading;
     const range = td.range;
@@ -103,20 +110,19 @@ function handleTargetsData(data: unknown, { store }: InboundHandlerContext): voi
     if (now - last >= TARGETS_UPDATE_THROTTLE_MS) {
       const lat = Number((coordinates as { lat: unknown }).lat);
       const lng = Number((coordinates as { lng: unknown }).lng);
-      store.dispatch(
-        updateTarget({
-          id,
-          coordinates: { lat, lng },
-          heading: Number.isFinite(Number(heading)) ? Number(heading) : 0,
-          range: typeof range === 'number' ? range : Number(range) || 0,
-          speed: Number.isFinite(Number(speed)) ? Number(speed) : 0,
-          type: mapPlatformToTargetType(platform),
-          status: mapStateToTargetStatus(state),
-          friend: Boolean(identity),
-          isRecommended: Boolean(isRecommended),
-          risk_level: typeof riskLevel === 'number' ? riskLevel : undefined,
-        }),
-      );
+      const payload = {
+        id,
+        coordinates: { lat, lng },
+        heading: Number.isFinite(Number(heading)) ? Number(heading) : 0,
+        range: typeof range === 'number' ? range : Number(range) || 0,
+        speed: Number.isFinite(Number(speed)) ? Number(speed) : 0,
+        type: mapPlatformToTargetType(platform),
+        status: mapStateToTargetStatus(state),
+        friend: Boolean(identity),
+        isRecommended: Boolean(isRecommended),
+        risk_level: typeof riskLevel === 'number' ? riskLevel : undefined,
+      };
+      store.dispatch(updateTarget(payload));
       targetsInboundRuntime.lastUpdate[id] = now;
     }
     targetsInboundRuntime.seenAt[id] = stamp;
@@ -165,7 +171,7 @@ function handleTargetAssigned(data: unknown, { store }: InboundHandlerContext): 
   if (!d) return;
   const targetId = readTargetId(d);
   if (!targetId) return;
-  store.dispatch(setTargetLineLayer({ id: targetId, lineLayerId: `target-line-${targetId}` }));
+  store.dispatch(setTargetLineLayer({ id: targetId, lineLayerId: perTargetAssignmentLineId(targetId) }));
 }
 
 function handleTargetLock(data: unknown, { store }: InboundHandlerContext): void {
@@ -173,7 +179,7 @@ function handleTargetLock(data: unknown, { store }: InboundHandlerContext): void
   if (!d) return;
   const targetId = readTargetId(d);
   if (!targetId) return;
-  store.dispatch(setTargetIconLayer({ id: targetId, iconLayerId: `lock-icon-${targetId}` }));
+  store.dispatch(setTargetIconLayer({ id: targetId, iconLayerId: perTargetLockIconId(targetId) }));
 }
 
 function handleTargetDestroyed(data: unknown, { store }: InboundHandlerContext): void {

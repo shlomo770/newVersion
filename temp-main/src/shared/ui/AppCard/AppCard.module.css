@@ -1,0 +1,34 @@
+.card {
+  border-radius: var(--theme-radius-xl, var(--layout-radius-xl));
+  border: 1px solid var(--theme-color-border-subtle, var(--color-border-zinc));
+  background: var(--theme-color-bg-card, rgba(255, 255, 255, 0.03));
+  padding: var(--theme-spacing-panel-padding, var(--space-4));
+  color: var(--theme-color-text-primary, var(--color-text-primary));
+  transition:
+    border-color var(--duration-slow) var(--ease-default),
+    background var(--duration-slow) var(--ease-default),
+    box-shadow var(--duration-slow) var(--ease-default);
+}
+
+.interactive {
+  cursor: pointer;
+}
+
+.interactive:hover {
+  border-color: var(--theme-color-border-strong, rgba(255, 255, 255, 0.15));
+  background: var(--theme-color-bg-card-hover, rgba(255, 255, 255, 0.06));
+}
+
+.active {
+  border-color: var(--theme-color-border-active, rgba(56, 189, 248, 0.5));
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--theme-color-accent) 15%, transparent),
+    var(--theme-color-bg-card-hover, rgba(255, 255, 255, 0.04))
+  );
+  box-shadow: 0 0 40px -8px color-mix(in srgb, var(--theme-color-accent) 35%, transparent);
+}
+
+.compact {
+  padding: var(--theme-spacing-panel-padding-sm, var(--space-3));
+}

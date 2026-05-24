@@ -30,6 +30,7 @@ import CompassNeedle from '../components/tools/CompassNeedle';
 import MapDimmerAuto from '../components/tools/MapDimmerAuto';
 import VideoWinButton from '../components/tools/VideoWinButton';
 import VideoPlayer from '../components/tools/VideoWindow';
+import EntitiesButton from '@features/entities/ui/EntitiesButton';
 import MapOverlayAnchors from './MapOverlayAnchors';
 import { useMapLayers } from '../hooks/useMapLayers';
 import styles from './MapContainer.module.css';
@@ -94,7 +95,12 @@ const MapContainer: FC<MapContainerProps> = memo((props) => {
   });
 
   const [isVideoOpen, setIsVideoOpen] = useState(false);
-  const [openSider] = useState(props.openSider ?? false);
+  const [entitiesOpen, setEntitiesOpen] = useState(false);
+  const openSider = props.openSider ?? false;
+
+  useEffect(() => {
+    if (openSider && entitiesOpen) setEntitiesOpen(false);
+  }, [openSider, entitiesOpen]);
 
   useEffect(() => {
     if (!props.focusEntityRef) return;
@@ -167,11 +173,18 @@ const MapContainer: FC<MapContainerProps> = memo((props) => {
       ) : null}
 
       {mapObject && !openSider ? (
-        <EntitiesManager map={mapObject} mapServiceRef={props.mapServiceRef} />
+        <EntitiesManager
+          map={mapObject}
+          mapServiceRef={props.mapServiceRef}
+          isSidebarOpen={entitiesOpen}
+          onSidebarOpenChange={setEntitiesOpen}
+          hideOwnButton
+        />
       ) : null}
 
       {!openSider ? (
-        <div className={styles.hudCluster}>
+        <div className={styles.mapActionDock} role="toolbar" aria-label="Map actions">
+          <EntitiesButton onToggleSidebar={() => setEntitiesOpen((open) => !open)} />
           <MapControls mapFacadeRef={mapFacadeRef} />
           <VideoWinButton onOpen={() => setIsVideoOpen((v) => !v)} />
         </div>

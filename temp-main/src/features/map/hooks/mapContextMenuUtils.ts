@@ -1,7 +1,22 @@
 import type { MapMouseEvent, MapTouchEvent } from 'maplibre-gl';
+import {
+  TARGET_LAYER_IDS as CANONICAL_TARGET_LAYER_IDS,
+  entityLayerIdFor,
+} from '@features/map/config';
 import type { MapTargetMenuEntry } from '../components/MapTargetSelectionMenu';
 
-export const TARGET_LAYER_IDS = ['targets-layer', 'targets-circle-layer'] as const;
+/** Legacy target layer id that some basemaps may still expose. */
+const LEGACY_TARGET_CIRCLE_LAYER_ID = 'targets-circle-layer';
+
+/**
+ * Pickable target layer ids the context menu should hit-test against.
+ * Wraps the canonical icon layer + the legacy "circle" layer id used by
+ * older basemap variants.
+ */
+export const TARGET_LAYER_IDS = [
+  CANONICAL_TARGET_LAYER_IDS.icons,
+  LEGACY_TARGET_CIRCLE_LAYER_ID,
+] as const;
 
 export interface ContextMenuState {
   entityId: string;
@@ -24,7 +39,7 @@ export function safePreventDefault(e: MapMouseEvent | MapTouchEvent): void {
 }
 
 export function buildEntityLayerIds(entityIds: string[]): string[] {
-  return entityIds.map((id) => `entity-layer-${id}`);
+  return entityIds.map(entityLayerIdFor);
 }
 
 export function resolveTargetEntries(

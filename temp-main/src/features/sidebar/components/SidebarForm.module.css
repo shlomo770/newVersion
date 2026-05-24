@@ -14,7 +14,7 @@
   position: absolute;
   top: var(--space-4);
   right: var(--space-4);
-  color: #9ca3af;
+  color: var(--theme-color-text-muted, var(--color-text-muted));
   background: transparent;
   border: none;
   cursor: pointer;

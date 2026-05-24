@@ -15,6 +15,9 @@ import type { OutboundMessageMap, OutboundMessageName } from '@/services/webSock
 import { sendDeleteEntity } from '@features/entities/api/outboundBuilders';
 import { swalConfirmDanger, swalInfo } from '@/utils/swalDialog';
 import type { MapService } from '@/services/map/MapService';
+import { AppIconButton, AppInput, cn } from "@shared/ui";
+import { ENTITIES_SIDEBAR_ICONS } from "@/config";
+import styles from "./EntitiesSidebar.shared.module.css";
 
 export type EntitiesSidebarPointsSectionProps = {
   onBack: () => void;
@@ -50,14 +53,14 @@ function GroupGlyph({ group, list }: { group: string; list: Entity[] }) {
   const def = code ? MARKER_ICONS.find((m) => m.code === code) : undefined;
   if (!def) {
     return (
-      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded border border-zinc-600/60 bg-zinc-900/90 text-[9px] font-bold tabular-nums text-sky-300/95">
+      <span className={cn(styles.glyphBoxLg, styles.glyphBox)}>
         {groupInitial(group)}
       </span>
     );
   }
   return (
     <span
-      className="flex h-5 w-5 shrink-0 items-center justify-center rounded border border-zinc-600/50 bg-zinc-900/95 text-[10px] leading-none text-zinc-200"
+      className={cn(styles.glyphBoxLg, styles.glyphBox)}
       style={{ fontFamily: `${def.font}, sans-serif` }}
       title={def.label}
     >
@@ -65,9 +68,6 @@ function GroupGlyph({ group, list }: { group: string; list: Entity[] }) {
     </span>
   );
 }
-
-const iconBtn =
-  "inline-flex h-6 w-6 shrink-0 items-center justify-center rounded text-zinc-500 transition hover:bg-zinc-700/80 hover:text-zinc-100";
 
 const EntitiesSidebarPointsSection: FC<EntitiesSidebarPointsSectionProps> = ({
   onBack,
@@ -115,88 +115,77 @@ const EntitiesSidebarPointsSection: FC<EntitiesSidebarPointsSectionProps> = ({
   };
 
   return (
-    <div className="flex flex-1 flex-col overflow-y-auto px-2.5 pb-2 pt-1">
-      <button
-        type="button"
-        onClick={onBack}
-        className="mb-2 flex items-center gap-1.5 py-1 text-[11px] text-zinc-500 transition hover:text-zinc-200"
-      >
-        <img src="./icons/back_arrow512.png" alt="" className="h-3.5 w-3.5 invert opacity-60" />
+    <div className={styles.scrollSection}>
+      <button type="button" onClick={onBack} className={styles.backLink}>
+        <img src={ENTITIES_SIDEBAR_ICONS.back} alt="" className={styles.backIcon} />
         חזרה
       </button>
 
-      <div className="mb-2 flex items-center justify-between gap-2 border-b border-zinc-700/40 pb-2">
-        <div className="min-w-0">
-          <h3 className="text-[11px] font-semibold tracking-wide text-zinc-200">נקודות</h3>
-          <p className="text-[9px] text-zinc-600">לפי סוג · קומפקטי</p>
+      <div className={styles.dividerHeader}>
+        <div>
+          <h3 className={styles.sectionTitle}>נקודות</h3>
+          <p className={styles.hintText}>לפי סוג · קומפקטי</p>
         </div>
-        <button
-          type="button"
-          onClick={() => onOpenCreateMarkerPanel?.()}
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-sky-600/90 text-white shadow-sm transition hover:bg-sky-500"
-          title="נקודה חדשה"
-        >
-          <FaPlus className="h-3 w-3" />
-        </button>
+        <AppIconButton size="sm" label="נקודה חדשה" onClick={() => onOpenCreateMarkerPanel?.()}>
+          <FaPlus />
+        </AppIconButton>
       </div>
 
-      <input
+      <AppInput
+        compact
         type="search"
+        fieldClassName={styles.fieldStack}
         value={pointsSearchQuery}
         onChange={(e) => setPointsSearchQuery(e.target.value)}
         placeholder="חיפוש…"
-        className="mb-2 w-full rounded-md border border-zinc-700/60 bg-zinc-900/80 px-2 py-1 text-[11px] text-zinc-100 placeholder-zinc-600 outline-none ring-0 transition focus:border-sky-600/50"
       />
 
-      <div className="flex flex-col gap-1">
+      <div className={styles.list}>
         {Object.entries(filteredPointsByIcon).map(([group, list]) => {
           const isOpenGroup = openMarkerGroup === group;
           const allHidden = list.length > 0 && list.every((e) => !e.visible);
           return (
-            <div key={group} className="rounded-md border border-zinc-700/35 bg-zinc-900/40">
-              <div className="flex items-stretch gap-0.5">
+            <div key={group} className={styles.compactGroup}>
+              <div className={styles.compactGroupHeader}>
                 <button
                   type="button"
                   onClick={() => setOpenMarkerGroup(isOpenGroup ? null : group)}
-                  className="flex min-w-0 flex-1 items-center gap-2 px-2 py-1.5 text-right transition hover:bg-zinc-800/50"
+                  className={styles.compactGroupToggle}
                 >
                   <FaChevronLeft
-                    className={`h-2.5 w-2.5 shrink-0 text-zinc-600 transition-transform ${isOpenGroup ? "-rotate-90" : ""}`}
+                    className={cn(styles.chevron, isOpenGroup && styles.chevronOpen)}
                     aria-hidden
                   />
                   <GroupGlyph group={group} list={list} />
-                  <span className="min-w-0 flex-1 truncate text-[11px] font-medium text-zinc-200">{group}</span>
-                  <span className="shrink-0 rounded bg-zinc-800/90 px-1.5 py-0.5 text-[9px] tabular-nums font-medium text-zinc-500">
-                    {list.length}
-                  </span>
+                  <span className={styles.compactGroupTitle}>{group}</span>
+                  <span className={cn(styles.badgeMuted, styles.badgeSm)}>{list.length}</span>
                 </button>
-                <button
-                  type="button"
+                <AppIconButton
+                  size="sm"
+                  label={allHidden ? "הצג הכל" : "הסתר הכל"}
                   onClick={(e) => {
                     e.stopPropagation();
                     setGroupVisibility(list, allHidden);
                   }}
-                  className={`${iconBtn} border-s border-zinc-700/30`}
-                  title={allHidden ? "הצג הכל" : "הסתר הכל"}
                 >
-                  {allHidden ? <FaEye className="h-2.5 w-2.5" /> : <FaEyeSlash className="h-2.5 w-2.5" />}
-                </button>
-                <button
-                  type="button"
+                  {allHidden ? <FaEye /> : <FaEyeSlash />}
+                </AppIconButton>
+                <AppIconButton
+                  size="sm"
+                  danger
+                  label="מחק קבוצה"
                   onClick={(e) => {
                     e.stopPropagation();
                     deleteGroup(list, group);
                   }}
-                  className={`${iconBtn} border-s border-zinc-700/30 text-zinc-600 hover:text-rose-400`}
-                  title="מחק קבוצה"
                 >
-                  <FaTrashAlt className="h-2.5 w-2.5" />
-                </button>
+                  <FaTrashAlt />
+                </AppIconButton>
               </div>
 
               {isOpenGroup && (
                 <ul
-                  className="border-t border-zinc-800/60 py-0.5 pe-1 ps-1"
+                  className={styles.compactGroupList}
                   onMouseLeave={() => {
                     if (activeMissionName) dispatch(setPreviewEntityId(null));
                   }}
@@ -210,25 +199,25 @@ const EntitiesSidebarPointsSection: FC<EntitiesSidebarPointsSectionProps> = ({
                           if (activeMissionName) dispatch(setPreviewEntityId(entity.id));
                         }}
                         onClick={() => handleEntityClick(entity)}
-                        className={`flex cursor-pointer items-center gap-0.5 rounded px-1 py-0.5 text-[10px] transition ${isSelected
-                          ? "bg-sky-900/35 text-sky-100 ring-1 ring-sky-600/30"
-                          : "text-zinc-300 hover:bg-zinc-800/60"
-                          }`}
+                        className={cn(
+                          styles.compactEntityRow,
+                          isSelected ? styles.compactEntityRowSelected : styles.compactEntityRowDefault,
+                        )}
                       >
-                        <button
-                          type="button"
+                        <AppIconButton
+                          size="sm"
+                          label="מפה"
                           onClick={(e) => {
                             e.stopPropagation();
                             onCenterToEntity(entity);
                           }}
-                          className={iconBtn}
-                          title="מפה"
                         >
-                          <FaCrosshairs className="h-2.5 w-2.5" />
-                        </button>
-                        <span className="min-w-0 flex-1 truncate text-right leading-tight">{entity.name}</span>
-                        <button
-                          type="button"
+                          <FaCrosshairs />
+                        </AppIconButton>
+                        <span className={styles.compactEntityName}>{entity.name}</span>
+                        <AppIconButton
+                          size="sm"
+                          label={entity.visible ? "הסתר" : "הצג"}
                           onClick={(e) => {
                             e.stopPropagation();
                             const nextVisible = !entity.visible;
@@ -236,24 +225,17 @@ const EntitiesSidebarPointsSection: FC<EntitiesSidebarPointsSectionProps> = ({
                             const map = mapServiceRef?.current?.getMap?.() ?? null;
                             setEntityVisibilityOnMap(map, entity.id, nextVisible);
                           }}
-                          className={`${iconBtn} ${entity.visible ? "text-emerald-500/90" : "text-zinc-600"
-                            }`}
-                          title={entity.visible ? "הסתר" : "הצג"}
                         >
-                          {entity.visible ? (
-                            <FaEye className="h-2.5 w-2.5" />
-                          ) : (
-                            <FaEyeSlash className="h-2.5 w-2.5" />
-                          )}
-                        </button>
-                        <button
-                          type="button"
+                          {entity.visible ? <FaEye /> : <FaEyeSlash />}
+                        </AppIconButton>
+                        <AppIconButton
+                          size="sm"
+                          danger
+                          label="מחק"
                           onClick={(e) => handleDeleteEntity(e, entity)}
-                          className={`${iconBtn} text-zinc-600 hover:text-rose-400`}
-                          title="מחק"
                         >
-                          <FaTrashAlt className="h-2.5 w-2.5" />
-                        </button>
+                          <FaTrashAlt />
+                        </AppIconButton>
                       </li>
                     );
                   })}

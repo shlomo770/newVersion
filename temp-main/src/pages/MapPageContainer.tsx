@@ -17,7 +17,6 @@ export interface MapPageContainerProps extends Omit<MapViewportProps, 'layerOver
   onHamburgerClick: () => void;
   onAbortTarget: (targetId: string) => void;
   handleTargetInfo: (targetId: string, identity: boolean) => void;
-  onTargetsClick?: () => void;
   setIsMeasuring: Dispatch<SetStateAction<boolean>>;
   onRegisterMapSiderToggle?: (toggle: () => void) => void;
 }

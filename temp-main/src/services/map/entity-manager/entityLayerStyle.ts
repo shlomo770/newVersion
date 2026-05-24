@@ -2,9 +2,14 @@ import type { Map as MaplibreMap } from 'maplibre-gl';
 import { createMarkerIconImageData, getMarkerIconImageId } from '@/constants/markerIcons';
 import { hasTransparency } from '@domain/models/entity';
 import type { EntityType, MarkerEntityProperties } from '@domain/models/entity';
+import { ENTITY_PAINT_DEFAULTS } from '@features/map/config';
 import type { MapLayerEntity } from './entityManagerTypes';
 
 export type EntityLayerPaint = Record<string, string | number | boolean | maplibregl.ExpressionSpecification>;
+
+/** MapLibre pixelRatio used when registering generated marker icons. */
+const MARKER_ICON_PIXEL_RATIO = 2;
+const TABOO_ENTITY_NAME = 'TABOOZONE';
 
 export function ensureMarkerIconImage(
   map: MaplibreMap,
@@ -15,7 +20,11 @@ export function ensureMarkerIconImage(
   if (map.hasImage(id)) return;
   try {
     const img = createMarkerIconImageData(code);
-    map.addImage(id, { width: img.width, height: img.height, data: img.data }, { pixelRatio: 2 });
+    map.addImage(
+      id,
+      { width: img.width, height: img.height, data: img.data },
+      { pixelRatio: MARKER_ICON_PIXEL_RATIO },
+    );
     addedIconImages.add(id);
   } catch {
     /* ignore duplicate or invalid icon payloads */
@@ -29,30 +38,32 @@ export function getPaintProperties(entity: MapLayerEntity): EntityLayerPaint {
     const entityColor =
       entity.color ||
       style.fillColor ||
-      (entity.type === 'sector' && entity.name === 'TABOOZONE' ? '#FFB300' : undefined) ||
-      '#3b82f6';
+      (entity.type === 'sector' && entity.name === TABOO_ENTITY_NAME
+        ? ENTITY_PAINT_DEFAULTS.tabooZoneColor
+        : undefined) ||
+      ENTITY_PAINT_DEFAULTS.color;
 
     const entityTransparency = hasTransparency(entity)
       ? entity.transparency
-      : style.fillOpacity ?? 0.3;
+      : style.fillOpacity ?? ENTITY_PAINT_DEFAULTS.opacity;
 
     if (entity.type === 'marker') {
       const circleOpacity = Math.min(1, Math.max(0, entityTransparency));
       return {
-        'circle-radius': 8,
+        'circle-radius': ENTITY_PAINT_DEFAULTS.marker.radius,
         'circle-color': entityColor,
-        'circle-stroke-color': style.strokeColor || '#1e40af',
-        'circle-stroke-width': style.strokeWidth || 2,
+        'circle-stroke-color': style.strokeColor || ENTITY_PAINT_DEFAULTS.strokeColor,
+        'circle-stroke-width': style.strokeWidth || ENTITY_PAINT_DEFAULTS.strokeWidth,
         'circle-opacity': circleOpacity,
       };
     }
 
     if (entity.type === 'target') {
       return {
-        'circle-radius': 40,
-        'circle-color': '#ff0000',
-        'circle-stroke-color': '#ffffff',
-        'circle-stroke-width': 4,
+        'circle-radius': ENTITY_PAINT_DEFAULTS.target.radius,
+        'circle-color': ENTITY_PAINT_DEFAULTS.target.color,
+        'circle-stroke-color': ENTITY_PAINT_DEFAULTS.target.strokeColor,
+        'circle-stroke-width': ENTITY_PAINT_DEFAULTS.target.strokeWidth,
       };
     }
 
@@ -60,7 +71,7 @@ export function getPaintProperties(entity: MapLayerEntity): EntityLayerPaint {
       const lineOpacity = Math.min(1, Math.max(0, entityTransparency));
       return {
         'line-color': entityColor,
-        'line-width': style.strokeWidth || entity.width || 2,
+        'line-width': style.strokeWidth || entity.width || ENTITY_PAINT_DEFAULTS.strokeWidth,
         'line-opacity': lineOpacity,
       };
     }
@@ -75,17 +86,17 @@ export function getPaintProperties(entity: MapLayerEntity): EntityLayerPaint {
       return {
         'fill-color': entityColor,
         'fill-opacity': entityTransparency,
-        'fill-outline-color': style.strokeColor || '#1e40af',
+        'fill-outline-color': style.strokeColor || ENTITY_PAINT_DEFAULTS.strokeColor,
       };
     }
 
     return {};
   } catch (error) {
-    console.error('❌ Error in getPaintProperties:', error, entity);
+    console.error('Error in getPaintProperties:', error, entity);
     return {
-      'fill-color': '#3b82f6',
-      'fill-opacity': 0.3,
-      'fill-outline-color': '#1e40af',
+      'fill-color': ENTITY_PAINT_DEFAULTS.color,
+      'fill-opacity': ENTITY_PAINT_DEFAULTS.opacity,
+      'fill-outline-color': ENTITY_PAINT_DEFAULTS.strokeColor,
     };
   }
 }
@@ -117,7 +128,7 @@ export function buildIconMarkerFeature(
 export function getIconMarkerLayout(): maplibregl.SymbolLayerSpecification['layout'] {
   return {
     'icon-image': ['get', 'iconImage'],
-    'icon-size': 1.8,
+    'icon-size': ENTITY_PAINT_DEFAULTS.iconMarker.sizeScale,
     'icon-anchor': 'center',
     'icon-allow-overlap': true,
   };

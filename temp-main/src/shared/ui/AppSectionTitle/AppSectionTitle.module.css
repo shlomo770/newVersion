@@ -1,0 +1,25 @@
+.title {
+  margin: 0;
+  font-size: var(--theme-font-size-xs, 0.75rem);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--theme-color-text-muted, var(--color-text-muted));
+}
+
+.titleLg {
+  font-size: var(--theme-font-size-lg, 1.125rem);
+  letter-spacing: -0.02em;
+  text-transform: none;
+  color: var(--theme-color-text-inverse, var(--color-white));
+}
+
+.withBorder {
+  padding-bottom: var(--space-2);
+  margin-bottom: var(--theme-spacing-panel-gap, var(--space-3));
+  border-bottom: 1px solid var(--theme-color-border-subtle, var(--color-border-zinc));
+}
+
+.centered {
+  text-align: center;
+}

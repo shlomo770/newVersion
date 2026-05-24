@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { InsStatusE } from '@domain/enums/status.enum';
+import { STATUS_BAR_ICONS } from '@/config';
 import { insIconClass } from './iconClassNames';
 import styles from './statusIcons.module.css';
 
@@ -25,7 +26,7 @@ function RenderInsIcon({ status = InsStatusE.NO_COMM }: RenderInsIconProps) {
       </svg>
       {status === InsStatusE.NO_COMM && (
         <div className={styles.iconOverlay}>
-          <img src="./icons/swap_no_link_arrows_512.png" className={styles.noCommImg} alt="" />
+          <img src={STATUS_BAR_ICONS.noComm} className={styles.noCommImg} alt="" />
         </div>
       )}
     </div>

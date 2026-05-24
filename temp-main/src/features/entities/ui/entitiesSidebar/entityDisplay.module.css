@@ -1,0 +1,18 @@
+.badge {
+  display: inline-flex;
+  height: 1.5rem;
+  min-width: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--theme-radius-sm, var(--layout-radius-sm));
+  background: var(--theme-color-primary-muted, var(--color-brand-primary-muted));
+  padding: 0 var(--space-1);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--theme-color-accent, var(--color-brand-primary));
+}
+
+.glyph {
+  width: 0.75rem;
+  height: 0.75rem;
+}

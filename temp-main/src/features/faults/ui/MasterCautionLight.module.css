@@ -8,16 +8,16 @@
 }
 
 .buttonActive {
-  background: #dc2626;
-  border-color: #f87171;
-  color: var(--color-white);
+  background: var(--color-status-fail, var(--theme-color-danger));
+  border-color: color-mix(in srgb, var(--theme-color-danger, var(--color-red)) 70%, white);
+  color: var(--theme-color-text-inverse, var(--color-white));
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 .buttonIdle {
-  background: #262626;
-  border-color: #525252;
-  color: #d4d4d4;
+  background: var(--theme-color-bg-elevated, var(--color-surface-zinc-900));
+  border-color: var(--theme-color-border-strong, rgba(255, 255, 255, 0.15));
+  color: var(--theme-color-text-secondary, var(--color-text-primary));
 }
 
 @keyframes pulse {

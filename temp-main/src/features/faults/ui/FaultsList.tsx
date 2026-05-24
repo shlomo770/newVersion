@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import type { RootState } from '@app/store';
+import { useDispatch } from 'react-redux';
+import { useAppSelector } from '@/hooks/useAppSelector';
 import { ErrorSeverityE, ErrorStateE } from '@/enums/general.enum';
 import {
   selectCategories,
@@ -47,13 +47,11 @@ function stateDotClass(state: ErrorStateE): string {
 
 export default function FaultsList() {
   const dispatch = useDispatch();
-  const categories = useSelector((state: RootState) => selectCategories(state));
-  const faults = useSelector((state: RootState) => selectFilteredFaults(state));
-  const selectedCategories = useSelector(
-    (state: RootState) => state.faults.filters.selectedCategories,
-  );
-  const severity = useSelector((state: RootState) => state.faults.filters.severity);
-  const showInactive = useSelector((state: RootState) => state.faults.filters.showInactive);
+  const categories = useAppSelector(selectCategories);
+  const faults = useAppSelector(selectFilteredFaults);
+  const selectedCategories = useAppSelector((state) => state.faults.filters.selectedCategories);
+  const severity = useAppSelector((state) => state.faults.filters.severity);
+  const showInactive = useAppSelector((state) => state.faults.filters.showInactive);
 
   const view = useMemo(
     () =>

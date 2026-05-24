@@ -1,5 +1,6 @@
 import { FC } from "react";
-import { btn, btnSky } from "./missionDePanelStyles";
+import { AppButton } from "@shared/ui";
+import { missionDeStyles } from "./missionDePanelStyles";
 
 export type MissionDeFooterProps = {
   onSaveMissionServer: () => void;
@@ -10,17 +11,13 @@ const MissionDeFooter: FC<MissionDeFooterProps> = ({
   onSaveMissionServer,
   onOpenMissionSaveCopy,
 }) => (
-  <div className="flex flex-wrap gap-2 border-t border-zinc-700/50 pt-3">
-    <button type="button" onClick={onSaveMissionServer} className={`${btnSky} px-4 py-2`}>
+  <div className={missionDeStyles.footerActions}>
+    <AppButton variant="primary" size="sm" onClick={onSaveMissionServer}>
       שמור לשרת
-    </button>
-    <button
-      type="button"
-      onClick={onOpenMissionSaveCopy}
-      className={`${btn} border-violet-500/35 bg-gradient-to-b from-violet-950/55 to-violet-950/75 px-4 py-2 text-violet-100 shadow-sm ring-1 ring-violet-500/15 hover:from-violet-900/60`}
-    >
+    </AppButton>
+    <AppButton variant="secondary" size="sm" onClick={onOpenMissionSaveCopy}>
       שמור עותק למשימה
-    </button>
+    </AppButton>
   </div>
 );
 

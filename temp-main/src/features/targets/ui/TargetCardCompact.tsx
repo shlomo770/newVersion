@@ -1,4 +1,8 @@
+import { cn } from '@shared/ui';
+import { TARGET_CARD_ICONS } from '@/config';
 import { Target } from '../store/targetsSlice';
+import { getTargetIcon } from '../utils/targetIconResolver';
+import styles from './TargetCardCompact.module.css';
 
 interface TargetCardCompactProps {
   target: Target;
@@ -6,25 +10,27 @@ interface TargetCardCompactProps {
   onSelect: (targetId: string) => void;
 }
 
-export function TargetCardCompact({ target, onSelect }: TargetCardCompactProps) {
-  const getTargetIcon = (type: string) => {
-    return `${type}.svg`
-  };
-
+export function TargetCardCompact({ target, isSelected, onSelect }: TargetCardCompactProps) {
   return (
     <div
-      className={`w-[90px] h-14 p-1 m-[2px] [#595959eb] flex flex-col items-center justify-center cursor-pointer transition-all duration-200 border hover:scale-105 hover:shadow-lg rounded-md`}
+      className={cn(styles.card, isSelected && styles.selected)}
       onClick={() => onSelect(target.id)}
       title={`${target.id} - ${target.type}`}
     >
-      <img
-        src={`icons/targets/${getTargetIcon(target.type)}`}
-        alt={target.type}
-        className="w-6 h-6 mb-1"
-        onError={(e) => { const target = e.target as HTMLImageElement; target.src = '/icons/default_unknown_red.png' }} />
-      <span className="text-xs text-white font-medium truncate w-full text-center">
-        {target.id}
-      </span>
+      <div
+        className={cn(styles.iconHalo, target.isRecommended && styles.iconHaloRecommended)}
+      >
+        <img
+          src={getTargetIcon(target.type)}
+          alt={target.type}
+          className={styles.icon}
+          onError={(e) => {
+            const img = e.target as HTMLImageElement;
+            img.src = TARGET_CARD_ICONS.cardFallback;
+          }}
+        />
+      </div>
+      <span className={styles.label}>{target.id}</span>
     </div>
   );
-} 
+}

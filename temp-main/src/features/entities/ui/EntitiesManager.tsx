@@ -15,11 +15,32 @@ import type { MapService } from '@/services/map/MapService';
 interface EntitiesManagerProps {
   map: maplibregl.Map;
   mapServiceRef?: React.MutableRefObject<MapService | null>;
+  /** When provided, sidebar open state is controlled externally. */
+  isSidebarOpen?: boolean;
+  onSidebarOpenChange?: (open: boolean) => void;
+  /** Suppress the built-in folder FAB (when rendered elsewhere). */
+  hideOwnButton?: boolean;
 }
 
-const EntitiesManager: FC<EntitiesManagerProps> = ({ map, mapServiceRef }) => {
+const EntitiesManager: FC<EntitiesManagerProps> = ({
+  map,
+  mapServiceRef,
+  isSidebarOpen: controlledOpen,
+  onSidebarOpenChange,
+  hideOwnButton = false,
+}) => {
   const dispatch = useAppDispatch();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const isSidebarOpen = isControlled ? Boolean(controlledOpen) : internalOpen;
+  const setIsSidebarOpen = (next: boolean) => {
+    if (isControlled) {
+      onSidebarOpenChange?.(next);
+    } else {
+      setInternalOpen(next);
+      onSidebarOpenChange?.(next);
+    }
+  };
   const [isEditPanelOpen, setIsEditPanelOpen] = useState(false);
   const [isCreationPanelOpen, setIsCreationPanelOpen] = useState(false);
   const [isMarkerCreationOpen, setIsMarkerCreationOpen] = useState(false);
@@ -67,7 +88,7 @@ const EntitiesManager: FC<EntitiesManagerProps> = ({ map, mapServiceRef }) => {
 
   return (
     <>
-      <EntitiesButton onToggleSidebar={handleToggleSidebar} />
+      {!hideOwnButton && <EntitiesButton onToggleSidebar={handleToggleSidebar} />}
       <EntitiesSidebar
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}

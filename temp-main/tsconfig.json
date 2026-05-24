@@ -24,7 +24,8 @@
       "@domain/*": ["src/domain/*"],
       "@shared/*": ["src/shared/*"],
       "@pages/*": ["src/pages/*"],
-      "@features/*": ["src/features/*"]
+      "@features/*": ["src/features/*"],
+      "@config/*": ["src/config/*"]
     }
   },
   "include": ["src"],

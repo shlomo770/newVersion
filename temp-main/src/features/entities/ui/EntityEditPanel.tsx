@@ -1,5 +1,5 @@
 import React, { useState, useEffect, FC } from 'react';
-import { FaTimes, FaTrashAlt } from 'react-icons/fa';
+import { FaTrashAlt } from 'react-icons/fa';
 import { RiImageEditLine } from "react-icons/ri";
 import { useAppDispatch } from '@/hooks/useAppDispatch';
 import type { Entity } from '@features/entities/store/entitiesSlice';
@@ -12,7 +12,9 @@ import { hasTransparency } from '@domain/models/entity';
 import { EntityCategoryEnum } from '@domain/enums/entity.enum';
 import type { Coordinates } from '@domain/models/coordinates';
 import type { MapService } from '@/services/map/MapService';
+import { AppButton, AppFloatingPanel, AppIconButton, AppInput, AppSelect } from '@shared/ui';
 import { swalWarning } from '@/utils/swalDialog';
+import styles from './EntityEditPanel.module.css';
 
 
 
@@ -143,160 +145,141 @@ const EntityEditPanel: FC<EntityEditPanelProps> = ({
   if (!isOpen || !entity) return null;
 
   return (
-    <div className="fixed left-[320px] top-24 max-h-1/2 w-[350px] bg-[#1f2937] shadow-lg z-[1000] p-6">
-      <button
-        onClick={handleCancel}
-        className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors p-2 z-50">
-        <FaTimes size={24} />
-      </button>
+    <AppFloatingPanel open={isOpen} onClose={handleCancel} title="Editing Entity" position="left">
+      <div className={styles.formStack}>
+        <AppInput
+          compact
+          label="Name"
+          value={entity?.name || ''}
+          onChange={(e) => handleFormChange({ name: e.target.value })}
+        />
+        <AppInput
+          compact
+          label="Height"
+          type="number"
+          value={heightMeters}
+          onChange={(e) => handleHeightChange(Number(e.target.value))}
+        />
 
-      <div className="h-full overflow-y-auto">
-        <div className="w-full p-4 font-sans flex flex-col">
-          <div className="text-center border-b border-gray-600 pb-2 mb-2">
-            <h3 className="text-xl font-semibold text-white">Editing Entity</h3>
-          </div>
-          <div className="mb-1.5 flex space-x-3 item-center">
-            <label className="block text-sm text-sky-100 font-medium min-w-12">Name</label>
+        <div className={styles.row}>
+          <AppSelect
+            compact
+            label="Type"
+            fieldClassName={styles.rowGrow}
+            value={entity?.category || 'FREE'}
+            onChange={(e) => handleFormChange({ category: Number(e.target.value) })}
+          >
+            {ENTITY_CATEGORY_OPTIONS.map((opt) => (
+              <option key={opt} value={opt}>
+                {EntityCategoryEnum[opt]}
+              </option>
+            ))}
+          </AppSelect>
+          <input
+            type="color"
+            value={entity?.color || '#3b82f6'}
+            onChange={(e) => handleFormChange({ color: e.target.value })}
+            className={styles.colorInput}
+            aria-label="Entity color"
+          />
+        </div>
+
+        {entity && hasTransparency(entity) ? (
+          <div>
+            <label className={styles.rowLabel}>
+              Opacity {Math.round(entity.transparency * 100)}%
+            </label>
             <input
-              type="text"
-              value={entity?.name || ''}
-              onChange={(e) => handleFormChange({ name: e.target.value })}
-              className="w-full px-2 py-1 bg-gray-800 text-white border border-gray-600 rounded text-xs focus:outline-none focus:border-sky-500 transition-colors text-right" />
-          </div >
-          <div className="mb-1.5 flex space-x-3 items-center"> <label className="block text-xs text-sky-100 font-medium min-w-12">Height</label>
-            <input
-              type="number"
-              value={heightMeters}
-              onChange={(e) => handleHeightChange(Number(e.target.value))}
-              className="w-full px-2 py-1 bg-gray-800 text-white border border-gray-600 rounded text-xs focus:outline-none focus:border-sky-500 transition-colors"
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={entity.transparency}
+              onChange={(e) => handleFormChange({ transparency: Number(e.target.value) })}
+              className={styles.range}
             />
           </div>
+        ) : null}
 
-          <div className="mb-1.5 flex space-x-3">
-            <label className="block text-sm text-sky-100 font-medium min-w-12">Type</label>
-            <select
-              value={entity?.category || 'FREE'}
-              onChange={(e) => handleFormChange({ category: Number(e.target.value) })}
-              className="w-full px-2 py-1 bg-gray-800 text-white border border-gray-600 rounded text-xs focus:outline-none focus:border-sky-500 transition-colors">
-              {ENTITY_CATEGORY_OPTIONS.map((opt) => (
-                <option key={opt} value={opt}>{EntityCategoryEnum[opt]}</option>
-              ))}
-            </select>
+        <div className={styles.actionsStack}>
+          <AppButton variant="secondary" fullWidth onClick={() => handleWaypointsClick()}>
+            <RiImageEditLine className="w-6 h-6" />
+          </AppButton>
 
-            <input
-              type="color"
-              value={entity?.color || '#3b82f6'}
-              onChange={(e) => handleFormChange({ color: e.target.value })}
-              className="w-[50%] h-8 bg-gray-800 border border-gray-600 rounded cursor-pointer" />
-          </div>
+          <AppButton variant="secondary" fullWidth onClick={handleSubmit}>
+            שליחה
+          </AppButton>
 
-          {entity && hasTransparency(entity) ? (
-            <div className="mb-1.5 mt-2.5 flex space-x-3 item-center">
-              <label className="block text-sm text-sky-100 mb-2 font-medium textright">
-                Opacity {Math.round(entity.transparency * 100)}%
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.01"
-                value={entity.transparency}
-                onChange={(e) => handleFormChange({ transparency: Number(e.target.value) })}
-                className="h-2 w-full bg-gray-700 rounded-lg appearance-none cursor-pointer mt-1" />
+          <AppButton variant="ghost" fullWidth onClick={() => setShowCoordinates(!showCoordinates)}>
+            {showCoordinates ? 'Hide' : 'Show'} Points
+          </AppButton>
+
+          {showCoordinates && entity?.coordinates ? (
+            <div className={styles.coordsSection}>
+              {editingCoords.map((coord, index) => {
+                const minPoints =
+                  entity.type === 'polygon' ? 3 :
+                    entity.type === 'line' ? 2 :
+                      entity.type === 'sector' ? 3 :
+                        2;
+                const canDelete =
+                  (entity.type === 'polygon' || entity.type === 'line' || entity.type === 'sector') &&
+                  editingCoords.length > minPoints;
+                return (
+                  <div key={index} className={styles.coordRow}>
+                    <AppInput
+                      compact
+                      className={styles.coordInput}
+                      step="0.000001"
+                      value={coord.lng}
+                      onChange={(e) => {
+                        const newCoords = [...editingCoords];
+                        newCoords[index] = { ...newCoords[index], lng: parseFloat(e.target.value) || 0 };
+                        setEditingCoords(newCoords);
+                      }}
+                    />
+                    <AppInput
+                      compact
+                      className={styles.coordInput}
+                      step="0.000001"
+                      value={coord.lat}
+                      onChange={(e) => {
+                        const newCoords = [...editingCoords];
+                        newCoords[index] = { ...newCoords[index], lat: parseFloat(e.target.value) || 0 };
+                        setEditingCoords(newCoords);
+                      }}
+                    />
+                    {canDelete ? (
+                      <AppIconButton
+                        label="מחק נקודה"
+                        size="sm"
+                        danger
+                        onClick={() => {
+                          const newCoords = editingCoords.filter((_, i) => i !== index);
+                          setEditingCoords(newCoords);
+                        }}
+                      >
+                        <FaTrashAlt className="w-3 h-3" />
+                      </AppIconButton>
+                    ) : null}
+                  </div>
+                );
+              })}
+
+              <div className={styles.actionsStack}>
+                <AppButton variant="primary" fullWidth onClick={applyCoordinateChanges}>
+                  Ok
+                </AppButton>
+                <AppButton variant="ghost" fullWidth onClick={onClose}>
+                  Cancel
+                </AppButton>
+              </div>
             </div>
           ) : null}
-
-          <div>
-            <button
-              onClick={() => handleWaypointsClick()}
-              className="w-full flex items-center justify-center space-x-2 bg-gray-700 text-white px-2 py-1 rounded mb-2">
-              <RiImageEditLine className='w-6 h-6' color='white' />
-            </button>
-
-            <button
-              onClick={handleSubmit}
-              className="w-full flex items-center justify-center space-x-2 bg-gray-700 text-white px-2 py-1 rounded mb-2">
-              <span className='text-xs'>שליחה  </span>
-            </button>
-
-            <button
-              onClick={() => setShowCoordinates(!showCoordinates)}
-              className="w-full flex items-center justify-center space-x-2 bg-gray-700 text-white px-2 py-1 rounded mb-2">
-              <span className='text-xs'>{showCoordinates ? 'Hibe' : 'Show'} Points </span>
-            </button>
-
-            {showCoordinates && entity?.coordinates && (
-              <div className="bg-gray-800 rounded p-3 max-h-[450px] overflow-y-auto scrollbar-hide">
-                {editingCoords.map((coord, index) => {
-                  const minPoints =
-                    entity.type === 'polygon' ? 3 :
-                      entity.type === 'line' ? 2 :
-                        entity.type === 'sector' ? 3 :
-                          2;
-                  const canDelete =
-                    (entity.type === 'polygon' || entity.type === 'line' || entity.type === 'sector') &&
-                    editingCoords.length > minPoints;
-                  return (
-                    <div key={index} className="pb-1">
-                      <div className="grid grid-cols-[1fr_1fr_auto] gap-1.5 items-center">
-                        <div>
-                          <input
-                            step="0.000001"
-                            value={coord.lng}
-                            onChange={(e) => {
-                              const newCoords = [...editingCoords];
-                              newCoords[index] = { ...newCoords[index], lng: parseFloat(e.target.value) || 0 };
-                              setEditingCoords(newCoords);
-                            }}
-                            className="w-full px-2 py-1 bg-gray-700 text-white text-xs border border-gray-600 rounded focus:outline-none focus:border-sky-500"
-                          />
-                        </div>
-                        <div>
-                          <input
-                            step="0.000001"
-                            value={coord.lat}
-                            onChange={(e) => {
-                              const newCoords = [...editingCoords];
-                              newCoords[index] = { ...newCoords[index], lat: parseFloat(e.target.value) || 0 };
-                              setEditingCoords(newCoords);
-                            }}
-                            className="w-full px-2 py-1 bg-gray-700 text-white text-xs border border-gray-600 rounded focus:outline-none focus:border-sky-500"
-                          />
-                        </div>
-                        {canDelete && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const newCoords = editingCoords.filter((_, i) => i !== index);
-                              setEditingCoords(newCoords);
-                            }}
-                            className="p-1 text-red-400 hover:text-red-300 hover:bg-red-900/40 rounded"
-                            title="מחק נקודה"
-                          >
-                            <FaTrashAlt className="w-3 h-3" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-
-                <div className="flex items-center justify-center text-white space-x-4 mt-6">
-                  <div onClick={applyCoordinateChanges} className='flex items-center justify-center'>
-                    <img src="./icons/check_ok_512.png" alt="" className='m-2 h-8 w-8' />
-                    <span className="text-lg font-bold text-[#98a5db]" >Ok </span>
-                  </div>
-                  <div className='flex items-center justify-center'>
-                    <img src="./icons/back_arrow512.png" alt="" className='m-2 h-8 w-8' onClick={onClose} />
-                    <span className="text-lg font-bold text-[#98a5db]">Cancel </span>
-                  </div>
-                </div>
-              </div>)}
-          </div>
         </div>
       </div>
-    </div>
-  )
+    </AppFloatingPanel>
+  );
 };
 
 export default EntityEditPanel;

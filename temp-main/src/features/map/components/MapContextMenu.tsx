@@ -1,5 +1,18 @@
 import type { FC, PointerEvent } from 'react';
+import { TARGET_CARD_ICONS } from '@/config';
 import styles from './MapContextMenu.module.css';
+
+/**
+ * Fallback HEX colors used only when the corresponding CSS theme
+ * variable is unavailable — the friend/hostile chevron in the context
+ * menu renders an inline SVG that cannot pick up CSS variables.
+ */
+const FRIEND_HOSTILE_FALLBACKS = {
+  friendlyPrimary: 'var(--color-green)',
+  friendlySecondary: '#2e7d32',
+  hostilePrimary: 'var(--color-red)',
+  hostileSecondary: '#dc2626',
+} as const;
 
 export interface MapContextMenuProps {
   open: boolean;
@@ -38,8 +51,12 @@ export const MapContextMenu: FC<MapContextMenuProps> = ({
   if (isTarget) {
     const switchingToHostile = targetIsFriend;
     const actionLabel = switchingToHostile ? 'אויב' : 'ידיד';
-    const iconPrimary = switchingToHostile ? '#ef4444' : '#43e55f';
-    const iconSecondary = switchingToHostile ? '#991b1b' : '#2e7d32';
+    const iconPrimary = switchingToHostile
+      ? `var(--theme-color-danger, ${FRIEND_HOSTILE_FALLBACKS.hostilePrimary})`
+      : `var(--theme-color-success, ${FRIEND_HOSTILE_FALLBACKS.friendlyPrimary})`;
+    const iconSecondary = switchingToHostile
+      ? `var(--color-status-fail, ${FRIEND_HOSTILE_FALLBACKS.hostileSecondary})`
+      : FRIEND_HOSTILE_FALLBACKS.friendlySecondary;
     const friendButtonClass = switchingToHostile
       ? styles.actionButtonHostile
       : styles.actionButtonFriendly;
@@ -61,7 +78,7 @@ export const MapContextMenu: FC<MapContextMenuProps> = ({
               aria-label="Allocate target"
             >
               <img
-                src="/icons/targets/Target_Point.png"
+                src={TARGET_CARD_ICONS.allocate}
                 alt=""
                 className={styles.actionIcon}
               />
@@ -76,7 +93,7 @@ export const MapContextMenu: FC<MapContextMenuProps> = ({
               onPointerDown={onToggleFriend}
               aria-label={switchingToHostile ? 'סמן כאויב' : 'סמן כידיד'}
             >
-              <div className="mb-2 flex h-8 w-8 items-center justify-center">
+              <div className={styles.friendIconWrap}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="512"

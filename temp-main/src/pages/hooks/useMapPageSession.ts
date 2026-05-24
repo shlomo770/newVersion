@@ -19,8 +19,6 @@ export interface MapPageSessionState {
   drawingMode: string | null;
   isSidebarOpen: boolean;
   setIsSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  isTargetsPanelOpen: boolean;
-  setIsTargetsPanelOpen: React.Dispatch<React.SetStateAction<boolean>>;
   focusEntityRef: MutableRefObject<((entity: Entity) => void) | undefined>;
   mapServiceRef: MutableRefObject<MapService | null>;
   handleAttackTarget: (targetId: string) => void;
@@ -28,7 +26,6 @@ export interface MapPageSessionState {
   handleTargetInfo: (targetId: string, identity: boolean) => void;
   closeSidebar: () => void;
   toggleSidebar: () => void;
-  toggleTargetsPanel: () => void;
 }
 
 export function useMapPageSession(): MapPageSessionState {
@@ -41,7 +38,6 @@ export function useMapPageSession(): MapPageSessionState {
   useTargetStatusLifecycle(true);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isTargetsPanelOpen, setIsTargetsPanelOpen] = useState(false);
   const focusEntityRef = useRef<((entity: Entity) => void) | undefined>(undefined);
   const mapServiceRef = useRef<MapService | null>(null);
 
@@ -85,7 +81,6 @@ export function useMapPageSession(): MapPageSessionState {
 
   const closeSidebar = useCallback(() => setIsSidebarOpen(false), []);
   const toggleSidebar = useCallback(() => setIsSidebarOpen((open) => !open), []);
-  const toggleTargetsPanel = useCallback(() => setIsTargetsPanelOpen((open) => !open), []);
 
   useEffect(() => {
     const ws = WebSocketService.getInstance();
@@ -167,8 +162,6 @@ export function useMapPageSession(): MapPageSessionState {
     drawingMode,
     isSidebarOpen,
     setIsSidebarOpen,
-    isTargetsPanelOpen,
-    setIsTargetsPanelOpen,
     focusEntityRef,
     mapServiceRef,
     handleAttackTarget,
@@ -176,6 +169,5 @@ export function useMapPageSession(): MapPageSessionState {
     handleTargetInfo,
     closeSidebar,
     toggleSidebar,
-    toggleTargetsPanel,
   };
 }

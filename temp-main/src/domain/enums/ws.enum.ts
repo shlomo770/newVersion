@@ -29,6 +29,8 @@ export enum WsMessageName {
   MissionData = 'MISSION_DATA',
   MissionDataUpdate = 'MISSION_DATA_UPDATE',
   Position = 'TMAPS_PARAMS',
+  /** Legacy mock server (`server.js`) position updates */
+  PositionWire = 'POSITION',
   RadarUpdate = 'RADAR_UPDATE',
   SaveResult = 'SAVE_RESULT',
   RecommendAssignment = 'RECOMMEND_ASSIGNMENT',

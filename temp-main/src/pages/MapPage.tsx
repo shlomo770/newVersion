@@ -51,7 +51,6 @@ export function MapPage() {
               onAbortTarget={session.handleAbortTarget}
               handleTargetInfo={session.handleTargetInfo}
               onHamburgerClick={session.toggleSidebar}
-              onTargetsClick={session.toggleTargetsPanel}
             />
           }
           settingsSidebar={
@@ -62,8 +61,6 @@ export function MapPage() {
               mapServiceRef={session.mapServiceRef}
               onAttackTarget={session.handleAttackTarget}
               onAbortTarget={session.handleAbortTarget}
-              isOpen
-              onToggle={session.toggleTargetsPanel}
             />
           }
         />

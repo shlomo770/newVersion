@@ -1,0 +1,12 @@
+.abortAnchor {
+  position: fixed;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+  z-index: 5;
+}
+
+.abortButton {
+  width: 100%;
+  min-width: 3rem;
+  font-size: var(--theme-font-size-xs, 0.75rem);
+}

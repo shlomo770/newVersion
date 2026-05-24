@@ -1,55 +1,13 @@
 import type { Map as MaplibreMap } from 'maplibre-gl';
 import { calculateCenter } from '@shared/lib/geo';
 import { formatEntityCategoryLabel } from '@/constants/entityCategories';
+import { MAP_LABEL_DEFAULTS } from '@features/map/config';
 import {
   entityLabelLayerId,
   entityLabelSourceId,
 } from './entityIds';
-import type { CoordLike, EntityGeoJsonFeature, MapLayerEntity } from './entityManagerTypes';
+import type { CoordLike, MapLayerEntity } from './entityManagerTypes';
 import { LABEL_ENTITY_TYPES } from './entityLayerStyle';
-
-export function logPolygonDiagnostics(
-  entity: MapLayerEntity,
-  geojson: EntityGeoJsonFeature,
-  phase: string,
-): void {
-  if (entity.type !== 'polygon') return;
-  try {
-    const ring =
-      geojson.geometry.type === 'Polygon' ? geojson.geometry.coordinates[0] : null;
-    if (!Array.isArray(ring) || ring.length === 0) {
-      console.warn(`[PolygonDebug:${phase}] no ring`, {
-        id: entity.id,
-        geometry: geojson.geometry,
-      });
-      return;
-    }
-    const first = ring[0];
-    const last = ring[ring.length - 1];
-    const isClosed =
-      Array.isArray(first) &&
-      Array.isArray(last) &&
-      first[0] === last[0] &&
-      first[1] === last[1];
-    const invalidPoints = ring.filter(
-      (p) =>
-        !Array.isArray(p) ||
-        p.length < 2 ||
-        !Number.isFinite(Number(p[0])) ||
-        !Number.isFinite(Number(p[1])),
-    ).length;
-    console.log(`[PolygonDebug:${phase}]`, {
-      id: entity.id,
-      ringPoints: ring.length,
-      closed: isClosed,
-      invalidPoints,
-      first,
-      last,
-    });
-  } catch (e) {
-    console.warn(`[PolygonDebug:${phase}] diagnostics failed`, e);
-  }
-}
 
 function normalizeCoord(c: CoordLike): { lng: number; lat: number } | null {
   if (Array.isArray(c)) {
@@ -146,35 +104,11 @@ export function buildEntityLabelFeature(
 /** Map label layer (name + category) centered on fill/line entities. */
 export function addEntityLabelLayer(map: MaplibreMap, entity: MapLayerEntity): void {
   if (!LABEL_ENTITY_TYPES.includes(entity.type as (typeof LABEL_ENTITY_TYPES)[number])) {
-    console.log('[EntityLabel] לא תווית – סוג לא נתמך:', entity.id, entity.type);
     return;
   }
 
   const pointFeature = buildEntityLabelFeature(entity);
-  if (!pointFeature) {
-    console.log(
-      '[EntityLabel] לא תווית – אין מרכז:',
-      entity.id,
-      'geometry:',
-      Boolean(entity.geometry),
-      'coordinates:',
-      entity.coordinates.length,
-    );
-    return;
-  }
-
-  const label = pointFeature.properties.label;
-  const center = pointFeature.geometry.coordinates;
-  console.log(
-    '[EntityLabel] מוסיף תווית:',
-    entity.id,
-    'סוג:',
-    entity.type,
-    'טקסט על מפה:',
-    label,
-    'מרכז:',
-    center,
-  );
+  if (!pointFeature) return;
 
   const labelSourceId = entityLabelSourceId(entity.id);
   const labelLayerId = entityLabelLayerId(entity.id);
@@ -190,18 +124,17 @@ export function addEntityLabelLayer(map: MaplibreMap, entity: MapLayerEntity): v
       source: labelSourceId,
       layout: {
         'text-field': ['get', 'label'],
-        'text-font': ['Open Sans Semibold'],
-        'text-size': 12,
+        'text-font': [...MAP_LABEL_DEFAULTS.font],
+        'text-size': MAP_LABEL_DEFAULTS.textSize,
         'text-anchor': 'center',
         'text-allow-overlap': true,
       },
       paint: {
-        'text-color': '#1a1a1a',
-        'text-halo-color': '#ffffff',
-        'text-halo-width': 3,
+        'text-color': MAP_LABEL_DEFAULTS.textColor,
+        'text-halo-color': MAP_LABEL_DEFAULTS.haloColor,
+        'text-halo-width': MAP_LABEL_DEFAULTS.haloWidth,
       },
     });
-    console.log('[EntityLabel] שכבת תווית נוצרה:', labelLayerId);
   } catch (e) {
     console.warn('[EntityLabel] שגיאה ביצירת תווית:', entity.id, e);
   }

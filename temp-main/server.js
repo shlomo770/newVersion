@@ -582,27 +582,43 @@ function broadcast(name, data) {
 
 }
 
-const position = {
-
-  coordinates: jeepPosition,
-
-  heading: 0,
-
-  los: {
-
-    rangeKm: 3,
-
-    angleDeg: 90
-
-  }
-
+function sendTmapsParams(ws, overrides = {}) {
+  const payload = {
+    tmaps_pos: { lat: jeepPosition.lat, lng: jeepPosition.lng, alt: 0 },
+    heading: jeepHeading,
+    use_manual: Boolean(overrides.use_manual),
+    use_gps: false,
+    ...(overrides.use_manual
+      ? {
+          manual_pos: {
+            lat: jeepPosition.lat,
+            lng: jeepPosition.lng,
+            alt: 0,
+            heading: jeepHeading,
+          },
+        }
+      : {}),
+  };
+  ws.send(JSON.stringify({ header: { name: 'TMAPS_PARAMS' }, data: payload }));
 }
 
-function updatePosition() {
-  // position.coordinates.lng += 0.01 * Math.cos(position.heading);
-  // position.coordinates.lat += 0.01 * Math.sin(position.heading);
-  position.heading = (position.heading + 10) % 360;
-  // broadcast('MY_POSITION', position);
+function broadcastTmapsParams(overrides = {}) {
+  broadcast('TMAPS_PARAMS', {
+    tmaps_pos: { lat: jeepPosition.lat, lng: jeepPosition.lng, alt: 0 },
+    heading: jeepHeading,
+    use_manual: Boolean(overrides.use_manual),
+    use_gps: false,
+    ...(overrides.use_manual
+      ? {
+          manual_pos: {
+            lat: jeepPosition.lat,
+            lng: jeepPosition.lng,
+            alt: 0,
+            heading: jeepHeading,
+          },
+        }
+      : {}),
+  });
 }
 
 
@@ -661,8 +677,8 @@ function updateTargets() {
     t.coordinates.lat = lat2 * (180 / Math.PI);
     t.coordinates.lng = lon2 * (180 / Math.PI);
 
-    // Update heading (optional: simulate turning)
-    t.heading = (t.heading + 10) % 360;
+    // Update heading (small increment for smoother simulation)
+    t.heading = (t.heading + 1) % 360;
   });
 
   broadcast('TARGETS_DATA', targets);
@@ -679,58 +695,9 @@ wss.on('connection', ws => {
 
   console.log(`🔌 Active connections: ${wss.clients.size}`);
 
-
-
-
-
-  setTimeout(() => {
-
-    console.log('🎯 Sending RECOMMEND_ASSIGNMENT for UAV_01');
-
-    broadcast('RECOMMEND_ASSIGNMENT', {
-
-      targetId: '1',
-
-      reason: 'High priority target'
-
-    });
-
-  }, 10000);
-
-
-
-
-
-  // שליחה ראשונית
-
-  ws.send(JSON.stringify({
-
-    header: { name: 'POSITION' }, data: {
-
-      valid: jeepPosition,
-
-      heading: jeepHeading,
-
-    }
-
-  }));
-
-  setTimeout(() => {
-    ws.send(JSON.stringify({
-
-      header: { name: 'POSITION' }, data: {
-
-        valid: jeepPosition,
-
-        heading: jeepHeading + 1,
-
-      }
-
-    }));
-  }, 10000);
-
-
-  // broadcast('TARGETS_POSITION', []);
+  // Initial sync — position + targets
+  sendTmapsParams(ws);
+  ws.send(JSON.stringify({ header: { name: 'TARGETS_DATA' }, data: targets }));
 
 
 
@@ -744,26 +711,14 @@ wss.on('connection', ws => {
 
       if (header.name === 'POSITION') {
 
-        console.log(data);
-
-
-
-        jeepPosition = data.valid;
-
-        jeepHeading = data.heading || 0;
-
+        const next = readLatLngWire(data?.valid ?? data);
+        if (next) {
+          jeepPosition = next;
+        }
+        if (Number.isFinite(Number(data?.heading))) {
+          jeepHeading = Number(data.heading);
+        }
         console.log('📍 Jeep position updated:', jeepPosition, jeepHeading);
-
-
-
-        // broadcast('MY_POSITION', {
-
-        //   coordinates: jeepPosition,
-
-        //   heading: jeepHeading,
-
-        // });
-
       }
 
 
@@ -1310,19 +1265,17 @@ wss.on('connection', ws => {
       }
 
       if (header.name === 'SET_POSITION') {
-
-        ws.send(JSON.stringify({
-
-          header: { name: 'POSITION' }, data: {
-
-            valid: { lat: data.lat, lng: data.lng },
-
-            heading: jeepHeading,
-
-          }
-
-        }));
-        console.log(data);
+        const manual = data?.manual_pos ?? data?.valid ?? data;
+        const next = readLatLngWire(manual);
+        if (next) {
+          jeepPosition = next;
+        }
+        const nextHeading = manual?.heading ?? data?.heading;
+        if (Number.isFinite(Number(nextHeading))) {
+          jeepHeading = Number(nextHeading);
+        }
+        sendTmapsParams(ws, { use_manual: true });
+        console.log('📍 SET_POSITION applied:', jeepPosition, jeepHeading);
       }
     } catch (err) {
 
@@ -1357,8 +1310,16 @@ function moveMeters(center, distanceMeters, angleDeg) {
   return { lat, lng };
 }
 
+function readLatLngWire(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const lat = Number(raw.lat);
+  const lng = Number(raw.lng);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  return { lat, lng };
+}
+
 function generateLosFrame() {
-  const center = { lat: 31.77, lng: 35.21 }; // נקודת ג'יפ לדוגמה
+  const center = { lat: jeepPosition.lat, lng: jeepPosition.lng };
   const radiusMeters = 6000;
 
   // סקטור 140° שמסתובב לאט מסביב
@@ -1434,9 +1395,7 @@ loadDTM().then(() => {
 
   setInterval(updateRadarStatus, 7000); // כל 7 שניות שולח עדכון RADAR
 
-  setTimeout(() => {
-    setInterval(updateTargets, 2000);
-  }, 20000);
+  setInterval(updateTargets, 2000);
 
   setInterval(() => {
     broadcast('SYSTEM_STATUS', {
@@ -1480,12 +1439,8 @@ loadDTM().then(() => {
   }, 15000);
 
   setTimeout(() => {
-    // setInterval(() => {
     broadcast('CONFIRM_POSITION', { state: true });
-    // }, 15000);
   }, 15000);
-
-  setInterval(updatePosition, 5000);
 
   setInterval(updateGunStatus, 6000); // כל 6 שניות 
 

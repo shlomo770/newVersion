@@ -1,5 +1,13 @@
 import { store } from '@app/store';
+import { ENTITY_PAINT_DEFAULTS, entityLayerIdFor } from '@features/map/config';
 
+/**
+ * Thin wrapper around MapLibre layer/source mutation calls used by the
+ * MapService stack. Only methods with active callers live here — older
+ * generic toggle helpers were removed because feature code now uses
+ * `map.setLayoutProperty` / `setPaintProperty` directly via
+ * `TargetsLayer` and the entity manager.
+ */
 export class MapLayerManager {
   private map: maplibregl.Map;
 
@@ -7,6 +15,7 @@ export class MapLayerManager {
     this.map = map;
   }
 
+  /** Used by MapMeasurementService to tear down ephemeral overlay layers. */
   public removeLayerAndSource(layerId: string, sourceId?: string): void {
     if (!this.map) return;
     const resolvedSourceId = sourceId || layerId;
@@ -18,173 +27,9 @@ export class MapLayerManager {
     }
   }
 
-  public toggleLayerVisibility(layerId: string, visible: boolean): void {
-    if (!this.map || !this.map.isStyleLoaded()) return;
-    try {
-      if (this.map.getLayer(layerId)) {
-        this.map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
-      }
-    } catch (error) {
-      console.error('Error toggling layer visibility:', error);
-    }
-  }
-
-  public toggleLayerGroup(category: string, visible: boolean): void {
-    if (!this.map || !this.map.isStyleLoaded()) return;
-    try {
-      const layers = this.map.getStyle().layers || [];
-      const categoryLayers = layers.filter(layer =>
-        layer.id.startsWith(`${category}-`) ||
-        layer.id === category ||
-        layer.id.includes(category)
-      );
-
-      categoryLayers.forEach(layer => {
-        if (this.map && this.map.getLayer(layer.id)) {
-          this.map.setLayoutProperty(layer.id, 'visibility', visible ? 'visible' : 'none');
-        }
-      });
-    } catch (error) {
-      console.error('Error toggling layer group:', error);
-    }
-  }
-
-  public toggleEntityLayers(entityType: string, visible: boolean): void {
-    if (!this.map) {
-      console.warn('Map not available for entity layer toggle');
-      return;
-    }
-
-    const style = this.map.getStyle();
-    if (!style || !style.layers) {
-      console.warn('Map style not loaded yet, skipping entity layer toggle');
-      return;
-    }
-
-    try {
-      const layers = style.layers || [];
-      const visibility = visible ? 'visible' : 'none';
-
-      if (entityType === 'los') {
-        const losLayers = layers.filter(layer =>
-          layer.id.includes('los') || layer.id.startsWith('ray-')
-        );
-
-        losLayers.forEach(layer => {
-          if (this.map && this.map.getLayer(layer.id)) {
-            this.map.setLayoutProperty(layer.id, 'visibility', visibility);
-          }
-        });
-
-        return;
-      }
-
-      const entityLayers = layers.filter(layer => {
-        if (!layer.id.startsWith('entity-layer-')) return false;
-        const entityId = layer.id.replace('entity-layer-', '');
-        const state = store.getState();
-        const entity = state.entities.byId[entityId];
-        if (!entity) return false;
-        return entity.type.toLowerCase() === entityType.toLowerCase();
-      });
-
-      entityLayers.forEach(layer => {
-        if (this.map && this.map.getLayer(layer.id)) {
-          this.map.setLayoutProperty(layer.id, 'visibility', visibility);
-        }
-      });
-    } catch (error) {
-      console.error('Error toggling entity layers:', error);
-    }
-  }
-
-  public toggleTargetLayers(targetType: string, visible: boolean): void {
-    if (!this.map) {
-      console.warn('Map not available for target layer toggle');
-      return;
-    }
-
-    const style = this.map.getStyle();
-    if (!style || !style.layers) {
-      console.warn('Map style not loaded yet, skipping target layer toggle');
-      return;
-    }
-
-    try {
-      const layers = style.layers || [];
-      const visibility = visible ? 'visible' : 'none';
-
-      if (targetType === 'all') {
-        const targetLayers = layers.filter(layer =>
-          layer.id.startsWith('targets-') ||
-          layer.id.includes('target')
-        );
-
-        targetLayers.forEach(layer => {
-          if (this.map && this.map.getLayer(layer.id)) {
-            this.map.setLayoutProperty(layer.id, 'visibility', visibility);
-          }
-        });
-
-      } else {
-        const targetLayers = layers.filter(layer => {
-          if (!layer.id.startsWith('targets-')) return false;
-
-          const layerId = layer.id.toLowerCase();
-          if (targetType === 'friendly' && layerId.includes('friendly')) return true;
-          if (targetType === 'hostile' && layerId.includes('hostile')) return true;
-          if (targetType === 'unknown' && layerId.includes('unknown')) return true;
-
-          return false;
-        });
-
-        targetLayers.forEach(layer => {
-          if (this.map && this.map.getLayer(layer.id)) {
-            this.map.setLayoutProperty(layer.id, 'visibility', visibility);
-          }
-        });
-      }
-
-    } catch (error) {
-      console.error('Error toggling target layers:', error);
-    }
-  }
-
-  public applyCategoryFilters(categoryFilters: { [key: string]: boolean }): void {
-    if (!this.map || !this.map.isStyleLoaded()) return;
-
-    try {
-      const state = store.getState();
-      const entities = state.entities.byId;
-
-      Object.entries(entities).forEach(([entityId, entity]) => {
-        const layerId = `entity-layer-${entityId}`;
-        const category = entity.category || 'Other';
-        const visible = categoryFilters[category] !== false; 
-
-        this.toggleLayerVisibility(layerId, visible);
-      });
-    } catch (error) {
-      console.error('Error applying category filters:', error);
-    }
-  }
-
-  public getLayerVisibility(layerId: string): boolean {
-    if (!this.map || !this.map.isStyleLoaded()) return false;
-
-    try {
-      const layer = this.map.getLayer(layerId);
-      if (!layer) return false;
-
-      const layout = layer.layout as { visibility?: string } | undefined;
-      const visibility = layout?.visibility;
-      return visibility !== 'none';
-    } catch (error) {
-      console.error('Error getting layer visibility:', error);
-      return false;
-    }
-  }
-
+  /** Recomputes color/opacity for every entity layer from the current
+   *  Redux entity state. Called by MapService after entity styling
+   *  changes (color picker, transparency slider). */
   public updateEntityColors(): void {
     if (!this.map || !this.map.isStyleLoaded()) return;
 
@@ -193,28 +38,32 @@ export class MapLayerManager {
       const entities = state.entities.byId;
 
       Object.entries(entities).forEach(([entityId, entity]) => {
-        const layerId = `entity-layer-${entityId}`;
+        const layerId = entityLayerIdFor(entityId);
         const layer = this.map.getLayer(layerId);
 
-        if (layer) {
-          const color = entity.color || '#3b82f6';
-          const transparency =
-            'transparency' in entity && typeof entity.transparency === 'number'
-              ? entity.transparency > 1
-                ? entity.transparency / 100
-                : entity.transparency
-              : 0.3;
+        if (!layer) return;
 
-          if (entity.type === 'line') {
-            this.map.setPaintProperty(layerId, 'line-color', color);
-            this.map.setPaintProperty(layerId, 'line-opacity', 1 - transparency);
-          } else if (entity.type === 'polygon' || entity.type === 'circle' || entity.type === 'rectangle') {
-            this.map.setPaintProperty(layerId, 'fill-color', color);
-            this.map.setPaintProperty(layerId, 'fill-opacity', transparency);
-          } else if (entity.type === 'marker') {
-            this.map.setPaintProperty(layerId, 'circle-color', color);
-            this.map.setPaintProperty(layerId, 'circle-opacity', 1 - transparency);
-          }
+        const color = entity.color || ENTITY_PAINT_DEFAULTS.color;
+        const transparency =
+          'transparency' in entity && typeof entity.transparency === 'number'
+            ? entity.transparency > 1
+              ? entity.transparency / 100
+              : entity.transparency
+            : ENTITY_PAINT_DEFAULTS.opacity;
+
+        if (entity.type === 'line') {
+          this.map.setPaintProperty(layerId, 'line-color', color);
+          this.map.setPaintProperty(layerId, 'line-opacity', 1 - transparency);
+        } else if (
+          entity.type === 'polygon' ||
+          entity.type === 'circle' ||
+          entity.type === 'rectangle'
+        ) {
+          this.map.setPaintProperty(layerId, 'fill-color', color);
+          this.map.setPaintProperty(layerId, 'fill-opacity', transparency);
+        } else if (entity.type === 'marker') {
+          this.map.setPaintProperty(layerId, 'circle-color', color);
+          this.map.setPaintProperty(layerId, 'circle-opacity', 1 - transparency);
         }
       });
     } catch (error) {

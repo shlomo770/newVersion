@@ -229,7 +229,7 @@
 }
 
 .actionButton:hover:not(:disabled) {
-  background: #3f3f46;
+  background: var(--theme-color-bg-card-hover, rgba(255, 255, 255, 0.06));
 }
 
 .actionButton:disabled {
@@ -242,13 +242,13 @@
 }
 
 .actionButtonCalibrate:hover:not(:disabled) {
-  color: #7dd3fc;
+  color: var(--theme-color-accent, var(--color-brand-primary));
 }
 
 .actionButtonManualActive {
-  border-color: rgba(37, 99, 235, 0.8);
-  background: rgba(8, 47, 73, 0.5);
-  color: #bae6fd;
+  border-color: var(--theme-color-border-active, rgba(56, 189, 248, 0.5));
+  background: var(--theme-color-accent-muted, var(--color-brand-primary-muted));
+  color: var(--theme-color-text-label, var(--color-text-primary));
 }
 
 .manualPanel {
@@ -375,7 +375,7 @@
 }
 
 .coordToggleButton:hover {
-  background: #3f3f46;
+  background: var(--theme-color-bg-card-hover, rgba(255, 255, 255, 0.06));
 }
 
 .utmZoneRow {

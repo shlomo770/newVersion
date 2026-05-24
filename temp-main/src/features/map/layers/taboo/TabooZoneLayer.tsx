@@ -4,18 +4,19 @@ import type { GeoJSONSource } from 'maplibre-gl';
 import type { Position } from 'geojson';
 import { useAppSelector } from '@/hooks/useAppSelector';
 import { buildRadarSectors } from '@shared/lib/geo';
+import { TABOO_ZONE_IDS, TABOO_ZONE_VISUALS } from '@features/map/config';
 import { safeRemoveLayer, safeRemoveSource, useMapStyleReady } from '../shared/useMapStyleReady';
-
-const TABOO_SOURCE_ID = 'taboo-zone-sector';
-const TABOO_FILL_LAYER_ID = 'taboo-zone-sector-fill';
-const TABOO_LINE_LAYER_ID = 'taboo-zone-sector-line';
 
 interface TabooZoneLayerProps {
   map: MaplibreMap;
+  /** Override the sweep step (deg) used to tessellate the sector. */
   stepDeg?: number;
 }
 
-export default function TabooZoneLayer({ map, stepDeg = 1 }: TabooZoneLayerProps) {
+export default function TabooZoneLayer({
+  map,
+  stepDeg = TABOO_ZONE_VISUALS.stepDeg,
+}: TabooZoneLayerProps) {
   const tabooZoneState = useAppSelector((state) => state.tabooZone);
   const myCoordinates = useAppSelector((state) => state.myPosition.coordinates);
 
@@ -31,33 +32,33 @@ export default function TabooZoneLayer({ map, stepDeg = 1 }: TabooZoneLayerProps
 
   const syncTaboo = () => {
     if (!map.isStyleLoaded()) return;
-    const source = map.getSource(TABOO_SOURCE_ID) as GeoJSONSource | undefined;
+    const source = map.getSource(TABOO_ZONE_IDS.source) as GeoJSONSource | undefined;
     if (!source) {
-      map.addSource(TABOO_SOURCE_ID, { type: 'geojson', data: featureCollection });
+      map.addSource(TABOO_ZONE_IDS.source, { type: 'geojson', data: featureCollection });
     } else {
       source.setData(featureCollection);
     }
 
-    if (!map.getLayer(TABOO_FILL_LAYER_ID)) {
+    if (!map.getLayer(TABOO_ZONE_IDS.fillLayer)) {
       map.addLayer({
-        id: TABOO_FILL_LAYER_ID,
+        id: TABOO_ZONE_IDS.fillLayer,
         type: 'fill',
-        source: TABOO_SOURCE_ID,
+        source: TABOO_ZONE_IDS.source,
         paint: {
-          'fill-color': '#FFB300',
-          'fill-opacity': 0.35,
+          'fill-color': TABOO_ZONE_VISUALS.fill.color,
+          'fill-opacity': TABOO_ZONE_VISUALS.fill.opacity,
         },
       });
     }
 
-    if (!map.getLayer(TABOO_LINE_LAYER_ID)) {
+    if (!map.getLayer(TABOO_ZONE_IDS.lineLayer)) {
       map.addLayer({
-        id: TABOO_LINE_LAYER_ID,
+        id: TABOO_ZONE_IDS.lineLayer,
         type: 'line',
-        source: TABOO_SOURCE_ID,
+        source: TABOO_ZONE_IDS.source,
         paint: {
-          'line-color': '#FFB300',
-          'line-width': 2,
+          'line-color': TABOO_ZONE_VISUALS.line.color,
+          'line-width': TABOO_ZONE_VISUALS.line.width,
         },
       });
     }
@@ -68,9 +69,9 @@ export default function TabooZoneLayer({ map, stepDeg = 1 }: TabooZoneLayerProps
     () => {
       syncTaboo();
       return () => {
-        safeRemoveLayer(map, TABOO_LINE_LAYER_ID);
-        safeRemoveLayer(map, TABOO_FILL_LAYER_ID);
-        safeRemoveSource(map, TABOO_SOURCE_ID);
+        safeRemoveLayer(map, TABOO_ZONE_IDS.lineLayer);
+        safeRemoveLayer(map, TABOO_ZONE_IDS.fillLayer);
+        safeRemoveSource(map, TABOO_ZONE_IDS.source);
       };
     },
     [],

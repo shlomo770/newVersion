@@ -10,6 +10,8 @@ import { useAppSelector } from '@/hooks/useAppSelector';
 import { MapContextMenu } from '../components/MapContextMenu';
 import { MapTargetSelectionMenu } from '../components/MapTargetSelectionMenu';
 import { updateTarget } from '@features/targets/store/targetsSlice';
+import { TargetStateString } from '@/enums/target.enum';
+import { ENTITY_LAYER_PREFIXES } from '@features/map/config';
 import { isTabooZoneEntity } from '@features/entities/ui/entitiesSidebar/entitiesSidebarUtils';
 import type { MapService } from '@/services/map/MapService';
 import {
@@ -93,8 +95,8 @@ export function useMapContextMenu(
       }
 
       const layerId = features[0].layer?.id ?? '';
-      if (layerId.startsWith('entity-layer-')) {
-        const entityId = layerId.replace('entity-layer-', '');
+      if (layerId.startsWith(ENTITY_LAYER_PREFIXES.layer)) {
+        const entityId = layerId.slice(ENTITY_LAYER_PREFIXES.layer.length);
         const entity = entitiesById[entityId];
         if (entity) {
           setContextMenu({
@@ -107,10 +109,10 @@ export function useMapContextMenu(
         return;
       }
 
-      if (layerId === 'targets-layer' || layerId === 'targets-circle-layer') {
+      if ((TARGET_LAYER_IDS as readonly string[]).includes(layerId)) {
         const targetFeatures = features.filter(
           (f) =>
-            (f.layer?.id === 'targets-layer' || f.layer?.id === 'targets-circle-layer') &&
+            (TARGET_LAYER_IDS as readonly string[]).includes(f.layer?.id ?? '') &&
             f.properties?.id,
         );
         const uniqueIds = targetFeatures
@@ -231,7 +233,7 @@ export function useMapContextMenu(
         updateTarget({
           ...target,
           isAssigned: true,
-          status: 'designated',
+          status: TargetStateString.designated,
         }),
       );
     }

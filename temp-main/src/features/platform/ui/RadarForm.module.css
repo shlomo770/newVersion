@@ -198,7 +198,7 @@
 }
 
 .resetButton:hover:not(:disabled) {
-  background: #3f3f46;
+  background: var(--theme-color-bg-card-hover, rgba(255, 255, 255, 0.06));
 }
 
 .resetButton:disabled {

@@ -1,4 +1,21 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import {
+  TARGET_TYPE_DEFAULTS,
+  TARGET_VISIBILITY_DEFAULTS,
+} from '@features/targets/config';
+
+/**
+ * Filter slice — the single source of truth for everything the user can
+ * toggle in the map's filter UI:
+ *
+ *  - `targets`           — friend / hostile / unknown / all type filter.
+ *  - `targetVisibility`  — independent toggles for trails, labels, and
+ *                          the right-side cards panel.
+ *
+ * The slice keeps **no panel/dialog state** of its own — opening/closing
+ * the filter menu is a transient UI concern owned by the component that
+ * renders it.
+ */
 
 export interface FilterState {
   targets: {
@@ -7,91 +24,69 @@ export interface FilterState {
     hostile: boolean;
     unknown: boolean;
   };
-  categories: {
-    'No-fly zone': boolean;
-    'Allowed zone': boolean;
-    'Building': boolean;
-    'Station': boolean;
-    'Parking': boolean;
-    'Other': boolean;
+  /** Independent visibility flags for sub-layers of the targets feature. */
+  targetVisibility: {
+    trails: boolean;
+    labels: boolean;
+    /** UI panel that lists target cards. */
+    panel: boolean;
   };
-  isFilterPanelOpen: boolean;
 }
 
 const initialState: FilterState = {
-  targets: {
-    all: true,
-    friendly: true,
-    hostile: true,
-    unknown: true
-  },
-  categories: {
-    'No-fly zone': true,
-    'Allowed zone': true,
-    'Building': true,
-    'Station': true,
-    'Parking': true,
-    'Other': true
-  },
-  isFilterPanelOpen: false
+  targets: { ...TARGET_TYPE_DEFAULTS },
+  targetVisibility: { ...TARGET_VISIBILITY_DEFAULTS },
 };
 
 const filterSlice = createSlice({
   name: 'filter',
   initialState,
   reducers: {
-    toggleLayer: (
+    setTargetTypeVisible: (
       state,
-      action: PayloadAction<{
-        category: keyof Omit<FilterState, 'isFilterPanelOpen'>;
-        layer: string;
-      }>,
+      action: PayloadAction<{ type: keyof FilterState['targets']; visible: boolean }>,
     ) => {
-      const { category, layer } = action.payload;
-      const bucket = state[category] as Record<string, boolean>;
-      if (layer in bucket) {
-        bucket[layer] = !bucket[layer];
-      }
+      state.targets[action.payload.type] = action.payload.visible;
+    },
+    toggleTargetType: (
+      state,
+      action: PayloadAction<keyof FilterState['targets']>,
+    ) => {
+      state.targets[action.payload] = !state.targets[action.payload];
     },
 
-    setLayerVisibility: (
-      state,
-      action: PayloadAction<{
-        category: keyof Omit<FilterState, 'isFilterPanelOpen'>;
-        layer: string;
-        visible: boolean;
-      }>,
-    ) => {
-      const { category, layer, visible } = action.payload;
-      const bucket = state[category] as Record<string, boolean>;
-      if (layer in bucket) {
-        bucket[layer] = visible;
-      }
+    setTargetTrailsVisible: (state, action: PayloadAction<boolean>) => {
+      state.targetVisibility.trails = action.payload;
     },
-    
-    resetFilters: (state) => {
-      state.targets = initialState.targets;
-      state.categories = initialState.categories;
+    toggleTargetTrailsVisible: (state) => {
+      state.targetVisibility.trails = !state.targetVisibility.trails;
     },
-    
-    setFilterPanelOpen: (state, action: PayloadAction<boolean>) => {
-      state.isFilterPanelOpen = action.payload;
+
+    setTargetLabelsVisible: (state, action: PayloadAction<boolean>) => {
+      state.targetVisibility.labels = action.payload;
     },
-    
-    // Quick filter presets
-    showTargetsOnly: (state) => {
-      // Only affect targets - keep all categories visible
-      state.targets = { all: true, friendly: true, hostile: true, unknown: true };
-    }
-  }
+    toggleTargetLabelsVisible: (state) => {
+      state.targetVisibility.labels = !state.targetVisibility.labels;
+    },
+
+    setTargetPanelVisible: (state, action: PayloadAction<boolean>) => {
+      state.targetVisibility.panel = action.payload;
+    },
+    toggleTargetPanelVisible: (state) => {
+      state.targetVisibility.panel = !state.targetVisibility.panel;
+    },
+  },
 });
 
 export const {
-  toggleLayer,
-  setLayerVisibility,
-  resetFilters,
-  setFilterPanelOpen,
-  showTargetsOnly
+  setTargetTypeVisible,
+  toggleTargetType,
+  setTargetTrailsVisible,
+  toggleTargetTrailsVisible,
+  setTargetLabelsVisible,
+  toggleTargetLabelsVisible,
+  setTargetPanelVisible,
+  toggleTargetPanelVisible,
 } = filterSlice.actions;
 
-export default filterSlice.reducer; 
+export default filterSlice.reducer;

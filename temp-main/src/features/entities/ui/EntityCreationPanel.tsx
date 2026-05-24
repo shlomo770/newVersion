@@ -1,18 +1,24 @@
 import { FC, useState } from 'react';
-import { FaTimes } from 'react-icons/fa';
-import { PiLineSegmentBold, PiPolygonFill } from "react-icons/pi";
-import { FaCircleNotch } from "react-icons/fa";
-import { FaEllipsisH, FaChartPie } from 'react-icons/fa';
+import { PiLineSegmentBold, PiPolygonFill } from 'react-icons/pi';
+import { FaCircleNotch, FaEllipsisH, FaChartPie } from 'react-icons/fa';
 import { useAppDispatch } from '@/hooks/useAppDispatch';
 import { useAppSelector } from '@/hooks/useAppSelector';
 import { setDrawingMode, setCreationForm } from '@features/entities/store/entitiesSlice';
 import { DegreeInput } from '@shared/components/inputs/DegreeInput';
+import {
+  AppButton,
+  AppFloatingPanel,
+  AppInput,
+  AppSectionTitle,
+  AppSelect,
+} from '@shared/ui';
 import { ENTITY_CATEGORY_OPTIONS } from '@/constants/entityCategories';
 import { WebSocketService } from '@/services/webSocket/WebSocketService';
 import { WsMessageName } from '@domain/enums/ws.enum';
 import { EntityCategoryEnum } from '@domain/enums/entity.enum';
 import { setTabooZoneSector } from '@features/taboo-zone';
 import type { EntityType } from '@domain/models/entity';
+import styles from './EntityCreationPanel.module.css';
 
 interface EntityCreationPanelProps {
   isOpen: boolean;
@@ -22,7 +28,6 @@ interface EntityCreationPanelProps {
 type ShapeDrawType = 'circle' | 'polygon' | 'line' | 'ellipse';
 
 const TABOOZONE_CATEGORY = 'TABOOZONE';
-const compactFieldClass = "w-full px-2 py-1 rounded bg-gray-800 text-white text-xs border border-gray-600 focus:outline-none focus:border-sky-500";
 
 function toDrawingEntityType(type: ShapeDrawType): EntityType {
   if (type === 'ellipse') return 'ellipse';
@@ -90,7 +95,7 @@ const EntityCreationPanel: FC<EntityCreationPanelProps> = ({ isOpen, onClose }) 
     WebSocketService.getInstance().sendMessage(WsMessageName.SetTabooZone, {
       id: entityId,
       start: angleFrom,
-      end: angleTo
+      end: angleTo,
     });
 
     dispatch(setTabooZoneSector({ minAngle: angleFrom, maxAngle: angleTo, radiusMeters: 1500 }));
@@ -101,158 +106,142 @@ const EntityCreationPanel: FC<EntityCreationPanelProps> = ({ isOpen, onClose }) 
     onClose();
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed left-[320px] top-24 max-h-[80vh] w-[340px] bg-[#1f2937] shadow-lg z-[1000] p-4">
-      <button
-        onClick={handleClose}
-        className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors p-2 z-50"
-        type="button">
-        <FaTimes size={24} />
-      </button>
+    <AppFloatingPanel
+      open={isOpen}
+      onClose={handleClose}
+      title="Create new area"
+      position="left"
+    >
+      {!showTABOOZONEForm ? (
+        <div className={styles.formStack}>
+          <AppInput
+            label="שם"
+            compact
+            value={creationName}
+            onChange={(e) =>
+              dispatch(setCreationForm({ name: e.target.value, category: creationCategory, height: creationHeight }))
+            }
+            placeholder="Entity name..."
+          />
+          <AppInput
+            label="גובה (מטר)"
+            compact
+            type="number"
+            step={1}
+            value={creationHeight}
+            onChange={(e) =>
+              dispatch(setCreationForm({
+                name: creationName,
+                category: creationCategory,
+                height: e.target.value === '' ? 0 : Number(e.target.value),
+              }))
+            }
+          />
+          <AppSelect
+            label="קטגוריה"
+            compact
+            value={creationCategory}
+            onChange={(e) =>
+              dispatch(setCreationForm({ name: creationName, category: Number(e.target.value), height: creationHeight }))
+            }
+          >
+            {ENTITY_CATEGORY_OPTIONS.map((opt) => (
+              <option key={opt} value={opt}>
+                {EntityCategoryEnum[opt]}
+              </option>
+            ))}
+          </AppSelect>
 
-      <div className="h-full overflow-y-auto">
-        <div className="w-full p-4 font-sans flex flex-col">
-          <div className="text-center border-b border-gray-600 pb-2 mb-4">
-            <h3 className="text-xl font-semibold text-white">Create new area</h3>
-          </div>
-
-          {!showTABOOZONEForm ? (
-            <>
-              <div className="mb-2">
-                <label className="block text-xs text-sky-100 font-medium mb-1">שם</label>
-                <input
-                  type="text"
-                  value={creationName}
-                  onChange={(e) => dispatch(setCreationForm({ name: e.target.value, category: creationCategory, height: creationHeight }))}
-                  placeholder="Entity name..."
-                  className={compactFieldClass}
-                />
-              </div>
-              <div className="mb-2">
-                <label className="block text-xs text-sky-100 font-medium mb-1">גובה (מטר)</label>
-                <input
-                  type="number"
-                  step={1}
-                  value={creationHeight}
-                  onChange={(e) => dispatch(setCreationForm({
-                    name: creationName,
-                    category: creationCategory,
-                    height: e.target.value === '' ? 0 : Number(e.target.value)
-                  }))}
-                  className={compactFieldClass}
-                />
-              </div>
-              <div className="mb-2">
-                <label className="block text-xs text-sky-100 font-medium mb-1">קטגוריה</label>
-                <select
-                  value={creationCategory}
-                  onChange={(e) => dispatch(setCreationForm({ name: creationName, category: Number(e.target.value), height: creationHeight }))}
-                  className={compactFieldClass}>
-                  {ENTITY_CATEGORY_OPTIONS.map((opt) => (
-                    <option key={opt} value={opt}>{EntityCategoryEnum[opt]}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="mb-2">
-                <label className="block text-xs text-sky-100 font-medium mb-1.5">Shape</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    disabled={!canSelectCirclePolygonEllipse}
-                    className={`flex flex-col items-center gap-1 py-2 rounded text-white transition-colors ${canSelectCirclePolygonEllipse ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-800 text-gray-500 cursor-not-allowed opacity-70'}`}
-                    onClick={() => handleCreateEntity('circle')}
-                    title={!canSelectCirclePolygonEllipse ? 'נא להזין שם ולבחור קטגוריה' : undefined}>
-                    <FaCircleNotch size={22} />
-                    <span className="text-xs">Circle</span>
-                  </button>
-                  <button
-                    type="button"
-                    disabled={!canSelectCirclePolygonEllipse}
-                    className={`flex flex-col items-center gap-1 py-2 rounded text-white transition-colors ${canSelectCirclePolygonEllipse ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-800 text-gray-500 cursor-not-allowed opacity-70'}`}
-                    onClick={() => handleCreateEntity('polygon')}
-                    title={!canSelectCirclePolygonEllipse ? 'נא להזין שם ולבחור קטגוריה' : undefined}>
-                    <PiPolygonFill size={22} />
-                    <span className="text-xs">Polygon</span>
-                  </button>
-                  <button
-                    type="button"
-                    disabled={!canSelectEllipse}
-                    className={`flex flex-col items-center gap-1 py-2 rounded text-white transition-colors ${canSelectEllipse ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-800 text-gray-500 cursor-not-allowed opacity-70'}`}
-                    onClick={() => handleCreateEntity('ellipse')}
-                    title={!canSelectEllipse ? (creationCategory === EntityCategoryEnum.FIZ ? 'בקטגוריה FIZ לא ניתן ליצור Ellipse' : 'נא להזין שם ולבחור קטגוריה') : undefined}>
-                    <FaEllipsisH size={22} />
-                    <span className="text-xs">Ellipse</span>
-                  </button>
-                  <button
-                    type="button"
-                    disabled={!canSelectPolyline}
-                    className={`flex flex-col items-center gap-1 py-2 rounded text-white transition-colors ${canSelectPolyline ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-800 text-gray-500 cursor-not-allowed opacity-70'}`}
-                    onClick={() => handleCreateEntity('line')}
-                    title={!canSelectPolyline ? 'Polyline זמין רק בקטגוריה FREE' : undefined}>
-                    <PiLineSegmentBold size={22} />
-                    <span className="text-xs">Polyline</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="flex flex-col items-center gap-1 py-2 rounded bg-gray-700 hover:bg-gray-600 text-white transition-colors"
-                    onClick={() => handleCreateEntity('sector')}>
-                    <FaChartPie size={22} />
-                    <span className="text-xs">TABOOZONE</span>
-                  </button>
-                </div>
-              </div>
-            </>
-          ) : showTABOOZONEForm ? (
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <label className="block text-sm text-sky-100 font-medium">TABOOZONE (ממיקום הגוף)</label>
-                <button
-                  type="button"
-                  className="text-gray-400 hover:text-white text-sm"
-                  onClick={() => setShowTABOOZONEForm(false)}>
-                  חזרה
-                </button>
-              </div>
-              <div className="flex gap-2">
-                <DegreeInput label="מעלה מ-" value={angleFrom} onChange={setAngleFrom} />
-                <DegreeInput label="מעלה עד" value={angleTo} onChange={setAngleTo} />
-              </div>
-              <div>
-                <label className="text-[11px] text-slate-400 mb-1 block">רדיוס (מ)</label>
-                <input
-                  type="number"
-                  min={1}
-                  step={100}
-                  value={radius}
-                  onChange={(e) => setRadius(e.target.value === '' ? '' : +e.target.value)}
-                  className={compactFieldClass}
-                />
-              </div>
-              <div>
-                <label className="text-[11px] text-slate-400 mb-1 block">קטגוריה</label>
-                <input
-                  type="text"
-                  readOnly
-                  value={TABOOZONE_CATEGORY}
-                  className={`${compactFieldClass} text-slate-300`}
-                />
-              </div>
+          <div>
+            <AppSectionTitle withBorder>Shape</AppSectionTitle>
+            <div className={styles.shapeGrid}>
               <button
                 type="button"
-                disabled={!canCreateTABOOZONE}
-                onClick={handleCreateTABOOZONEFromForm}
-                className={`w-full rounded px-3 py-2 text-sm font-medium transition-colors ${canCreateTABOOZONE ? 'bg-sky-600 text-white hover:bg-sky-500' : 'bg-gray-800 text-gray-500 cursor-not-allowed opacity-70'}`}
-                title={!canCreateTABOOZONE ? 'יש למלא זוויות/רדיוס ולוודא שיש מיקום גוף תקין' : undefined}
+                disabled={!canSelectCirclePolygonEllipse}
+                className={styles.shapeButton}
+                onClick={() => handleCreateEntity('circle')}
+                title={!canSelectCirclePolygonEllipse ? 'נא להזין שם ולבחור קטגוריה' : undefined}
               >
-                צור TABOOZONE
+                <FaCircleNotch size={22} />
+                <span className={styles.shapeLabel}>Circle</span>
+              </button>
+              <button
+                type="button"
+                disabled={!canSelectCirclePolygonEllipse}
+                className={styles.shapeButton}
+                onClick={() => handleCreateEntity('polygon')}
+                title={!canSelectCirclePolygonEllipse ? 'נא להזין שם ולבחור קטגוריה' : undefined}
+              >
+                <PiPolygonFill size={22} />
+                <span className={styles.shapeLabel}>Polygon</span>
+              </button>
+              <button
+                type="button"
+                disabled={!canSelectEllipse}
+                className={styles.shapeButton}
+                onClick={() => handleCreateEntity('ellipse')}
+                title={
+                  !canSelectEllipse
+                    ? creationCategory === EntityCategoryEnum.FIZ
+                      ? 'בקטגוריה FIZ לא ניתן ליצור Ellipse'
+                      : 'נא להזין שם ולבחור קטגוריה'
+                    : undefined
+                }
+              >
+                <FaEllipsisH size={22} />
+                <span className={styles.shapeLabel}>Ellipse</span>
+              </button>
+              <button
+                type="button"
+                disabled={!canSelectPolyline}
+                className={styles.shapeButton}
+                onClick={() => handleCreateEntity('line')}
+                title={!canSelectPolyline ? 'Polyline זמין רק בקטגוריה FREE' : undefined}
+              >
+                <PiLineSegmentBold size={22} />
+                <span className={styles.shapeLabel}>Polyline</span>
+              </button>
+              <button type="button" className={styles.shapeButton} onClick={() => handleCreateEntity('sector')}>
+                <FaChartPie size={22} />
+                <span className={styles.shapeLabel}>TABOOZONE</span>
               </button>
             </div>
-          ) : null}
+          </div>
         </div>
-      </div>
-    </div>
+      ) : (
+        <div className={styles.formStack}>
+          <div className={styles.tabooHeader}>
+            <label className={styles.tabooTitle}>TABOOZONE (ממיקום הגוף)</label>
+            <button type="button" className={styles.backLink} onClick={() => setShowTABOOZONEForm(false)}>
+              חזרה
+            </button>
+          </div>
+          <div className={styles.degreeRow}>
+            <DegreeInput label="מעלה מ-" value={angleFrom} onChange={setAngleFrom} />
+            <DegreeInput label="מעלה עד" value={angleTo} onChange={setAngleTo} />
+          </div>
+          <AppInput
+            label="רדיוס (מ)"
+            compact
+            type="number"
+            min={1}
+            step={100}
+            value={radius}
+            onChange={(e) => setRadius(e.target.value === '' ? '' : +e.target.value)}
+          />
+          <AppInput label="קטגוריה" compact readOnly value={TABOOZONE_CATEGORY} />
+          <AppButton
+            fullWidth
+            disabled={!canCreateTABOOZONE}
+            onClick={handleCreateTABOOZONEFromForm}
+            title={!canCreateTABOOZONE ? 'יש למלא זוויות/רדיוס ולוודא שיש מיקום גוף תקין' : undefined}
+          >
+            צור TABOOZONE
+          </AppButton>
+        </div>
+      )}
+    </AppFloatingPanel>
   );
 };
 

@@ -1,4 +1,6 @@
-import { FC } from "react";
+import { FC } from 'react';
+import { ENTITIES_SIDEBAR_ICONS } from '@/config';
+import styles from './EntitiesSidebar.shared.module.css';
 
 export type EntitiesSidebarHomeProps = {
   onOpenMissions: () => void;
@@ -11,38 +13,26 @@ const EntitiesSidebarHome: FC<EntitiesSidebarHomeProps> = ({
   onOpenAreas,
   onOpenPoints,
 }) => (
-  <div className="flex flex-1 flex-col gap-1 overflow-y-auto p-3">
-    <button
-      type="button"
-      onClick={onOpenMissions}
-      className="flex w-full items-center gap-3 rounded-lg bg-gray-700/50 px-4 py-3 text-left text-white transition-colors hover:bg-gray-600/50"
-    >
-      <img src="./icons/task_512.png" alt="" className="h-8 w-8 opacity-90" />
-      <div className="flex flex-col">
-        <span className="font-medium">Missions</span>
-        <span className="text-xs text-gray-400">שמירה</span>
+  <div className={styles.navList}>
+    <button type="button" onClick={onOpenMissions} className={styles.navCard}>
+      <img src={ENTITIES_SIDEBAR_ICONS.missions} alt="" className={styles.navCardIcon} />
+      <div>
+        <div className={styles.navCardTitle}>Missions</div>
+        <div className={styles.navCardHint}>שמירה</div>
       </div>
     </button>
-    <button
-      type="button"
-      onClick={onOpenAreas}
-      className="flex w-full items-center gap-3 rounded-lg bg-gray-700/50 px-4 py-3 text-left text-white transition-colors hover:bg-gray-600/50"
-    >
-      <img src="./icons/polygon_512.png" alt="" className="h-8 w-8 opacity-90" />
-      <div className="flex flex-col">
-        <span className="font-medium">Areas</span>
-        <span className="text-xs text-gray-400">אזורים וישויות</span>
+    <button type="button" onClick={onOpenAreas} className={styles.navCard}>
+      <img src={ENTITIES_SIDEBAR_ICONS.areas} alt="" className={styles.navCardIcon} />
+      <div>
+        <div className={styles.navCardTitle}>Areas</div>
+        <div className={styles.navCardHint}>אזורים וישויות</div>
       </div>
     </button>
-    <button
-      type="button"
-      onClick={onOpenPoints}
-      className="mt-2 flex w-full items-center gap-3 rounded-lg bg-gray-700/50 px-4 py-3 text-left text-white transition-colors hover:bg-gray-600/50"
-    >
-      <img src="./icons/pointing_center_512.png" alt="" className="h-8 w-8 opacity-90" />
-      <div className="flex flex-col">
-        <span className="font-medium">Points</span>
-        <span className="text-xs text-gray-400">נקודות (markers)</span>
+    <button type="button" onClick={onOpenPoints} className={styles.navCard}>
+      <img src={ENTITIES_SIDEBAR_ICONS.points} alt="" className={styles.navCardIcon} />
+      <div>
+        <div className={styles.navCardTitle}>Points</div>
+        <div className={styles.navCardHint}>נקודות (markers)</div>
       </div>
     </button>
   </div>

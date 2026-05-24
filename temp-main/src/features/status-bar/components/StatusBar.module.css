@@ -146,7 +146,7 @@
 .divider {
   width: 1px;
   height: 2rem;
-  background: #9ca3af;
+  background: var(--theme-color-border, var(--color-border-panel));
 }
 
 .systemColumn {

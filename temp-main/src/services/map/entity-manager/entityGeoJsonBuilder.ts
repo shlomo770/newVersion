@@ -196,8 +196,6 @@ export function buildEntityFeatureFromGeometry(entity: MapLayerEntity): EntityGe
 }
 
 export function convertEntityToGeoJSON(entity: MapLayerEntity): EntityGeoJsonFeature {
-  console.log('🔧 Converting entity to GeoJSON:', entity);
-
   if (!entity.coordinates || !Array.isArray(entity.coordinates) || entity.coordinates.length === 0) {
     console.error('❌ Invalid entity coordinates:', entity);
     return {

@@ -1,5 +1,7 @@
 import { useMemo, useState, useEffect, useCallback, useRef, useLayoutEffect, type MutableRefObject } from 'react';
 import { useAppSelector } from '@/hooks/useAppSelector';
+import { useAppDispatch } from '@/hooks/useAppDispatch';
+import { setTargetPanelVisible } from '@features/map/store/filterSlice';
 import { TargetListPanel } from './TargetListPanel';
 import { TargetCardExpanded } from './TargetCardExpanded';
 import type { Target } from '../store/targetsSlice';
@@ -12,11 +14,24 @@ export interface TargetViewerProps {
   mapServiceRef: MutableRefObject<MapService | null>;
   onAttackTarget: (targetId: string) => void;
   onAbortTarget: (targetId: string) => void;
-  isOpen: boolean;
-  onToggle: () => void;
+  /** Override visibility (otherwise driven by Redux `filter.targetVisibility.panel`). */
+  isOpen?: boolean;
+  onToggle?: () => void;
 }
 
-export function TargetViewer({ mapServiceRef, onAttackTarget, onAbortTarget, isOpen, onToggle }: TargetViewerProps) {
+export function TargetViewer({
+  mapServiceRef,
+  onAttackTarget,
+  onAbortTarget,
+  isOpen: controlledOpen,
+  onToggle,
+}: TargetViewerProps) {
+  const dispatch = useAppDispatch();
+  // Default to true if the store still uses an older slice shape (HMR safety).
+  const reduxPanelVisible = useAppSelector(
+    (state) => state.filter.targetVisibility?.panel ?? true,
+  );
+  const isOpen = controlledOpen ?? reduxPanelVisible;
   const targetsState = useAppSelector(state => state.targets);
   const targets = useMemo(
     () => targetsState.allIds.map(id => targetsState.byId[id]).filter(Boolean),
@@ -131,7 +146,11 @@ export function TargetViewer({ mapServiceRef, onAttackTarget, onAbortTarget, isO
   };
 
   const handleClose = () => {
-    onToggle();
+    if (onToggle) {
+      onToggle();
+    } else {
+      dispatch(setTargetPanelVisible(false));
+    }
   };
 
   return (

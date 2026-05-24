@@ -16,6 +16,7 @@ export default defineConfig({
       '@shared': path.resolve(projectRoot, 'src/shared'),
       '@pages': path.resolve(projectRoot, 'src/pages'),
       '@features': path.resolve(projectRoot, 'src/features'),
+      '@config': path.resolve(projectRoot, 'src/config'),
     },
   },
   optimizeDeps: {

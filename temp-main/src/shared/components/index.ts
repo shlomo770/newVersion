@@ -3,13 +3,6 @@ export { default as ErrorBoundary } from './ErrorBoundary/ErrorBoundary';
 export { CenterModal } from './Modal/CenterModal';
 export type { CenterModalProps } from './Modal/CenterModal';
 
-export { TacticalButton } from './buttons/TacticalButton';
-export type {
-  TacticalButtonProps,
-  TacticalButtonVariant,
-  TacticalButtonSize,
-} from './buttons/TacticalButton';
-
 export { ImageButtonGhost } from './buttons/ImageButtonGhost';
 export type { ImageButtonGhostProps } from './buttons/ImageButtonGhost';
 

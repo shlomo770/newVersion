@@ -1,8 +1,16 @@
 import { TargetStateString } from '@/enums/target.enum';
+import { cn } from '@shared/ui';
+import { TARGET_CARD_ICONS } from '@/config';
+import {
+  getTargetStatusHebrewLabel,
+  getTargetTypeHebrewLabel,
+} from '@features/targets/config';
 import { Target } from '../store/targetsSlice';
+import { getTargetIcon } from '../utils/targetIconResolver';
 import { ImageButtonGhost } from '@shared/components/buttons/ImageButtonGhost';
 import { RedRoundButton } from '@shared/components/buttons/RedRoundButton';
 import { SpinnerMustard } from '@shared/components/feedback/Spinner';
+import styles from './TargetCardExpanded.module.css';
 
 interface TargetCardExpandedProps {
   target: Target;
@@ -11,143 +19,121 @@ interface TargetCardExpandedProps {
   onAbort: (targetId: string) => void;
 }
 
-export function TargetCardExpanded({ target, onAction, onCenter, onAbort }: TargetCardExpandedProps) {
+/** Component-local sizing for the in-card action buttons. These are
+ *  intentionally NOT moved to a global config because they're tied to
+ *  the card layout (sm/md/lg button slots in `TargetCardExpanded.module.css`). */
+const ACTION_BUTTON_SIZES = {
+  allocateImage: 55,
+  abortRound: 65,
+  destroyedImage: 50,
+  spinner: 60,
+  spinnerStroke: 6,
+} as const;
 
-  const getStatus = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'פעיל';
-      case 'allocated':
-        return 'בהמתנה';
-      case 'designated':
-        return 'מוקצה';
-      case 'track':
-        return 'נעול';
-      case 'arm':
-        return 'תקיפה';
-      case 'Abort':
-        return 'בוטל';
-      case 'Destroyed':
-        return 'הושמד';
-      default:
-        return '';
-    }
-  };
+export function TargetCardExpanded({
+  target,
+  onAction,
+  onCenter,
+  onAbort,
+}: TargetCardExpandedProps) {
+  if (target === undefined) return null;
 
-  const getType = (type: string) => {
-    switch (type) {
-      case 'droneMedium':
-        return 'רחפן בנוני';
-      case 'droneLarge':
-        return 'רחפן גדול';
-      case 'airplaneLarge':
-        return 'מטוס גדול';
-      case 'airplaneMedium':
-        return 'מטוס בנוני';
-      default:
-        return '';
-    }
-  };
-  const getTargetIcon = (type: string) => {
-    return `${type}.svg`
-  };
+  const isHighlighted = target.status !== TargetStateString.active;
+  const isTrackLike =
+    target.status === TargetStateString.track ||
+    target.status === TargetStateString.designated ||
+    target.status === TargetStateString.arm;
 
   return (
-    <>
-      {target !== undefined ?
-        <div className={`p-4 shadow-md text-white bg-[#1f2937d6] m-[2px] mr-1 min-h-[150px] rounded-xl ${target && target.status !== TargetStateString.active ? 'border-4 border-yellow-400' : ''}`}>
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3 flex-1">
-              <div className='flex flex-col'>
-                <div
-                  className={
-                    "inline-flex items-center justify-center w-12 h-12 p-2 rounded-full mt-0 mb-2 " +
-                    (target.status === TargetStateString.track ||
-                      target.status === TargetStateString.designated ||
-                      target.status === TargetStateString.arm
-                      ? "border-2 border-red-600"
-                      : target.isRecommended
-                        ? "border-2 border-[#fff400] badge-pulse"
-                        : "border-0")
-                  }
-                >
-                  <img
-                    onClick={() => onCenter(target.id)}
-                    src={`icons/targets/${getTargetIcon(target.type)}`}
-                    alt={target.type}
-                    className="w-8 h-8 object-contain block"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = '/icons/default_unknown_red.png';
-                    }}
-                  />
-                </div>
-                <div className='flex '>
-                  <div className="flex-1">
-                    <div className="text-sm text-gray-400">
-                      Rng {target.range?.toString().slice(0, 4)} m
-                    </div>
-                    <div className="text-sm text-gray-400">
-                      Az {Math.floor(Number(target.heading?.toString().slice(0, 4)))} °
-                    </div>
-                  </div>
-                  <div className="w-px h-10 ml-2 bg-[#9ca3af]" />
-                </div>
-              </div>
-
-              <div className="flex-1">
-                <div className="font-bold text-lg">{target.id}</div>
-                <div className="font-bold text-xl text-yellow-400"> {getType(target.type)}</div>
-                <div className="text-sm text-gray-400">
-                  {target.speed} m
-                </div>
-                <div className="text-sm text-gray-400">
-                  {target.coordinates.alt?.toString().slice(0, 4)} kts
-                </div>
-              </div>
+    <div className={cn(styles.card, isHighlighted && styles.cardHighlighted)}>
+      <div className={styles.layout}>
+        <div className={styles.main}>
+          <div className={styles.iconColumn}>
+            <div
+              className={cn(
+                styles.iconWrap,
+                isTrackLike && styles.iconWrapTrack,
+                target.isRecommended && styles.iconWrapRecommended,
+              )}
+            >
+              <img
+                onClick={() => onCenter(target.id)}
+                src={getTargetIcon(target.type)}
+                alt={target.type}
+                className={styles.icon}
+                onError={(e) => {
+                  const img = e.target as HTMLImageElement;
+                  img.src = TARGET_CARD_ICONS.cardFallback;
+                }}
+              />
             </div>
-
-            <div className="flex flex-col items-end">
-
-              <div className="font-bold text-lg w-full text-center pb-2">{getStatus(target.status)}</div>
-              {target.status === "active" &&
-                <div>
-                  <ImageButtonGhost onClick={() => onAction(target.id)} size={55} src='/icons/targets/Target_Point.png' />
-                  <div className="font-bold text-[#98a5db] w-full text-center"> הקצה</div>
+            <div className={styles.metricsRow}>
+              <div className={styles.metrics}>
+                <div className={styles.metric}>Rng {target.range?.toString().slice(0, 4)} m</div>
+                <div className={styles.metric}>
+                  Az {Math.floor(Number(target.heading?.toString().slice(0, 4)))} °
                 </div>
-              }
-              {target.status === "designated" &&
-                <div>
-                  <RedRoundButton onClick={() => onAbort(target.id)} size={65} label='ביטול' />
-
-                </div>
-
-              }
-              {(target.status === "track" || target.status === "arm" || target.status === "allocated") &&
-                <div>
-                  <RedRoundButton onClick={() => onAbort(target.id)} size={65} label='ביטול' />
-
-                </div>
-
-              }
-              {target.status === "destroyed" &&
-                <div>
-                  <ImageButtonGhost size={50} src='/icons/targets/x.png' />
-                  <div className="font-bold text-[#98a5db] w-full text-center"> הושמד</div>
-                </div>
-              }
-              {target.status === "allocated" &&
-                <div>
-                  <SpinnerMustard size={60} stroke={6} />
-                  <div className="font-bold text-[#98a5db] w-full text-center"> בהמתנה</div>
-                </div>
-              }
+              </div>
+              <div className={styles.divider} />
             </div>
           </div>
-        </div >
-        :
-        ''
-      }
-    </>
+
+          <div className={styles.info}>
+            <div className={styles.targetId}>{target.id}</div>
+            <div className={styles.targetType}>{getTargetTypeHebrewLabel(target.type)}</div>
+            <div className={styles.metric}>{target.speed} m</div>
+            <div className={styles.metric}>{target.coordinates.alt?.toString().slice(0, 4)} kts</div>
+          </div>
+        </div>
+
+        <div className={styles.actionsColumn}>
+          <div className={styles.status}>{getTargetStatusHebrewLabel(target.status)}</div>
+          {target.status === TargetStateString.active && (
+            <div>
+              <ImageButtonGhost
+                onClick={() => onAction(target.id)}
+                size={ACTION_BUTTON_SIZES.allocateImage}
+                src={TARGET_CARD_ICONS.allocate}
+              />
+              <div className={styles.actionLabel}>הקצה</div>
+            </div>
+          )}
+          {target.status === TargetStateString.designated && (
+            <RedRoundButton
+              onClick={() => onAbort(target.id)}
+              size={ACTION_BUTTON_SIZES.abortRound}
+              label="ביטול"
+            />
+          )}
+          {(target.status === TargetStateString.track ||
+            target.status === TargetStateString.arm ||
+            target.status === TargetStateString.allocated) && (
+            <RedRoundButton
+              onClick={() => onAbort(target.id)}
+              size={ACTION_BUTTON_SIZES.abortRound}
+              label="ביטול"
+            />
+          )}
+          {target.status === TargetStateString.destroyed && (
+            <div>
+              <ImageButtonGhost
+                size={ACTION_BUTTON_SIZES.destroyedImage}
+                src={TARGET_CARD_ICONS.destroyed}
+              />
+              <div className={styles.actionLabel}>הושמד</div>
+            </div>
+          )}
+          {target.status === TargetStateString.allocated && (
+            <div>
+              <SpinnerMustard
+                size={ACTION_BUTTON_SIZES.spinner}
+                stroke={ACTION_BUTTON_SIZES.spinnerStroke}
+              />
+              <div className={styles.actionLabel}>בהמתנה</div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
-} 
+}

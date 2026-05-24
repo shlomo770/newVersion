@@ -1,0 +1,75 @@
+.formStack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-spacing-form-gap, var(--space-2));
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.rowLabel {
+  min-width: 3rem;
+  font-size: var(--theme-font-size-sm, 0.875rem);
+  font-weight: 500;
+  color: var(--theme-color-text-label, var(--color-text-muted));
+}
+
+.rowGrow {
+  flex: 1;
+}
+
+.colorInput {
+  width: 50%;
+  height: 2rem;
+  border-radius: var(--theme-radius-md, var(--layout-radius-md));
+  border: 1px solid var(--theme-color-border, var(--color-border-panel));
+  background: var(--theme-color-bg-input, var(--color-surface-input-dark));
+  cursor: pointer;
+}
+
+.range {
+  width: 100%;
+  height: 0.5rem;
+  margin-top: var(--space-1);
+  border-radius: var(--theme-radius-lg, var(--layout-radius-lg));
+  background: var(--theme-color-border, var(--color-border-panel));
+  appearance: none;
+  cursor: pointer;
+}
+
+.coordsSection {
+  margin-top: var(--space-2);
+}
+
+.coordRow {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+
+.coordInput {
+  flex: 1;
+}
+
+.actionsStack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.deleteRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  color: var(--theme-color-danger, var(--color-red));
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  font-size: var(--theme-font-size-sm, 0.875rem);
+}

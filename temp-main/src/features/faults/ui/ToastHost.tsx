@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { FaExclamationTriangle } from 'react-icons/fa';
-import type { RootState } from '@app/store';
-import { ErrorSeverityE } from '@/enums/general.enum';
-import {
+import { useAppSelector } from '@/hooks/useAppSelector';
+import { ErrorSeverityE } from '@/enums/general.enum';import {
   selectPopupQueue,
   dismissPopup,
   popNextPopup,
@@ -11,6 +10,7 @@ import {
   selectMasterCautionOn,
   acknowledgeAll,
 } from '../store/faultsSlice';
+import { AppButton, AppIconButton } from '@shared/ui';
 import styles from './ToastHost.module.css';
 
 const DISMISS_TTL_MS = 60_000;
@@ -18,10 +18,9 @@ const TOAST_TTL_MS = 8_000;
 
 export default function ToastHost() {
   const dispatch = useDispatch();
-  const queue = useSelector((state: RootState) => selectPopupQueue(state));
+  const queue = useAppSelector(selectPopupQueue);
   const first = queue.length > 0 ? queue[0] : null;
-  const masterOn = useSelector((state: RootState) => selectMasterCautionOn(state));
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const masterOn = useAppSelector(selectMasterCautionOn);  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeIdRef = useRef<string | null>(null);
 
   const isMasterToast = useMemo(() => {
@@ -74,9 +73,14 @@ export default function ToastHost() {
     <div className={styles.host}>
       {masterOn && (
         <div className={styles.masterRow}>
-          <button type="button" className={styles.masterButton} onClick={() => dispatch(acknowledgeAll())}>
+          <AppButton
+            variant="danger"
+            size="sm"
+            className={styles.masterButton}
+            onClick={() => dispatch(acknowledgeAll())}
+          >
             MASTER CAUTION
-          </button>
+          </AppButton>
         </div>
       )}
 
@@ -93,9 +97,9 @@ export default function ToastHost() {
               </div>
               <div className={styles.toastMessage}>{first.description}</div>
             </div>
-            <button type="button" className={styles.closeButton} onClick={closeNow}>
+            <AppIconButton label="Dismiss" size="sm" className={styles.closeButton} onClick={closeNow}>
               X
-            </button>
+            </AppIconButton>
           </div>
         </div>
       )}

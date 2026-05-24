@@ -3,103 +3,103 @@ import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { setSelectedMode } from '../store/systemSlice';
 import { SelectedModeE } from '@domain/enums/general.enum';
+import { AppButton } from '@shared/ui';
+import { PLATFORM_ICONS } from '@/config';
+import styles from './ModeSelector.module.css';
+
+/** Short pause after entering fullscreen before triggering the route
+ *  change — gives the browser time to settle the resize layout. */
+const FULLSCREEN_TRANSITION_DELAY_MS = 400;
 
 const ModeSelector: FC = () => {
-    const dispatch = useDispatch();
-    const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-    const enterFullscreen = async () => {
-        const el = document.documentElement as HTMLElement & {
-            webkitRequestFullscreen?: () => Promise<void> | void;
-            msRequestFullscreen?: () => Promise<void> | void;
-        };
-
-        if (document.fullscreenElement) return;
-
-        if (el.requestFullscreen) {
-            await el.requestFullscreen();
-            return;
-        }
-
-        if (el.webkitRequestFullscreen) {
-            await el.webkitRequestFullscreen();
-            return;
-        }
-
-        if (el.msRequestFullscreen) {
-            await el.msRequestFullscreen();
-        }
+  const enterFullscreen = async () => {
+    const el = document.documentElement as HTMLElement & {
+      webkitRequestFullscreen?: () => Promise<void> | void;
+      msRequestFullscreen?: () => Promise<void> | void;
     };
 
-    const handleModeSelect = async (mode: SelectedModeE, path: '/map' | '/maintenance') => {
-        try {
-            await enterFullscreen();
-        } catch (error) {
-            console.error('Failed to enter fullscreen:', error);
-        }
+    if (document.fullscreenElement) return;
 
-        setTimeout(() => {
-            dispatch(setSelectedMode(mode));
-            navigate(path);
-        }, 400);
-    };
+    if (el.requestFullscreen) {
+      await el.requestFullscreen();
+      return;
+    }
 
-    return (
-        <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300">
-            <div
-                className="pointer-events-none absolute inset-0 opacity-40"
-                style={{
-                    background:
-                        'radial-gradient(ellipse 70% 50% at 50% 0%, rgba(148, 163, 184, 0.35), transparent), radial-gradient(circle at 80% 80%, rgba(56, 189, 248, 0.12), transparent 45%)',
-                }}
-            />
+    if (el.webkitRequestFullscreen) {
+      await el.webkitRequestFullscreen();
+      return;
+    }
 
-            <div className="relative z-10 w-full max-w-3xl px-4 text-center">
-                <div className="relative mb-10">
-                    <img
-                        src="/icons/jeepM.png"
-                        alt="Vehicle"
-                        className="mx-auto h-auto w-[min(92vw,400px)] select-none pointer-events-none drop-shadow-xl"
-                        draggable={false}
-                    />
+    if (el.msRequestFullscreen) {
+      await el.msRequestFullscreen();
+    }
+  };
 
-                    <h1
-                        className="absolute bottom-[-20px] left-1/2 -translate-x-1/2 text-7xl font-semibold tracking-[0.2em] text-slate-700/95 drop-shadow-sm sm:text-8xl"
-                    >
-                        JBK
-                    </h1>
-                </div>
+  const handleModeSelect = async (mode: SelectedModeE, path: '/map' | '/maintenance') => {
+    try {
+      await enterFullscreen();
+    } catch (error) {
+      console.error('Failed to enter fullscreen:', error);
+    }
 
-                <p className="mb-8 text-sm text-slate-600">בחרו מצב הפעלה</p>
+    setTimeout(() => {
+      dispatch(setSelectedMode(mode));
+      navigate(path);
+    }, FULLSCREEN_TRANSITION_DELAY_MS);
+  };
 
-                <div className="flex flex-wrap justify-center gap-4">
-                    <button
-                        type="button"
-                        onClick={() => handleModeSelect(SelectedModeE.Mission, '/map')}
-                        className="min-w-[140px] rounded-xl border border-slate-400/40 bg-white/80 px-8 py-3.5 font-medium text-slate-800 shadow-md backdrop-blur transition hover:border-sky-400/60 hover:bg-white hover:shadow-lg"
-                    >
-                        מבצעי
-                    </button>
+  return (
+    <div className={styles.page}>
+      <div className={styles.backdrop} />
 
-                    <button
-                        type="button"
-                        onClick={() => handleModeSelect(SelectedModeE.Maintenance, '/maintenance')}
-                        className="min-w-[140px] rounded-xl border border-slate-400/40 bg-white/80 px-8 py-3.5 font-medium text-slate-800 shadow-md backdrop-blur transition hover:border-cyan-500/50 hover:bg-white hover:shadow-lg"
-                    >
-                        תחזוקה
-                    </button>
+      <div className={styles.content}>
+        <div className={styles.hero}>
+          <img
+            src={PLATFORM_ICONS.jeepHero}
+            alt="Vehicle"
+            className={styles.heroImage}
+            draggable={false}
+          />
 
-                    <button
-                        type="button"
-                        onClick={() => handleModeSelect(SelectedModeE.Training, '/map')}
-                        className="min-w-[140px] rounded-xl border border-slate-400/40 bg-white/80 px-8 py-3.5 font-medium text-slate-800 shadow-md backdrop-blur transition hover:border-indigo-400/50 hover:bg-white hover:shadow-lg"
-                    >
-                        אימון
-                    </button>
-                </div>
-            </div>
+          <h1 className={styles.title}>JBK</h1>
         </div>
-    );
+
+        <p className={styles.subtitle}>בחרו מצב הפעלה</p>
+
+        <div className={styles.actions}>
+          <AppButton
+            variant="primary"
+            size="lg"
+            className={styles.modeButton}
+            onClick={() => handleModeSelect(SelectedModeE.Mission, '/map')}
+          >
+            מבצעי
+          </AppButton>
+
+          <AppButton
+            variant="secondary"
+            size="lg"
+            className={styles.modeButton}
+            onClick={() => handleModeSelect(SelectedModeE.Maintenance, '/maintenance')}
+          >
+            תחזוקה
+          </AppButton>
+
+          <AppButton
+            variant="ghost"
+            size="lg"
+            className={styles.modeButton}
+            onClick={() => handleModeSelect(SelectedModeE.Training, '/map')}
+          >
+            אימון
+          </AppButton>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default ModeSelector;

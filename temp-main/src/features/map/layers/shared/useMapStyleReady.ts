@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react';
 import type { Map as MaplibreMap } from 'maplibre-gl';
 
-const STYLE_DEBOUNCE_MS = 80;
-
 /**
- * Runs `effect` when the map style is ready; debounces styledata to avoid layer flash storms.
+ * Runs `effect` once the map style is loaded, and again after a full style reload (`load`).
+ * Does NOT re-run on tile `styledata` events — those fire constantly during pan/zoom and must
+ * not tear down or reinstall custom sources/layers.
  */
 export function useMapStyleReady(
   map: MaplibreMap | null,
@@ -18,21 +18,11 @@ export function useMapStyleReady(
     if (!map) return undefined;
 
     let cancelled = false;
-    let styleTimer: ReturnType<typeof setTimeout> | null = null;
     let cleanup: void | (() => void);
 
     const run = () => {
       if (cancelled || !map.isStyleLoaded()) return;
-      if (cleanup) cleanup();
       cleanup = effectRef.current(map);
-    };
-
-    const schedule = () => {
-      if (styleTimer) clearTimeout(styleTimer);
-      styleTimer = setTimeout(() => {
-        styleTimer = null;
-        run();
-      }, STYLE_DEBOUNCE_MS);
     };
 
     if (map.isStyleLoaded()) {
@@ -40,13 +30,10 @@ export function useMapStyleReady(
     }
 
     map.on('load', run);
-    map.on('styledata', schedule);
 
     return () => {
       cancelled = true;
       map.off('load', run);
-      map.off('styledata', schedule);
-      if (styleTimer) clearTimeout(styleTimer);
       if (cleanup) cleanup();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- caller supplies domain deps

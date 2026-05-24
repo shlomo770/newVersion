@@ -15,11 +15,12 @@ export {
 } from './store/mapSlice';
 
 export {
-  toggleLayer,
-  setLayerVisibility,
-  resetFilters,
-  setFilterPanelOpen,
-  showTargetsOnly,
+  setTargetTrailsVisible,
+  toggleTargetTrailsVisible,
+  setTargetLabelsVisible,
+  toggleTargetLabelsVisible,
+  setTargetPanelVisible,
+  toggleTargetPanelVisible,
 } from './store/filterSlice';
 
 export {
@@ -49,7 +50,6 @@ export {
 export { setLOS, clearLOS } from './store/losSlice';
 export type { LosState, LosRay } from './store/losSlice';
 
-export { default as FilterPanel } from './components/FilterPanel';
 export { default as BaseMapSelector } from './components/BaseMapSelector';
 
 export { default as MapContainer } from './ui/MapContainer';
@@ -72,11 +72,6 @@ export {
 
 export type { MapContextMenuActions } from './hooks';
 
-export { convertStoreEntityToEditable } from './lib/entityEditable';
-export type { EditableMapEntity } from './lib/entityEditable';
-
 export { default as MapTacticalLayers } from './layers/MapTacticalLayers';
 export type { MapTacticalLayersProps } from './layers/MapTacticalLayers';
-export { composeTacticalLayers } from './services/layerComposer';
-export type { TacticalLayerComposerOptions } from './services/layerComposer';
 export type { FilterState } from './store/filterSlice';

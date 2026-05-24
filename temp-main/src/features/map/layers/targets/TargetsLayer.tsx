@@ -1,453 +1,331 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Map as MaplibreMap } from 'maplibre-gl';
-import type { GeoJSONSource } from 'maplibre-gl';
 import { useAppSelector } from '@/hooks/useAppSelector';
 import type { Target } from '@features/targets';
 import {
-  EMPTY_FEATURE_COLLECTION,
-  featureCollection,
-  lineStringFeature,
-  pointFeature,
-  type LngLatTuple,
-} from '../shared/geoJson';
+  isTargetIconId,
+  loadAllTargetIcons,
+  loadTargetIconIntoMap,
+} from './mapTargetIconLoader';
+import {
+  installTargetLayers,
+  verifyTargetLayersInstalled,
+} from './targetLayerInstaller';
+import { pushTargetData } from './targetLayerUpdater';
+import { MAP_PRELOAD_TARGET_ICON_IDS } from '@features/targets/utils/targetIconResolver';
+import { isAbortableTarget } from '@features/targets/utils/targetAbortRule';
+import { registerOwnedMapImageIds } from '@features/map/utils/mapErrorHandler';
 import { isTargetVisibleByFilter } from '../shared/targetVisibility';
-import { useMapStyleReady } from '../shared/useMapStyleReady';
+import { AppButton } from '@shared/ui';
+import {
+  ABORT_BUTTON_WIDTH_PX,
+  getAbortButtonScreenPosition,
+} from './abortButtonLayout';
+import {
+  TARGET_LAYER_IDS,
+  TARGETS_INIT_CONFIG,
+  TARGETS_RECOMMENDED_BLINK,
+} from '@features/map/config';
+import styles from './TargetsLayer.module.css';
+
+/**
+ * TargetsLayer — thin React orchestrator.
+ *
+ * All the heavy lifting lives in dedicated modules so this file stays
+ * focused on lifecycle + Redux wiring:
+ *
+ *   - `targetLayerInstaller.ts` — addSource / addLayer (idempotent).
+ *   - `targetLayerUpdater.ts`   — source.setData (cheap, every frame).
+ *   - `targetGeoJson.ts`        — pure FeatureCollection builders.
+ *   - `mapTargetIconLoader.ts`  — SVG → ImageData rasterization.
+ *   - `targetIconResolver.ts`   — type → icon id.
+ *   - `targetLabel.ts`          — on-map text label formatting.
+ *   - `targetAbortRule.ts`      — which targets get an ABORT button.
+ *
+ * The component does five things and nothing else:
+ *
+ *   1. Reads targets / filters / jeep position from Redux.
+ *   2. Drives the bulletproof init lifecycle (initial delay + load +
+ *      styledata + periodic retry until installer succeeds AND
+ *      sanity-check passes).
+ *   3. Re-runs `pushTargetData` whenever visible targets or jeep change.
+ *   4. Flips `setLayoutProperty('visibility', …)` when the user toggles
+ *      trails / labels — layers are never recreated for visibility.
+ *   5. Renders the DOM ABORT-button overlay synced to the MapLibre
+ *      viewport.
+ */
 
 interface TargetsLayerProps {
   map: MaplibreMap;
   onAbort: (targetId: string) => void;
 }
 
-interface TargetFeatureProperties {
-  id: string;
-  heading: number;
-  iconName: string;
-  label: string;
-  isRecommended: boolean;
-  isAssigned: boolean;
-  isLocked: boolean;
-  isAllocated: boolean;
-  isDestroyed: boolean;
-}
-
-interface AssignFeatureProperties {
-  id: string;
-  isAssigned: boolean;
-  isLocked: boolean;
-  isAllocated: boolean;
-  isDestroyed: boolean;
-}
-
-const TARGET_ICON_NAMES = [
-  'airplaneLarge_friendly',
-  'airplaneLarge_hostile',
-  'airplaneMedium_friendly',
-  'airplaneMedium_hostile',
-  'droneLarge_friendly',
-  'droneLarge_hostile',
-  'droneMedium_friendly',
-  'droneMedium_hostile',
-  'helicopter_friendly',
-  'helicopter_hostile',
-  'unknown_friendly',
-  'unknown_hostile',
-] as const;
-
-function buildTargetFeature(target: Target): GeoJSON.Feature<GeoJSON.Point, TargetFeatureProperties> | null {
-  if (!target.coordinates) return null;
-  const base = target.type || 'unknown';
-  const iconName = `${base}_${target.friend ? 'friendly' : 'hostile'}`;
-  const heading = target.heading ?? 0;
-  const rangeStr = target.range != null ? String(target.range).slice(0, 4) : '';
-  const altStr = target.coordinates.alt != null ? String(target.coordinates.alt).slice(0, 4) : '';
-  const secondLine = [rangeStr, altStr].filter(Boolean).join(' | ');
-  const label = secondLine ? `${target.id}\n${secondLine}` : target.id;
-  return pointFeature(target.coordinates.lng, target.coordinates.lat, {
-    id: target.id,
-    heading,
-    iconName,
-    label,
-    isRecommended: Boolean(target.isRecommended),
-    isAssigned: Boolean(target.isAssigned),
-    isLocked: Boolean(target.isLocked),
-    isAllocated: target.status === 'allocated',
-    isDestroyed: target.status === 'destroyed',
-  });
-}
-
-function isAbortableTarget(target: Target): boolean {
-  return Boolean(
-    target.coordinates &&
-      (target.isAssigned ||
-        target.status === 'allocated' ||
-        target.status === 'designated' ||
-        target.status === 'track' ||
-        target.status === 'arm'),
-  );
+function isMapReady(map: MaplibreMap | null): boolean {
+  return !!map && typeof map.isStyleLoaded === 'function' && Boolean(map.isStyleLoaded());
 }
 
 const TargetsLayer: React.FC<TargetsLayerProps> = ({ map, onAbort }) => {
   const targets = useAppSelector((state) => state.targets);
   const targetFilters = useAppSelector((state) => state.filter.targets);
-  const myPosition = useAppSelector((state) => state.myPosition);
-  const initializedRef = useRef(false);
-
-  const IDS = useMemo(
-    () => ({
-      srcTargets: 'targets',
-      srcTrails: 'targets-trails',
-      srcAssign: 'target-arrows',
-      srcTips: 'arrow-tips',
-      lyrTargets: 'targets-layer',
-      lyrTargetLabels: 'targets-labels-layer',
-      lyrTrails: 'targets-trails-layer',
-      lyrRingRed: 'targets-red-ring-layer',
-      lyrRingRec: 'targets-recommended-ring',
-      lyrAssigned: 'target-arrows-layer',
-      lyrAllocated: 'target-arrows-layer-allocated',
-      lyrLocked: 'target-arrows-locked',
-      lyrDestroyed: 'targets-destroyed-layer',
-    }),
-    [],
+  /* Defensive against an older slice shape that may still be in the
+   * running Redux store across HMR — `targetVisibility` could be undefined. */
+  const trailsVisible = useAppSelector(
+    (state) => state.filter.targetVisibility?.trails ?? true,
   );
+  const labelsVisible = useAppSelector(
+    (state) => state.filter.targetVisibility?.labels ?? true,
+  );
+  const myPosition = useAppSelector((state) => state.myPosition);
+
+  /* Refs for the initial layer install — keeps `initialize` stable
+   * across visibility-toggle re-renders. The toggle effects below
+   * handle live visibility updates via `setLayoutProperty`. */
+  const trailsVisibleRef = useRef(trailsVisible);
+  trailsVisibleRef.current = trailsVisible;
+  const labelsVisibleRef = useRef(labelsVisible);
+  labelsVisibleRef.current = labelsVisible;
+
+  const initializedRef = useRef(false);
+  /* State flag (not just a ref) so the data-push effect re-runs the
+   * moment init flips to true. */
+  const [initialized, setInitialized] = useState(false);
+  /* Always holds the LATEST `pushData` closure so deferred callers
+   * (the `initialize().then(...)` continuation) push fresh data. */
+  const pushDataRef = useRef<() => void>(() => undefined);
 
   const visibleTargets = useMemo(() => {
-    return targets.allIds
+    const all = targets.allIds
       .map((id) => targets.byId[id])
-      .filter((t): t is Target => Boolean(t))
-      .filter((t) => isTargetVisibleByFilter(t, targetFilters));
+      .filter((t): t is Target => Boolean(t));
+    return all.filter((t) => isTargetVisibleByFilter(t, targetFilters));
   }, [targets.allIds, targets.byId, targetFilters]);
 
-  const loadPngIcons = useCallback(async () => {
-    const loadOne = (name: string) =>
-      new Promise<void>((resolve) => {
-        map.loadImage(`/icons/targets/${name}.png`, (err, img) => {
-          if (!err && img && !map.hasImage(name)) {
-            map.addImage(name, img);
-          }
-          resolve();
-        });
+  /* Reserve icon ids globally so mapErrorHandler doesn't shadow them
+   * with 1×1 transparent placeholders when MapLibre fires
+   * `styleimagemissing`. */
+  useEffect(() => {
+    return registerOwnedMapImageIds(MAP_PRELOAD_TARGET_ICON_IDS, isTargetIconId);
+  }, []);
+
+  /* Lazy load fallback — covers the case where a target arrives with
+   * an icon id we somehow haven't preloaded yet. */
+  useEffect(() => {
+    const handler = (event: { id: string }) => {
+      if (!isTargetIconId(event.id)) return;
+      if (map.hasImage(event.id)) return;
+      void loadTargetIconIntoMap(map, event.id).then((ok) => {
+        if (ok) map.triggerRepaint();
       });
-    await Promise.all(TARGET_ICON_NAMES.map(loadOne));
+    };
+    map.on('styleimagemissing', handler);
+    return () => {
+      map.off('styleimagemissing', handler);
+    };
   }, [map]);
 
+  /**
+   * Idempotent initialize — loads all icons, then delegates to the
+   * installer, then verifies the layer is actually queryable.
+   */
+  const initialize = useCallback(async (): Promise<boolean> => {
+    if (!isMapReady(map)) return false;
+    if (initializedRef.current) return true;
+
+    /* Preload all icon images BEFORE adding the symbol layer. MapLibre's
+     * placement loop will crash on every frame otherwise. */
+    await loadAllTargetIcons(map);
+
+    /* IMPORTANT: do NOT re-check `isStyleLoaded()` here. While icons
+     * were rasterizing (~100ms) the map may have started loading
+     * tiles and `isStyleLoaded()` will return false intermittently.
+     * After the initial load fired once, `addSource` / `addLayer`
+     * work fine even while tiles are in flight. */
+
+    try {
+      installTargetLayers(map, {
+        trailsVisible: trailsVisibleRef.current,
+        labelsVisible: labelsVisibleRef.current,
+      });
+
+      if (!verifyTargetLayersInstalled(map)) {
+        return false;
+      }
+
+      initializedRef.current = true;
+      return true;
+    } catch {
+      return false;
+    }
+  }, [map]);
+
+  const pushData = useCallback(() => {
+    if (!map || !initializedRef.current) return;
+    pushTargetData(map, {
+      visibleTargets,
+      jeep: myPosition?.coordinates,
+    });
+  }, [map, visibleTargets, myPosition]);
+
+  /* Keep the ref pointing at the latest closure. */
+  pushDataRef.current = pushData;
+
+  /**
+   * Bulletproof init lifecycle. Three independent triggers funnel
+   * through one idempotent `attempt()`:
+   *
+   *   1. Scheduled first attempt after `initialDelayMs`.
+   *   2. `load` event.
+   *   3. `styledata` event.
+   *   4. Periodic retry safety net every `retryIntervalMs`,
+   *      capped at `maxAttempts`. `attempt()` stops the interval
+   *      itself on success.
+   *
+   * The watchdog at the top of `attempt()` rebuilds layers if a
+   * basemap swap dropped them.
+   */
   useEffect(() => {
-    const layerId = IDS.lyrRingRec;
+    if (!map) return;
+    let cancelled = false;
+    let pending = false;
+    let attempts = 0;
+    let interval: number | null = null;
+    let initialTimer: number | null = null;
+
+    const stopRetries = () => {
+      if (interval !== null) {
+        window.clearInterval(interval);
+        interval = null;
+      }
+    };
+
+    const attempt = async () => {
+      if (cancelled || pending) return;
+
+      if (initializedRef.current) {
+        if (!map.getLayer(TARGET_LAYER_IDS.icons)) {
+          initializedRef.current = false;
+          setInitialized(false);
+        } else {
+          stopRetries();
+          return;
+        }
+      }
+
+      if (!map.isStyleLoaded()) return;
+
+      attempts += 1;
+      if (attempts > TARGETS_INIT_CONFIG.maxAttempts) {
+        stopRetries();
+        return;
+      }
+
+      pending = true;
+      try {
+        const ok = await initialize();
+        pending = false;
+        if (cancelled) return;
+        if (ok) {
+          setInitialized(true);
+          pushDataRef.current();
+          stopRetries();
+        }
+      } catch {
+        pending = false;
+      }
+    };
+
+    initialTimer = window.setTimeout(() => {
+      void attempt();
+    }, TARGETS_INIT_CONFIG.initialDelayMs) as unknown as number;
+
+    const onLoad = () => {
+      void attempt();
+    };
+    const onStyleData = () => {
+      void attempt();
+    };
+    map.on('load', onLoad);
+    map.on('styledata', onStyleData);
+
+    interval = window.setInterval(() => {
+      void attempt();
+    }, TARGETS_INIT_CONFIG.retryIntervalMs) as unknown as number;
+
+    return () => {
+      cancelled = true;
+      if (initialTimer !== null) window.clearTimeout(initialTimer);
+      stopRetries();
+      map.off('load', onLoad);
+      map.off('styledata', onStyleData);
+    };
+  }, [map, initialize]);
+
+  /* Re-push data on every visible target / jeep change. Gated on the
+   * `initialized` STATE so it re-fires the moment init flips to true. */
+  useEffect(() => {
+    if (!initialized) return;
+    pushData();
+  }, [initialized, pushData, visibleTargets.length]);
+
+  /* Visibility toggles — flip layout property only, never recreate. */
+  useEffect(() => {
+    try {
+      if (map.getLayer(TARGET_LAYER_IDS.trails)) {
+        map.setLayoutProperty(
+          TARGET_LAYER_IDS.trails,
+          'visibility',
+          trailsVisible ? 'visible' : 'none',
+        );
+      }
+    } catch {
+      /* not ready */
+    }
+  }, [map, trailsVisible]);
+
+  useEffect(() => {
+    try {
+      if (map.getLayer(TARGET_LAYER_IDS.labels)) {
+        map.setLayoutProperty(
+          TARGET_LAYER_IDS.labels,
+          'visibility',
+          labelsVisible ? 'visible' : 'none',
+        );
+      }
+    } catch {
+      /* not ready */
+    }
+  }, [map, labelsVisible]);
+
+  /* Recommended ring blink — config-driven cadence + opacities. */
+  useEffect(() => {
     let visible = true;
     const interval = window.setInterval(() => {
       try {
-        if (!map.getLayer(layerId)) return;
-        map.setPaintProperty(layerId, 'circle-stroke-opacity', visible ? 0.9 : 0.2);
+        if (!map.getLayer(TARGET_LAYER_IDS.ringRecommended)) return;
+        map.setPaintProperty(
+          TARGET_LAYER_IDS.ringRecommended,
+          'circle-stroke-opacity',
+          visible ? TARGETS_RECOMMENDED_BLINK.opacityOn : TARGETS_RECOMMENDED_BLINK.opacityOff,
+        );
         visible = !visible;
       } catch {
-        /* layer not ready */
+        /* not ready */
       }
-    }, 600);
+    }, TARGETS_RECOMMENDED_BLINK.intervalMs);
     return () => window.clearInterval(interval);
-  }, [map, IDS.lyrRingRec]);
+  }, [map]);
 
-  const pushData = useCallback(() => {
-    if (!initializedRef.current) return;
-
-    const srcTargets = map.getSource(IDS.srcTargets) as GeoJSONSource | undefined;
-    const srcTrails = map.getSource(IDS.srcTrails) as GeoJSONSource | undefined;
-    const srcAssign = map.getSource(IDS.srcAssign) as GeoJSONSource | undefined;
-    const srcTips = map.getSource(IDS.srcTips) as GeoJSONSource | undefined;
-    if (!srcTargets || !srcTrails || !srcAssign || !srcTips) return;
-
-    const targetFeatures = visibleTargets
-      .map(buildTargetFeature)
-      .filter((f): f is GeoJSON.Feature<GeoJSON.Point, TargetFeatureProperties> => Boolean(f));
-
-    srcTargets.setData(featureCollection(targetFeatures));
-
-    const trailFeatures = visibleTargets
-      .filter((t) => t.trail && t.trail.length >= 2)
-      .map((t) => {
-        const coordinates: LngLatTuple[] = t.trail!.map((p) => [p.lng, p.lat]);
-        return lineStringFeature(coordinates, { id: t.id });
-      });
-
-    srcTrails.setData(featureCollection(trailFeatures));
-
-    if (!myPosition?.coordinates) {
-      srcAssign.setData(EMPTY_FEATURE_COLLECTION);
-      srcTips.setData(EMPTY_FEATURE_COLLECTION);
-      return;
-    }
-
-    const jeep = myPosition.coordinates;
-    const assignFeatures: GeoJSON.Feature<GeoJSON.LineString, AssignFeatureProperties>[] = [];
-    const tipFeatures: GeoJSON.Feature<GeoJSON.LineString, { id: string }>[] = [];
-    const tipLen = 0.002;
-    const tipAng = (25 * Math.PI) / 180;
-
-    for (const t of visibleTargets) {
-      if (!t.coordinates) continue;
-      if (
-        t.isAssigned ||
-        t.isLocked ||
-        t.status === 'allocated' ||
-        t.status === 'destroyed'
-      ) {
-        const target = t.coordinates;
-        assignFeatures.push(
-          lineStringFeature(
-            [
-              [jeep.lng, jeep.lat],
-              [target.lng, target.lat],
-            ],
-            {
-              id: t.id,
-              isAssigned: Boolean(t.isAssigned),
-              isLocked: Boolean(t.isLocked),
-              isAllocated: t.status === 'allocated',
-              isDestroyed: t.status === 'destroyed',
-            },
-          ),
-        );
-
-        const dir = Math.atan2(jeep.lat - target.lat, jeep.lng - target.lng);
-        const left = {
-          lng: target.lng + tipLen * Math.cos(dir + tipAng),
-          lat: target.lat + tipLen * Math.sin(dir + tipAng),
-        };
-        const right = {
-          lng: target.lng + tipLen * Math.cos(dir - tipAng),
-          lat: target.lat + tipLen * Math.sin(dir - tipAng),
-        };
-        tipFeatures.push(
-          lineStringFeature(
-            [
-              [target.lng, target.lat],
-              [left.lng, left.lat],
-            ],
-            { id: `${t.id}_left` },
-          ),
-        );
-        tipFeatures.push(
-          lineStringFeature(
-            [
-              [target.lng, target.lat],
-              [right.lng, right.lat],
-            ],
-            { id: `${t.id}_right` },
-          ),
-        );
-      }
-    }
-
-    srcAssign.setData(featureCollection(assignFeatures));
-    srcTips.setData(featureCollection(tipFeatures));
-  }, [IDS, map, myPosition, visibleTargets]);
-
-  useMapStyleReady(
-    map,
-    () => {
-      const install = async () => {
-        if (initializedRef.current) return;
-        await loadPngIcons();
-
-        if (!map.getSource(IDS.srcTargets)) {
-          map.addSource(IDS.srcTargets, { type: 'geojson', data: EMPTY_FEATURE_COLLECTION });
-        }
-        if (!map.getSource(IDS.srcTrails)) {
-          map.addSource(IDS.srcTrails, { type: 'geojson', data: EMPTY_FEATURE_COLLECTION });
-        }
-        if (!map.getSource(IDS.srcAssign)) {
-          map.addSource(IDS.srcAssign, { type: 'geojson', data: EMPTY_FEATURE_COLLECTION });
-        }
-        if (!map.getSource(IDS.srcTips)) {
-          map.addSource(IDS.srcTips, { type: 'geojson', data: EMPTY_FEATURE_COLLECTION });
-        }
-
-        if (!map.getLayer(IDS.lyrTrails)) {
-          map.addLayer({
-            id: IDS.lyrTrails,
-            type: 'line',
-            source: IDS.srcTrails,
-            paint: {
-              'line-color': '#000000',
-              'line-width': 2,
-              'line-opacity': 0.9,
-              'line-dasharray': [1, 1],
-            },
-          });
-        }
-
-        if (!map.getLayer(IDS.lyrTargets)) {
-          map.addLayer({
-            id: IDS.lyrTargets,
-            type: 'symbol',
-            source: IDS.srcTargets,
-            layout: {
-              'icon-image': ['get', 'iconName'],
-              'icon-size': 0.04,
-              'icon-allow-overlap': true,
-              'icon-rotation-alignment': 'map',
-              'icon-rotate': ['get', 'heading'],
-            },
-          });
-        }
-
-        if (!map.getLayer(IDS.lyrRingRed)) {
-          map.addLayer({
-            id: IDS.lyrRingRed,
-            type: 'circle',
-            source: IDS.srcTargets,
-            filter: ['any', ['==', ['get', 'isAssigned'], true], ['==', ['get', 'isLocked'], true]],
-            paint: {
-              'circle-stroke-color': '#dd4141',
-              'circle-stroke-width': 2,
-              'circle-stroke-opacity': 0.9,
-              'circle-radius': 15,
-              'circle-color': 'rgba(0,0,0,0)',
-            },
-          });
-        }
-
-        if (!map.getLayer(IDS.lyrRingRec)) {
-          map.addLayer({
-            id: IDS.lyrRingRec,
-            type: 'circle',
-            source: IDS.srcTargets,
-            filter: [
-              'all',
-              ['==', ['get', 'isRecommended'], true],
-              ['==', ['get', 'isAssigned'], false],
-              ['==', ['get', 'isLocked'], false],
-            ],
-            paint: {
-              'circle-stroke-color': '#fff400',
-              'circle-stroke-width': 2,
-              'circle-stroke-opacity': 0.9,
-              'circle-radius': 15,
-              'circle-color': 'rgba(0,0,0,0)',
-            },
-          });
-        }
-
-        if (!map.getLayer(IDS.lyrAssigned)) {
-          map.addLayer({
-            id: IDS.lyrAssigned,
-            type: 'line',
-            source: IDS.srcAssign,
-            filter: ['==', ['get', 'isLocked'], true],
-            paint: {
-              'line-color': '#ff2b2b',
-              'line-width': 1.5,
-              'line-dasharray': [1, 0],
-            },
-          }, IDS.lyrTargets);
-        }
-
-        if (!map.getLayer(IDS.lyrAllocated)) {
-          map.addLayer({
-            id: IDS.lyrAllocated,
-            type: 'line',
-            source: IDS.srcAssign,
-            filter: ['==', ['get', 'isAllocated'], true],
-            paint: {
-              'line-color': '#58e1db',
-              'line-width': 1.5,
-              'line-dasharray': [4, 4],
-            },
-          }, IDS.lyrTargets);
-        }
-
-        if (!map.getLayer(IDS.lyrLocked)) {
-          map.addLayer({
-            id: IDS.lyrLocked,
-            type: 'line',
-            source: IDS.srcAssign,
-            filter: ['all', ['==', ['get', 'isAssigned'], true], ['!=', ['get', 'isLocked'], true]],
-            paint: {
-              'line-color': '#ff2b2b',
-              'line-width': 1.5,
-              'line-dasharray': [4, 4],
-            },
-          }, IDS.lyrTargets);
-        }
-
-        if (!map.hasImage('x-icon')) {
-          map.loadImage('/icons/x.png', (err, img) => {
-            if (!err && img && !map.hasImage('x-icon')) {
-              map.addImage('x-icon', img);
-              if (!map.getLayer(IDS.lyrDestroyed)) {
-                map.addLayer({
-                  id: IDS.lyrDestroyed,
-                  type: 'symbol',
-                  source: IDS.srcTargets,
-                  filter: ['==', ['get', 'isDestroyed'], true],
-                  layout: {
-                    'icon-image': 'x-icon',
-                    'icon-size': 0.15,
-                    'icon-allow-overlap': true,
-                  },
-                });
-              }
-            }
-          });
-        } else if (!map.getLayer(IDS.lyrDestroyed)) {
-          map.addLayer({
-            id: IDS.lyrDestroyed,
-            type: 'symbol',
-            source: IDS.srcTargets,
-            filter: ['==', ['get', 'isDestroyed'], true],
-            layout: {
-              'icon-image': 'x-icon',
-              'icon-size': 0.15,
-              'icon-allow-overlap': true,
-            },
-          });
-        }
-
-        if (!map.getLayer(IDS.lyrTargetLabels)) {
-          map.addLayer({
-            id: IDS.lyrTargetLabels,
-            type: 'symbol',
-            source: IDS.srcTargets,
-            filter: ['!', ['==', ['get', 'isDestroyed'], true]],
-            layout: {
-              'text-field': ['get', 'label'],
-              'text-font': ['Open Sans Semibold'],
-              'text-size': 12,
-              'text-offset': [0, 2],
-              'text-anchor': 'top',
-              'text-allow-overlap': true,
-              'text-ignore-placement': false,
-            },
-            paint: {
-              'text-color': '#000000',
-              'text-halo-width': 1,
-            },
-          });
-        }
-
-        initializedRef.current = true;
-        pushData();
-      };
-
-      void install();
-      return () => {
-        initializedRef.current = false;
-      };
-    },
-    [IDS, loadPngIcons, pushData],
-  );
-
-  useEffect(() => {
-    pushData();
-  }, [pushData]);
-
+  /* Abort buttons (DOM overlay anchored to MapLibre screen coords). */
   const [buttons, setButtons] = useState<Record<string, { x: number; y: number }>>({});
-
   const updateButtonPos = useCallback(() => {
     const result: Record<string, { x: number; y: number }> = {};
     for (const t of visibleTargets) {
       if (isAbortableTarget(t) && t.coordinates) {
-        const p = map.project([t.coordinates.lng, t.coordinates.lat]);
-        result[t.id] = { x: p.x - 22.5, y: p.y + 30 };
+        result[t.id] = getAbortButtonScreenPosition(
+          map,
+          t.coordinates.lng,
+          t.coordinates.lat,
+        );
       }
     }
     setButtons(result);
@@ -457,9 +335,13 @@ const TargetsLayer: React.FC<TargetsLayerProps> = ({ map, onAbort }) => {
     updateButtonPos();
     map.on('move', updateButtonPos);
     map.on('zoom', updateButtonPos);
+    map.on('rotate', updateButtonPos);
+    map.on('pitch', updateButtonPos);
     return () => {
       map.off('move', updateButtonPos);
       map.off('zoom', updateButtonPos);
+      map.off('rotate', updateButtonPos);
+      map.off('pitch', updateButtonPos);
     };
   }, [map, updateButtonPos]);
 
@@ -473,20 +355,21 @@ const TargetsLayer: React.FC<TargetsLayerProps> = ({ map, onAbort }) => {
         return (
           <div
             key={t.id}
-            className="fixed pointer-events-auto"
-            style={{ left: pos.x, top: pos.y + 25 }}
+            className={styles.abortAnchor}
+            style={{
+              left: pos.x,
+              top: pos.y,
+              width: ABORT_BUTTON_WIDTH_PX,
+            }}
           >
-            <div
+            <AppButton
+              variant="danger"
+              size="sm"
+              className={styles.abortButton}
               onClick={() => onAbort(t.id)}
-              className="text-sm text-white h-6 rounded-md w-12 bg-red-600 text-center mt-1 cursor-pointer"
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') onAbort(t.id);
-              }}
             >
               ביטול
-            </div>
+            </AppButton>
           </div>
         );
       })}

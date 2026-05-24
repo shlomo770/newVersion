@@ -13,6 +13,9 @@ import type { EntityCategoryEnum } from '@domain/enums/entity.enum';
 import { WsMessageName } from '@domain/enums/ws.enum';
 import type { OutboundMessageMap, OutboundMessageName } from '@/services/webSocket/wsTypes';
 import { swalConfirmDanger } from "@/utils/swalDialog";
+import { AppIconButton, AppInput, cn } from "@shared/ui";
+import { ENTITIES_SIDEBAR_ICONS } from "@/config";
+import styles from "./EntitiesSidebar.shared.module.css";
 
 export type EntitiesSidebarMissionsSectionProps = {
   onBackToRoot: () => void;
@@ -59,59 +62,49 @@ const EntitiesSidebarMissionsSection: FC<EntitiesSidebarMissionsSectionProps> = 
   onOpenCreateMarkerPanel,
   onCenterToEntity,
 }) => (
-  <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-3">
-    <button
-      type="button"
-      onClick={onBackToRoot}
-      className="mb-2 flex shrink-0 items-center gap-2 text-sm text-gray-400 hover:text-white"
-    >
-      <img src="./icons/back_arrow512.png" alt="" className="h-4 w-4 invert opacity-70" />
-      ????
+  <div className={styles.section}>
+    <button type="button" onClick={onBackToRoot} className={styles.backLink}>
+      <img src={ENTITIES_SIDEBAR_ICONS.back} alt="" className={styles.backIcon} />
+      חזרה
     </button>
 
     {!activeMissionName ? (
       <>
-        <div className="mb-3 shrink-0 rounded-lg border border-gray-700/50 bg-gray-800/40 px-3 py-2">
-          <p className="text-[11px] leading-snug text-gray-400">
-            ??? ?? + ??? ????? ????? ???? ? ??? ????? ?????? ?? ?? ????? ????. ??? ?? ?? ????? ?????? ??? ????? ????? (??????, ????? ??, ????? ????).
-            ??? ????? ????? ???? ????? ?? ?? ??????? ??????.
+        <div className={styles.infoBox}>
+          <p className={styles.infoText}>
+            לחץ על + ליצירת משימה חדשה, ולאחר מכן פתח משימה כדי להוסיף ישויות. ניתן לבחור מאזורים, נקודות וסוגי ישות (פוליגון, קו, מרקר).
+            לאחר סיום — שמור משימה לשרת או שמור עותק.
           </p>
         </div>
 
-        <div className="mb-2 flex shrink-0 flex-wrap items-center justify-between gap-2">
-          <p className="px-1 text-xs uppercase tracking-wide text-gray-500">?? ???????</p>
-          <button
-            type="button"
-            onClick={createLocalMission}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-600 text-white shadow transition-colors hover:bg-sky-500"
-            title="????? ???? ??????"
-          >
-            <FaPlus className="h-4 w-4" />
-          </button>
+        <div className={styles.sectionHeader}>
+          <p className={styles.sectionTitle}>רשימת משימות</p>
+          <AppIconButton size="sm" label="משימה חדשה" onClick={createLocalMission}>
+            <FaPlus />
+          </AppIconButton>
         </div>
 
-        <input
-          type="text"
+        <AppInput
+          compact
+          fieldClassName={styles.fieldStack}
           value={missionSearchQuery}
           onChange={(e) => setMissionSearchQuery(e.target.value)}
-          placeholder="????? ??? ?????..."
-          className="mb-2 w-full shrink-0 rounded-lg border border-gray-600 bg-gray-800 px-3 py-1.5 text-sm text-white placeholder-gray-400 focus:border-sky-500 focus:outline-none"
+          placeholder="חיפוש לפי שם משימה..."
         />
 
-        <div className="min-h-0 flex-1 space-y-1.5 overflow-y-auto">
+        <div className={styles.list}>
           {filteredMissions.length === 0 ? (
-            <div className="text-xs text-gray-400">
-              {sortedMissions.length === 0 ? "??? ?????? ?????" : "??? ?????? ??????"}
+            <div className={styles.emptyText}>
+              {sortedMissions.length === 0 ? "אין משימות עדיין" : "לא נמצאו משימות"}
             </div>
           ) : (
             filteredMissions.map((mission) => (
               <div
                 key={mission.id}
-                className={`group flex items-center justify-between gap-1.5 rounded-lg px-2 py-2 transition-colors ${
-                  activeMissionId === mission.id
-                    ? "border border-sky-500/40 bg-sky-600/25"
-                    : "bg-gray-800/60 hover:bg-gray-700/70"
-                }`}
+                className={cn(
+                  styles.missionRow,
+                  activeMissionId === mission.id ? styles.missionRowActive : styles.missionRowDefault,
+                )}
               >
                 <button
                   type="button"
@@ -121,48 +114,48 @@ const EntitiesSidebarMissionsSection: FC<EntitiesSidebarMissionsSectionProps> = 
                       sendLoadMission(mission.id);
                     }
                   }}
-                  className="min-w-0 flex-1 truncate pl-1 text-right text-sm font-medium text-gray-100"
-                  title="??? ????? ?????"
+                  className={styles.missionNameBtn}
+                  title="פתח משימה"
                 >
                   {mission.name}
                 </button>
-                <button
-                  type="button"
+                <AppIconButton
+                  size="sm"
+                  danger
+                  label="מחק משימה"
                   onClick={async (e) => {
                     e.stopPropagation();
-                    const ok = await swalConfirmDanger(`????? ?? ?????? "${mission.name}"?`, {
-                      title: "????? ?????",
-                      confirmText: "???",
-                      cancelText: "?????",
+                    const ok = await swalConfirmDanger(`למחוק את המשימה "${mission.name}"?`, {
+                      title: "מחיקת משימה",
+                      confirmText: "מחק",
+                      cancelText: "ביטול",
                     });
                     if (!ok) return;
                     sendMessage(WsMessageName.DeleteMission, { mission_id: mission.id });
                     dispatch(removeMission(mission.id));
                   }}
-                  className="shrink-0 rounded p-2 text-gray-400 hover:bg-red-900/20 hover:text-red-400"
-                  title="??? ?????"
                 >
-                  <FaTrashAlt className="h-4 w-4" />
-                </button>
+                  <FaTrashAlt />
+                </AppIconButton>
               </div>
             ))
           )}
         </div>
       </>
     ) : (
-      <div className="flex min-h-0 flex-1 flex-col gap-2">
+      <div className={styles.missionFormStack}>
         <button
           type="button"
           onClick={() => dispatch(setActiveMissionId(null))}
-          className="w-fit shrink-0 text-right text-[11px] text-sky-400 hover:text-sky-300"
+          className={styles.linkText}
         >
-          ? ???? ?????? ??????
+          ← חזרה לרשימת משימות
         </button>
-        <p className="shrink-0 text-[11px] leading-relaxed text-gray-500">
-          ???? ?????: ???? ?? ???????, ????? ?????, ????? ??????, ???? ?????, ????? ????. ????? ?? ?? ??????.
+        <p className={styles.hintText}>
+          עריכת משימה: הוסף מאזורים, נקודות וישויות, סדר וסנן, שמור לשרת. השתמש בכפתורי הפעולות.
         </p>
-        <p className="shrink-0 text-[10px] leading-snug text-gray-600">
-          ???? ????? ?? ?????? ??????. ???? ???? ???? ????? ??????? ?????? ??????. ????? ???? ?? ?&quot;???? ????&quot;.
+        <p className={styles.hintText}>
+          שמירת עותק יוצרת משימה חדשה. שמירה לשרת שולחת את הנתונים לשרת. ניתן גם ללחוץ על &quot;שמור עותק&quot;.
         </p>
       </div>
     )}
@@ -196,4 +189,3 @@ const EntitiesSidebarMissionsSection: FC<EntitiesSidebarMissionsSectionProps> = 
 );
 
 export default EntitiesSidebarMissionsSection;
-

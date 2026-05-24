@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { GunStatusE } from '@domain/enums/status.enum';
+import { STATUS_BAR_ICONS } from '@/config';
 import { gunIconClass } from './iconClassNames';
 import styles from './statusIcons.module.css';
 
@@ -40,7 +41,7 @@ function RenderGunIcon({ status = GunStatusE.NO_COMM }: RenderGunIconProps) {
 
       {status === GunStatusE.NO_COMM && (
         <div className={styles.iconOverlay}>
-          <img src="./icons/swap_no_link_arrows_512.png" className={styles.noCommImg} alt="" />
+          <img src={STATUS_BAR_ICONS.noComm} className={styles.noCommImg} alt="" />
         </div>
       )}
     </div>

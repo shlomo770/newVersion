@@ -1,8 +1,8 @@
 import { store } from '@app/store';
 import type { RootState } from '@app/store';
+import { TargetStateString } from '@/enums/target.enum';
 import { removeTarget, type Target } from '../store/targetsSlice';
-
-const POLL_INTERVAL_MS = 1000;
+import { TARGET_STATUS_POLL_INTERVAL_MS } from '../config/targetRuntime.config';
 
 export class TargetStatusService {
   private static instance: TargetStatusService | null = null;
@@ -32,7 +32,7 @@ export class TargetStatusService {
     this.isRunning = true;
     this.intervalRef = setInterval(() => {
       this.evaluateTargets();
-    }, POLL_INTERVAL_MS);
+    }, TARGET_STATUS_POLL_INTERVAL_MS);
   }
 
   stop(): void {
@@ -69,7 +69,7 @@ export class TargetStatusService {
     const timeoutMs = root.settings.inactiveTargetTimeoutSec * 1000;
     const now = Date.now();
     if (!target.lastUpdate) return false;
-    return now - target.lastUpdate > timeoutMs && target.status !== 'destroyed';
+    return now - target.lastUpdate > timeoutMs && target.status !== TargetStateString.destroyed;
   }
 
   static shouldRemoveTarget(target: Target, state?: RootState): boolean {

@@ -27,7 +27,7 @@
 }
 
 .maintenance {
-  background: #070a10;
+  background: var(--theme-color-bg-app, var(--color-surface-dark));
   color: var(--color-text-primary);
 }
 

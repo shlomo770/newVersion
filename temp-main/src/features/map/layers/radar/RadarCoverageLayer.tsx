@@ -4,6 +4,13 @@ import type { GeoJSONSource } from 'maplibre-gl';
 import type { Position } from 'geojson';
 import { useAppSelector } from '@/hooks/useAppSelector';
 import { buildRadarSectors } from '@shared/lib/geo';
+import {
+  RADAR_COVERAGE_IDS,
+  RADAR_COVERAGE_VISUALS,
+  radarFillLayerId,
+  radarLineLayerId,
+  radarSourceId,
+} from '@features/map/config';
 import { safeRemoveLayer, safeRemoveSource, useMapStyleReady } from '../shared/useMapStyleReady';
 
 interface RadarCoverageLayerProps {
@@ -14,18 +21,18 @@ interface RadarCoverageLayerProps {
   fillOpacity?: number;
   lineColor?: string;
   lineWidth?: number;
-  overlayPrefixHints?: string[];
+  overlayPrefixHints?: ReadonlyArray<string>;
 }
 
 export default function RadarCoverageLayer({
   map,
-  idPrefix = 'radar-nc',
-  stepDeg = 1,
-  fillColor = '#0400ff',
-  fillOpacity = 0.2,
-  lineColor = '#7574ad',
-  lineWidth = 2,
-  overlayPrefixHints = ['targets-', 'entity-', 'entity-icon-', 'entity-label-', 'overlay-', 'draw-'],
+  idPrefix = RADAR_COVERAGE_IDS.defaultPrefix,
+  stepDeg = RADAR_COVERAGE_VISUALS.stepDeg,
+  fillColor = RADAR_COVERAGE_VISUALS.fill.color,
+  fillOpacity = RADAR_COVERAGE_VISUALS.fill.opacity,
+  lineColor = RADAR_COVERAGE_VISUALS.line.color,
+  lineWidth = RADAR_COVERAGE_VISUALS.line.width,
+  overlayPrefixHints = RADAR_COVERAGE_IDS.overlayPrefixHints,
 }: RadarCoverageLayerProps) {
   const radarRange = useAppSelector((state) => state.radar.radarRange);
   const radarNonCoverage = useAppSelector((state) => state.radar.radarNonCoverage);
@@ -33,9 +40,9 @@ export default function RadarCoverageLayer({
 
   const ids = useMemo(
     () => ({
-      src: `${idPrefix}-src`,
-      fill: `${idPrefix}-fill`,
-      line: `${idPrefix}-line`,
+      src: radarSourceId(idPrefix),
+      fill: radarFillLayerId(idPrefix),
+      line: radarLineLayerId(idPrefix),
     }),
     [idPrefix],
   );

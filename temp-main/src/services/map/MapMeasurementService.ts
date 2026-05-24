@@ -2,7 +2,17 @@ import type { Map as MaplibreMap } from 'maplibre-gl';
 import type { Feature, FeatureCollection, LineString, Point, Polygon } from 'geojson';
 import type { Coordinates } from '@domain/models/coordinates';
 import { closeRing } from '@/utils/geometry';
-import { MapLayerManager } from "./MapLayerManager";
+import { MEASURE_IDS, MEASURE_VISUALS } from '@features/map/config';
+import { MapLayerManager } from './MapLayerManager';
+
+const POINTS_PAINT = {
+  'circle-radius': MEASURE_VISUALS.pointRadius,
+  'circle-color': MEASURE_VISUALS.pointFill,
+  'circle-stroke-color': MEASURE_VISUALS.pointStroke,
+  'circle-stroke-width': MEASURE_VISUALS.pointStrokeWidth,
+} as const;
+
+const toCoord = (pt: Coordinates): [number, number] => [pt.lng, pt.lat];
 
 export class MapMeasurementService {
   private map: MaplibreMap;
@@ -16,56 +26,51 @@ export class MapMeasurementService {
   public renderMeasurement(points: Coordinates[]) {
     if (!this.map) return;
 
-    this.layerManager.removeLayerAndSource("measure-line");
-    this.layerManager.removeLayerAndSource("measure-points");
+    this.layerManager.removeLayerAndSource(MEASURE_IDS.distanceLineLayer);
+    this.layerManager.removeLayerAndSource(MEASURE_IDS.distancePointsLayer);
 
     if (points.length > 0) {
       const pointsData: FeatureCollection<Point> = {
-        type: "FeatureCollection",
+        type: 'FeatureCollection',
         features: points.map((pt, index) => ({
-          type: "Feature",
-          geometry: { type: "Point", coordinates: [pt.lng, pt.lat] },
-          properties: { index }
-        }))
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: toCoord(pt) },
+          properties: { index },
+        })),
       };
-      this.map.addSource("measure-points", {
-        type: "geojson",
-        data: pointsData
+      this.map.addSource(MEASURE_IDS.distancePointsSource, {
+        type: 'geojson',
+        data: pointsData,
       });
       this.map.addLayer({
-        id: "measure-points",
-        type: "circle",
-        source: "measure-points",
-        paint: {
-          "circle-radius": 6,
-          "circle-color": "#f59e42",
-          "circle-stroke-color": "#fff",
-          "circle-stroke-width": 2
-        }
+        id: MEASURE_IDS.distancePointsLayer,
+        type: 'circle',
+        source: MEASURE_IDS.distancePointsSource,
+        paint: POINTS_PAINT,
       });
     }
 
     if (points.length >= 2) {
       const lineData: Feature<LineString> = {
-        type: "Feature",
+        type: 'Feature',
         geometry: {
-          type: "LineString",
-          coordinates: points.map(pt => [pt.lng, pt.lat])
+          type: 'LineString',
+          coordinates: points.map(toCoord),
         },
-        properties: {}
+        properties: {},
       };
-      this.map.addSource("measure-line", {
-        type: "geojson",
-        data: lineData
+      this.map.addSource(MEASURE_IDS.distanceLineSource, {
+        type: 'geojson',
+        data: lineData,
       });
       this.map.addLayer({
-        id: "measure-line",
-        type: "line",
-        source: "measure-line",
+        id: MEASURE_IDS.distanceLineLayer,
+        type: 'line',
+        source: MEASURE_IDS.distanceLineSource,
         paint: {
-          "line-color": "#f59e42",
-          "line-width": 4
-        }
+          'line-color': MEASURE_VISUALS.accentColor,
+          'line-width': MEASURE_VISUALS.distanceLineWidth,
+        },
       });
     }
   }
@@ -74,122 +79,114 @@ export class MapMeasurementService {
     if (!this.map) return;
 
     const previewLine: Feature<LineString> = {
-      type: "Feature",
+      type: 'Feature',
       geometry: {
-        type: "LineString",
-        coordinates: [
-          [start.lng, start.lat],
-          [current.lng, current.lat]
-        ]
+        type: 'LineString',
+        coordinates: [toCoord(start), toCoord(current)],
       },
-      properties: {}
+      properties: {},
     };
 
-    const sourceId = "measure-line-preview";
-    const layerId = "measure-line-preview";
+    const sourceId = MEASURE_IDS.distancePreviewSource;
+    const layerId = MEASURE_IDS.distancePreviewLayer;
     const source = this.map.getSource(sourceId) as maplibregl.GeoJSONSource | undefined;
     if (source) {
       source.setData(previewLine);
     } else {
       this.map.addSource(sourceId, {
-        type: "geojson",
-        data: previewLine
+        type: 'geojson',
+        data: previewLine,
       });
       this.map.addLayer({
         id: layerId,
-        type: "line",
+        type: 'line',
         source: sourceId,
         paint: {
-          "line-color": "#f59e42",
-          "line-width": 2,
-          "line-opacity": 0.6,
-          "line-dasharray": [2, 2]
-        }
+          'line-color': MEASURE_VISUALS.accentColor,
+          'line-width': MEASURE_VISUALS.previewLineWidth,
+          'line-opacity': MEASURE_VISUALS.previewLineOpacity,
+          'line-dasharray': MEASURE_VISUALS.previewLineDash,
+        },
       });
     }
   }
 
   public clearMeasurementPreview() {
-    this.layerManager.removeLayerAndSource("measure-line-preview");
+    this.layerManager.removeLayerAndSource(MEASURE_IDS.distancePreviewLayer);
   }
 
   public renderAreaMeasurement(points: Coordinates[]) {
     if (!this.map) return;
 
-    this.layerManager.removeLayerAndSource("measure-area-fill");
-    this.layerManager.removeLayerAndSource("measure-area-line");
-    this.layerManager.removeLayerAndSource("measure-area-points");
+    this.layerManager.removeLayerAndSource(MEASURE_IDS.areaFillLayer);
+    this.layerManager.removeLayerAndSource(MEASURE_IDS.areaLineLayer);
+    this.layerManager.removeLayerAndSource(MEASURE_IDS.areaPointsLayer);
 
     if (points.length > 0) {
       const pointsData: FeatureCollection<Point> = {
-        type: "FeatureCollection",
+        type: 'FeatureCollection',
         features: points.map((pt, index) => ({
-          type: "Feature",
-          geometry: { type: "Point", coordinates: [pt.lng, pt.lat] },
-          properties: { index }
-        }))
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: toCoord(pt) },
+          properties: { index },
+        })),
       };
-      this.map.addSource("measure-area-points", {
-        type: "geojson",
-        data: pointsData
+      this.map.addSource(MEASURE_IDS.areaPointsSource, {
+        type: 'geojson',
+        data: pointsData,
       });
       this.map.addLayer({
-        id: "measure-area-points",
-        type: "circle",
-        source: "measure-area-points",
-        paint: {
-          "circle-radius": 6,
-          "circle-color": "#f59e42",
-          "circle-stroke-color": "#fff",
-          "circle-stroke-width": 2
-        }
+        id: MEASURE_IDS.areaPointsLayer,
+        type: 'circle',
+        source: MEASURE_IDS.areaPointsSource,
+        paint: POINTS_PAINT,
       });
     }
 
     if (points.length >= 3) {
       const ring = closeRing(points);
       const lineData: Feature<LineString> = {
-        type: "Feature",
+        type: 'Feature',
         geometry: {
-          type: "LineString",
-          coordinates: points.map(pt => [pt.lng, pt.lat])
+          type: 'LineString',
+          coordinates: points.map(toCoord),
         },
-        properties: {}
+        properties: {},
       };
-      this.map.addSource("measure-area-line", {
-        type: "geojson",
-        data: lineData
+      this.map.addSource(MEASURE_IDS.areaLineSource, {
+        type: 'geojson',
+        data: lineData,
       });
       this.map.addLayer({
-        id: "measure-area-line",
-        type: "line",
-        source: "measure-area-line",
+        id: MEASURE_IDS.areaLineLayer,
+        type: 'line',
+        source: MEASURE_IDS.areaLineSource,
         paint: {
-          "line-color": "#f59e42",
-          "line-width": 3
-        }
+          'line-color': MEASURE_VISUALS.accentColor,
+          'line-width': MEASURE_VISUALS.areaLineWidth,
+        },
       });
 
       const fillData: Feature<Polygon> = {
-        type: "Feature",
+        type: 'Feature',
         geometry: {
-          type: "Polygon",
-          coordinates: [ring.map(pt => [pt.lng, pt.lat])]
+          type: 'Polygon',
+          coordinates: [ring.map(toCoord)],
         },
-        properties: {}
+        properties: {},
       };
-      this.map.addSource("measure-area-fill", {
-        type: "geojson",
-        data: fillData
+      this.map.addSource(MEASURE_IDS.areaFillSource, {
+        type: 'geojson',
+        data: fillData,
       });
       this.map.addLayer({
-        id: "measure-area-fill",
-        type: "fill",
-        source: "measure-area-fill",
+        id: MEASURE_IDS.areaFillLayer,
+        type: 'fill',
+        source: MEASURE_IDS.areaFillSource,
         paint: {
-          "fill-color": "#f59e42",
-          "fill-opacity": 0.2
-        }
+          'fill-color': MEASURE_VISUALS.accentColor,
+          'fill-opacity': MEASURE_VISUALS.areaFillOpacity,
+        },
       });
     }
   }
@@ -198,78 +195,78 @@ export class MapMeasurementService {
     if (!this.map || points.length === 0) return;
 
     const previewPoints = [...points, current];
-    const lineCoords = previewPoints.map(pt => [pt.lng, pt.lat] as [number, number]);
+    const lineCoords = previewPoints.map(toCoord);
 
-    const lineSourceId = "measure-area-preview-line";
-    const lineLayerId = "measure-area-preview-line";
+    const lineSourceId = MEASURE_IDS.areaPreviewLineSource;
+    const lineLayerId = MEASURE_IDS.areaPreviewLineLayer;
     const lineSource = this.map.getSource(lineSourceId) as maplibregl.GeoJSONSource | undefined;
     const lineData: Feature<LineString> = {
-      type: "Feature",
-      geometry: { type: "LineString", coordinates: lineCoords },
-      properties: {}
+      type: 'Feature',
+      geometry: { type: 'LineString', coordinates: lineCoords },
+      properties: {},
     };
     if (lineSource) {
       lineSource.setData(lineData);
     } else {
-      this.map.addSource(lineSourceId, { type: "geojson", data: lineData });
+      this.map.addSource(lineSourceId, { type: 'geojson', data: lineData });
       this.map.addLayer({
         id: lineLayerId,
-        type: "line",
+        type: 'line',
         source: lineSourceId,
         paint: {
-          "line-color": "#f59e42",
-          "line-width": 2,
-          "line-opacity": 0.6,
-          "line-dasharray": [2, 2]
-        }
+          'line-color': MEASURE_VISUALS.accentColor,
+          'line-width': MEASURE_VISUALS.previewLineWidth,
+          'line-opacity': MEASURE_VISUALS.previewLineOpacity,
+          'line-dasharray': MEASURE_VISUALS.previewLineDash,
+        },
       });
     }
 
     if (previewPoints.length >= 3) {
       const ring = closeRing(previewPoints);
-      const fillSourceId = "measure-area-preview-fill";
-      const fillLayerId = "measure-area-preview-fill";
+      const fillSourceId = MEASURE_IDS.areaPreviewFillSource;
+      const fillLayerId = MEASURE_IDS.areaPreviewFillLayer;
       const fillSource = this.map.getSource(fillSourceId) as maplibregl.GeoJSONSource | undefined;
       const fillData: Feature<Polygon> = {
-        type: "Feature",
+        type: 'Feature',
         geometry: {
-          type: "Polygon",
-          coordinates: [ring.map(pt => [pt.lng, pt.lat])]
+          type: 'Polygon',
+          coordinates: [ring.map(toCoord)],
         },
-        properties: {}
+        properties: {},
       };
       if (fillSource) {
         fillSource.setData(fillData);
       } else {
-        this.map.addSource(fillSourceId, { type: "geojson", data: fillData });
+        this.map.addSource(fillSourceId, { type: 'geojson', data: fillData });
         this.map.addLayer({
           id: fillLayerId,
-          type: "fill",
+          type: 'fill',
           source: fillSourceId,
           paint: {
-            "fill-color": "#f59e42",
-            "fill-opacity": 0.15
-          }
+            'fill-color': MEASURE_VISUALS.accentColor,
+            'fill-opacity': MEASURE_VISUALS.areaPreviewFillOpacity,
+          },
         });
       }
     }
   }
 
   public clearAreaMeasurementPreview() {
-    this.layerManager.removeLayerAndSource("measure-area-preview-line");
-    this.layerManager.removeLayerAndSource("measure-area-preview-fill");
+    this.layerManager.removeLayerAndSource(MEASURE_IDS.areaPreviewLineLayer);
+    this.layerManager.removeLayerAndSource(MEASURE_IDS.areaPreviewFillLayer);
   }
 
   public clearMeasurement() {
     this.clearMeasurementPreview();
-    this.layerManager.removeLayerAndSource("measure-line");
-    this.layerManager.removeLayerAndSource("measure-points");
+    this.layerManager.removeLayerAndSource(MEASURE_IDS.distanceLineLayer);
+    this.layerManager.removeLayerAndSource(MEASURE_IDS.distancePointsLayer);
   }
 
   public clearAreaMeasurement() {
     this.clearAreaMeasurementPreview();
-    this.layerManager.removeLayerAndSource("measure-area-fill");
-    this.layerManager.removeLayerAndSource("measure-area-line");
-    this.layerManager.removeLayerAndSource("measure-area-points");
+    this.layerManager.removeLayerAndSource(MEASURE_IDS.areaFillLayer);
+    this.layerManager.removeLayerAndSource(MEASURE_IDS.areaLineLayer);
+    this.layerManager.removeLayerAndSource(MEASURE_IDS.areaPointsLayer);
   }
 }

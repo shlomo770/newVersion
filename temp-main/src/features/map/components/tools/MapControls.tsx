@@ -1,13 +1,27 @@
-import React, { useRef, useState } from 'react';
-import { TbZoomPan, TbMapStar } from 'react-icons/tb';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  TbZoomPan,
+  TbMapStar,
+  TbAdjustmentsHorizontal,
+  TbLayoutSidebarRightCollapse,
+} from 'react-icons/tb';
 import { useAppSelector } from '@/hooks/useAppSelector';
 import { useAppDispatch } from '@/hooks/useAppDispatch';
 import { setBrightness, setZoom } from '@features/map/store/mapSlice';
+import { toggleTargetPanelVisible } from '@features/map/store/filterSlice';
 import { setDrawingMode } from '@features/entities';
-import FlyoutMenu from '@shared/components/overlay/FlyoutMenu';
+import { FlyoutMenu } from '@shared/components';
 import BaseMapSelector from '../BaseMapSelector';
+import TargetFilterMenu from './TargetFilterMenu';
 import type { MapFacade, JsonPathInput } from '@features/map/services/MapFacade';
+import { MAP_TOOLBAR_FLYOUT, BRIGHTNESS_CONFIG } from '@features/map/config';
+import { MAP_TOOL_ICONS } from '@/config';
 import styles from './MapControls.module.css';
+
+/** Zoom level applied by the "Zoom 1:1" reset button. */
+const ZOOM_RESET_LEVEL = 10;
+/** Common Tabler icon size used inside the toolbar flyout. */
+const TOOLBAR_ICON_SIZE_PX = 25;
 
 interface MapControlsProps {
   mapFacadeRef?: React.MutableRefObject<MapFacade | null>;
@@ -76,21 +90,63 @@ function normalizePaths(raw: unknown): JsonPathInput[] {
   return [];
 }
 
+/**
+ * MapControls — floating round launcher button at top-left of the map
+ * that opens the main map tools flyout.
+ *
+ * Architecture:
+ *  - Main flyout: one-shot actions (zoom 1:1, brightness, ruler, JSON
+ *    import, basemap selector) PLUS two stateful buttons that the user
+ *    must be able to identify separately:
+ *      • "Filter" button  → opens a sub-flyout (`TargetFilterMenu`) that
+ *        controls visibility of target *map elements* (trails, labels).
+ *      • "Panel" button   → toggles the right-side target cards panel.
+ *        This is a separate concern (UI panel vs map elements) so it is
+ *        deliberately NOT inside the filter sub-flyout.
+ *  - Brightness slider sub-flyout — same pattern as the filter.
+ *
+ * Tunable flyout offsets live in `@features/map/config/mapTools.config.ts`;
+ * brightness slider range in `@features/map/config/mapDefaults.config.ts`;
+ * toolbar icon paths in `@/config/appIcons.config.ts`.
+ */
 const MapControls: React.FC<MapControlsProps> = ({ mapFacadeRef }) => {
   const dispatch = useAppDispatch();
   const [isOpen, setIsOpen] = useState(false);
   const [isOpenBrightness, setIsOpenBrightness] = useState(false);
+  const [isOpenFilter, setIsOpenFilter] = useState(false);
   const [isMapSelectorOpen, setIsMapSelectorOpen] = useState(false);
   const buttonRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const brightness = useAppSelector((state) => state.map.brightness);
   const drawingMode = useAppSelector((state) => state.entities.drawingMode);
+  // Defensive against an older slice shape that may still be in the running
+  // Redux store across HMR — `targetVisibility` could be undefined.
+  const panelVisible = useAppSelector(
+    (state) => state.filter.targetVisibility?.panel ?? true,
+  );
   const isMeasuringDistance = drawingMode === 'measure';
 
-  const handleZoomReset = () => {
-    dispatch(setZoom(10));
-    mapFacadeRef?.current?.setZoom(10);
+  // Closing the main flyout MUST always close every sub-flyout — otherwise
+  // a stale sub-popup can float on the map alone.
+  const closeAllFlyouts = useCallback(() => {
     setIsOpen(false);
+    setIsOpenBrightness(false);
+    setIsOpenFilter(false);
+    setIsMapSelectorOpen(false);
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setIsOpenBrightness(false);
+      setIsOpenFilter(false);
+      setIsMapSelectorOpen(false);
+    }
+  }, [isOpen]);
+
+  const handleZoomReset = () => {
+    dispatch(setZoom(ZOOM_RESET_LEVEL));
+    mapFacadeRef?.current?.setZoom(ZOOM_RESET_LEVEL);
+    closeAllFlyouts();
   };
 
   const handleBrightnessChange = (value: number) => {
@@ -100,11 +156,15 @@ const MapControls: React.FC<MapControlsProps> = ({ mapFacadeRef }) => {
   const handleRulerToggle = () => {
     const newMode = isMeasuringDistance ? null : 'measure';
     dispatch(setDrawingMode(newMode));
-    setIsOpen(false);
+    closeAllFlyouts();
   };
 
   const handleMapTypeToggle = () => {
-    setIsMapSelectorOpen(!isMapSelectorOpen);
+    setIsMapSelectorOpen((open) => !open);
+  };
+
+  const handleToggleTargetsPanel = () => {
+    dispatch(toggleTargetPanelVisible());
   };
 
   const handleJsonFilePick = () => {
@@ -119,7 +179,9 @@ const MapControls: React.FC<MapControlsProps> = ({ mapFacadeRef }) => {
       const parsed: unknown = JSON.parse(text);
       const paths = normalizePaths(parsed);
       if (paths.length === 0) {
-        console.warn('JSON must include at least one path with 2+ points.');
+        if (import.meta.env.DEV) {
+          console.warn('JSON must include at least one path with 2+ points.');
+        }
         return;
       }
       mapFacadeRef.current.renderJsonPaths(paths);
@@ -143,7 +205,7 @@ const MapControls: React.FC<MapControlsProps> = ({ mapFacadeRef }) => {
           if (ev.key === 'Enter' || ev.key === ' ') setIsOpen(!isOpen);
         }}
       >
-        <img src="./icons/Map_512.png" alt="" className={styles.launcherIcon} />
+        <img src={MAP_TOOL_ICONS.launcher} alt="" className={styles.launcherIcon} />
       </div>
       <input
         ref={fileInputRef}
@@ -157,24 +219,24 @@ const MapControls: React.FC<MapControlsProps> = ({ mapFacadeRef }) => {
         anchorRef={buttonRef}
         isOpen={isOpenBrightness}
         placement="bottom"
-        top={260}
-        left={240}
-        arow={55}
+        top={MAP_TOOLBAR_FLYOUT.brightness.top}
+        left={MAP_TOOLBAR_FLYOUT.brightness.left}
+        arow={MAP_TOOLBAR_FLYOUT.brightness.arrow}
         onClose={() => setIsOpenBrightness(false)}
       >
         <div className={styles.brightnessPanel} onClick={(e) => e.stopPropagation()}>
-          <img src="./icons/brightness_512.png" className={styles.brightnessIcon} alt="" />
+          <img src={MAP_TOOL_ICONS.brightness} className={styles.brightnessIcon} alt="" />
           <input
             type="range"
-            min={0}
-            max={1}
-            step={0.1}
+            min={BRIGHTNESS_CONFIG.uiMin}
+            max={BRIGHTNESS_CONFIG.uiMax}
+            step={BRIGHTNESS_CONFIG.uiStep}
             value={brightness}
             onChange={(e) => handleBrightnessChange(Number(e.target.value))}
             onClick={(e) => e.stopPropagation()}
             className={styles.brightnessSlider}
             style={{
-              background: `linear-gradient(to right, #2F67FF 0%, #2F67FF ${brightness * 100}%, #C9CDD3 ${brightness * 100}%, #C9CDD3 100%)`,
+              background: `linear-gradient(to right, var(--theme-color-primary) 0%, var(--theme-color-primary) ${brightness * 100}%, var(--theme-color-border) ${brightness * 100}%, var(--theme-color-border) 100%)`,
             }}
           />
         </div>
@@ -182,86 +244,139 @@ const MapControls: React.FC<MapControlsProps> = ({ mapFacadeRef }) => {
 
       <FlyoutMenu
         anchorRef={buttonRef}
+        isOpen={isOpenFilter}
+        placement="bottom"
+        top={MAP_TOOLBAR_FLYOUT.filter.top}
+        left={MAP_TOOLBAR_FLYOUT.filter.left}
+        arow={MAP_TOOLBAR_FLYOUT.filter.arrow}
+        onClose={() => setIsOpenFilter(false)}
+      >
+        <TargetFilterMenu />
+      </FlyoutMenu>
+
+      <FlyoutMenu
+        anchorRef={buttonRef}
         isOpen={isOpen}
         placement="bottom"
-        top={155}
-        left={285}
-        arow={25}
-        onClose={() => !isOpenBrightness && setIsOpen(false)}
+        top={MAP_TOOLBAR_FLYOUT.main.top}
+        left={MAP_TOOLBAR_FLYOUT.main.left}
+        arow={MAP_TOOLBAR_FLYOUT.main.arrow}
+        onClose={() => {
+          if (isOpenBrightness || isMapSelectorOpen || isOpenFilter) return;
+          setIsOpen(false);
+        }}
       >
         <div className={styles.menuPanel} onClick={(e) => e.stopPropagation()}>
           <div className={styles.menuRow}>
-            <div
+            <button
+              type="button"
               className={styles.menuItem}
               onClick={(e) => {
                 e.stopPropagation();
                 handleZoomReset();
               }}
               title="Zoom 1:1"
-              role="button"
-              tabIndex={0}
             >
-              <TbZoomPan size={25} className="text-white" />
-              <span className={styles.menuItemLabel}>{"זום  1:1"}</span>
-            </div>
+              <TbZoomPan size={TOOLBAR_ICON_SIZE_PX} className={styles.menuItemIconWhite} />
+              <span className={styles.menuItemLabel}>{'זום  1:1'}</span>
+            </button>
 
-            <div
+            <button
+              type="button"
               className={styles.menuItem}
-              onClick={() => setIsOpenBrightness(!isOpenBrightness)}
-              role="button"
-              tabIndex={0}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsOpenBrightness((open) => !open);
+              }}
+              title="Brightness"
             >
-              <img src="./icons/brightness_512.png" alt="" className={styles.menuItemIcon} />
+              <img src={MAP_TOOL_ICONS.brightness} alt="" className={styles.menuItemIcon} />
               <span className={styles.menuItemLabel}>בהירות</span>
-            </div>
+            </button>
 
-            <div
+            <button
+              type="button"
               className={`${styles.menuItem} ${isMeasuringDistance ? styles.menuItemActive : ''}`}
               onClick={(e) => {
                 e.stopPropagation();
                 handleRulerToggle();
               }}
               title="Ruler"
-              role="button"
-              tabIndex={0}
             >
-              <img src="./icons/ruler_512.png" alt="" className={styles.menuItemIcon} />
+              <img src={MAP_TOOL_ICONS.ruler} alt="" className={styles.menuItemIcon} />
               <span className={styles.menuItemLabel}>מדידות</span>
               {isMeasuringDistance ? <div className={styles.activeDot} /> : null}
-            </div>
+            </button>
 
-            <div
+            <button
+              type="button"
+              className={`${styles.menuItem} ${isOpenFilter ? styles.menuItemActive : ''}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsOpenFilter((open) => !open);
+              }}
+              title="Map filters (trails, labels)"
+              aria-haspopup="menu"
+              aria-expanded={isOpenFilter}
+            >
+              <TbAdjustmentsHorizontal
+                size={TOOLBAR_ICON_SIZE_PX}
+                className={styles.menuItemIconWhite}
+              />
+              <span className={styles.menuItemLabel}>סינון</span>
+            </button>
+
+            <button
+              type="button"
+              className={`${styles.menuItem} ${panelVisible ? styles.menuItemActive : ''}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleToggleTargetsPanel();
+              }}
+              title={panelVisible ? 'Hide targets panel' : 'Show targets panel'}
+              aria-pressed={panelVisible}
+            >
+              <TbLayoutSidebarRightCollapse
+                size={TOOLBAR_ICON_SIZE_PX}
+                className={styles.menuItemIconWhite}
+              />
+              <span className={styles.menuItemLabel}>פאנל</span>
+              {panelVisible ? <div className={styles.activeDot} /> : null}
+            </button>
+
+            <button
+              type="button"
               className={styles.menuItem}
               onClick={(e) => {
                 e.stopPropagation();
                 handleJsonFilePick();
-                setIsOpen(false);
+                closeAllFlyouts();
               }}
               title="Load JSON Path"
-              role="button"
-              tabIndex={0}
             >
-              <img src="./icons/endpoints.png" alt="" className={styles.menuItemIcon} />
+              <img src={MAP_TOOL_ICONS.jsonImport} alt="" className={styles.menuItemIcon} />
               <span className={styles.menuItemLabel}>JSON</span>
-            </div>
+            </button>
 
             <div className={`${styles.menuItem} ${styles.mapSelectorWrap}`}>
-              <div
+              <button
+                type="button"
                 className={styles.menuItem}
                 onClick={(e) => {
                   e.stopPropagation();
                   handleMapTypeToggle();
                 }}
                 title="Map Type"
-                role="button"
-                tabIndex={0}
               >
-                <TbMapStar size={25} className="text-white" />
+                <TbMapStar size={TOOLBAR_ICON_SIZE_PX} className={styles.menuItemIconWhite} />
                 <span className={styles.menuItemLabel}>החלף</span>
-              </div>
+              </button>
               {isMapSelectorOpen ? (
                 <div className={styles.mapSelectorDropdown}>
-                  <BaseMapSelector isOpen={isMapSelectorOpen} onToggle={() => setIsMapSelectorOpen(false)} />
+                  <BaseMapSelector
+                    isOpen={isMapSelectorOpen}
+                    onToggle={() => setIsMapSelectorOpen(false)}
+                  />
                 </div>
               ) : null}
             </div>

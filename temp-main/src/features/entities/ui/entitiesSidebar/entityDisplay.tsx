@@ -1,62 +1,57 @@
-import { FC } from "react";
+import { FC } from 'react';
 import {
   FaCircleNotch,
   FaEllipsisH,
   FaMinus,
   FaChartPie,
   FaRegSquare,
-} from "react-icons/fa";
-import { PiPolygonFill } from "react-icons/pi";
+} from 'react-icons/fa';
+import { PiPolygonFill } from 'react-icons/pi';
+import styles from './entityDisplay.module.css';
 
 export function getEntityTypeLabel(type: string): string {
   switch (type) {
-    case "circle":
-      return "מעגל";
-    case "ellipse":
-      return "אליפסה";
-    case "polygon":
-      return "פוליגון";
-    case "line":
-      return "קו";
-    case "sector":
+    case 'circle':
+      return 'מעגל';
+    case 'ellipse':
+      return 'אליפסה';
+    case 'polygon':
+      return 'פוליגון';
+    case 'line':
+      return 'קו';
+    case 'sector':
       return 'מגזר (Taboo Zone)';
-    case "rectangle":
-      return "מלבן";
-    case "target":
-      return "Target";
+    case 'rectangle':
+      return 'מלבן';
+    case 'target':
+      return 'Target';
     default:
       return type;
   }
 }
 
 export const EntityCategoryBadge: FC<{ category: string }> = ({ category }) => {
-  const short = String(category || "?")
+  const short = String(category || '?')
     .trim()
     .slice(0, 3);
-  const normalized = short ? short.toUpperCase() : "?";
-  return (
-    <span className="inline-flex h-6 min-w-[24px] items-center justify-center rounded bg-sky-500/20 px-1 text-[11px] font-semibold text-sky-300">
-      {normalized}
-    </span>
-  );
+  const normalized = short ? short.toUpperCase() : '?';
+  return <span className={styles.badge}>{normalized}</span>;
 };
-
-const commonIcon = "h-3 w-3";
 
 export const EntityTypeGlyph: FC<{ type: string }> = ({ type }) => {
   switch (type) {
-    case "circle":
-      return <FaCircleNotch className={commonIcon} />;
-    case "ellipse":
-      return <FaEllipsisH className={commonIcon} />;
-    case "polygon":
-    case "rectangle":
-      return <PiPolygonFill className={commonIcon} />;
-    case "line":
-      return <FaMinus className={commonIcon} />;
-    case "sector":
-      return <FaChartPie className={commonIcon} />;
+    case 'circle':
+      return <FaCircleNotch className={styles.glyph} />;
+    case 'ellipse':
+      return <FaEllipsisH className={styles.glyph} />;
+    case 'polygon':
+    case 'rectangle':
+      return <PiPolygonFill className={styles.glyph} />;
+    case 'line':
+      return <FaMinus className={styles.glyph} />;
+    case 'sector':
+      return <FaChartPie className={styles.glyph} />;
     default:
-      return <FaRegSquare className={commonIcon} />;
+      return <FaRegSquare className={styles.glyph} />;
   }
 };

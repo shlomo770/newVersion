@@ -19,7 +19,6 @@ import {
 import { faultsReducer } from '@features/faults';
 import { confirmReducer } from '@features/confirm';
 import { tabooZoneReducer } from '@features/taboo-zone';
-import { wsInboundReducer } from '@features/ws-debug';
 
 export const rootReducer = combineReducers({
   entities: entitiesReducer,
@@ -38,7 +37,6 @@ export const rootReducer = combineReducers({
   faults: faultsReducer,
   confirm: confirmReducer,
   tabooZone: tabooZoneReducer,
-  wsInbound: wsInboundReducer,
 });
 
 export type RootReducerState = ReturnType<typeof rootReducer>;

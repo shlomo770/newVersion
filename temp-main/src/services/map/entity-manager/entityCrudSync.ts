@@ -19,7 +19,7 @@ import {
   isIconMarkerEntity,
   type EntityLayerPaint,
 } from './entityLayerStyle';
-import { addEntityLabelLayer, logPolygonDiagnostics, syncEntityLabelLayer } from './entityEventHandlers';
+import { addEntityLabelLayer, syncEntityLabelLayer } from './entityEventHandlers';
 import type { EntityGeoJsonFeature, MapLayerEntity } from './entityManagerTypes';
 import { resolveEntityTransparency } from './entityManagerTypes';
 import type { EntityType } from '@domain/models/entity';
@@ -136,7 +136,6 @@ export class EntityCrudSync {
             });
           }
         } else {
-          logPolygonDiagnostics(entity, geojson, 'addSource');
           map.addSource(sourceId, { type: 'geojson', data: geojson });
           map.addLayer(buildEntityLayerObject(layerId, entity.type, sourceId, getPaintProperties(entity)));
           addEntityLabelLayer(map, entity);
@@ -154,7 +153,6 @@ export class EntityCrudSync {
     }
 
     try {
-      logPolygonDiagnostics(entity, geojson, 'setData-existingSource');
       existingSource.setData(geojson);
 
       if (isIconMarkerEntity(entity)) {
@@ -227,7 +225,6 @@ export class EntityCrudSync {
           });
         }
       } else {
-        logPolygonDiagnostics(entity, geojson, 'setData-recreateSource');
         map.addSource(sourceId, { type: 'geojson', data: geojson });
         map.addLayer(buildEntityLayerObject(layerId, entity.type, sourceId, getPaintProperties(entity)));
         addEntityLabelLayer(map, entity);
@@ -281,11 +278,9 @@ export class EntityCrudSync {
       }
       if (this.map.getLayer(layerId)) {
         this.map.removeLayer(layerId);
-        console.log('✅ Removed layer:', layerId);
       }
       if (this.map.getSource(sourceId)) {
         this.map.removeSource(sourceId);
-        console.log('✅ Removed source:', sourceId);
       }
 
       this.entityCache.delete(entityId);
@@ -336,7 +331,6 @@ export class EntityCrudSync {
       }
 
       try {
-        logPolygonDiagnostics(entity, geojson, 'updateEntityOnMap-setData');
         source.setData(geojson);
       } catch (err) {
         console.error('❌ Failed to setData on source in updateEntityOnMap:', err);

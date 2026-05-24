@@ -1,19 +1,15 @@
-export function entitySourceId(entityId: string): string {
-  return `entity-${entityId}`;
-}
-
-export function entityLayerId(entityId: string): string {
-  return `entity-layer-${entityId}`;
-}
-
-export function entityIconLayerId(entityId: string): string {
-  return `entity-icon-layer-${entityId}`;
-}
-
-export function entityLabelSourceId(entityId: string): string {
-  return `entity-label-${entityId}`;
-}
-
-export function entityLabelLayerId(entityId: string): string {
-  return `entity-label-layer-${entityId}`;
-}
+/**
+ * Thin re-exports of the canonical entity id builders defined in
+ * `@features/map/config/mapLayers.config.ts`.
+ *
+ * The legacy entity-manager call sites still import from this module
+ * — keeping the old names while pointing them at the central config
+ * lets us avoid touching every consumer in this pass.
+ */
+export {
+  entitySourceIdFor as entitySourceId,
+  entityLayerIdFor as entityLayerId,
+  entityIconLayerIdFor as entityIconLayerId,
+  entityLabelSourceIdFor as entityLabelSourceId,
+  entityLabelLayerIdFor as entityLabelLayerId,
+} from '@features/map/config';

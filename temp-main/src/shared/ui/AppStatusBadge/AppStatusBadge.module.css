@@ -1,0 +1,49 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--theme-radius-full, 9999px);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+}
+
+.default {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--theme-color-text-secondary, var(--color-text-primary));
+  border-color: var(--theme-color-border-subtle, var(--color-border-zinc));
+}
+
+.success {
+  background: color-mix(in srgb, var(--theme-color-success) 18%, transparent);
+  color: var(--theme-color-success, var(--color-green));
+  border-color: color-mix(in srgb, var(--theme-color-success) 35%, transparent);
+}
+
+.warning {
+  background: color-mix(in srgb, var(--theme-color-warning) 18%, transparent);
+  color: var(--theme-color-warning, var(--color-amber-focus));
+  border-color: color-mix(in srgb, var(--theme-color-warning) 35%, transparent);
+}
+
+.danger {
+  background: color-mix(in srgb, var(--theme-color-danger) 18%, transparent);
+  color: var(--theme-color-danger, var(--color-red));
+  border-color: color-mix(in srgb, var(--theme-color-danger) 35%, transparent);
+}
+
+.info {
+  background: color-mix(in srgb, var(--theme-color-accent) 18%, transparent);
+  color: var(--theme-color-accent, var(--color-brand-primary));
+  border-color: color-mix(in srgb, var(--theme-color-accent) 35%, transparent);
+}
+
+.active {
+  background: color-mix(in srgb, var(--theme-color-primary) 18%, transparent);
+  color: var(--theme-color-primary, var(--color-brand-accent));
+  border-color: color-mix(in srgb, var(--theme-color-primary) 35%, transparent);
+}

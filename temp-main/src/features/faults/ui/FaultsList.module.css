@@ -2,10 +2,10 @@
   width: 100%;
   max-width: 900px;
   height: 100%;
-  color: #f5f5f5;
-  border-radius: var(--layout-radius-xl);
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--theme-color-text-primary, var(--color-text-primary));
+  border-radius: var(--theme-radius-xl, var(--layout-radius-xl));
+  background: color-mix(in srgb, var(--theme-color-bg-panel, var(--color-surface-panel)) 92%, transparent);
+  border: 1px solid var(--theme-color-border-subtle, rgba(255, 255, 255, 0.1));
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
   display: flex;
   flex-direction: column;
@@ -16,7 +16,7 @@
   align-items: center;
   gap: var(--space-3);
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--theme-color-text-muted, var(--color-text-muted));
 }
 
 .legendItem {
@@ -29,27 +29,27 @@
   width: 0.5rem;
   height: 0.5rem;
   border-radius: 9999px;
-  background: #f87171;
+  background: var(--theme-color-danger, var(--color-red));
 }
 
 .dotIntermediate {
   width: 0.5rem;
   height: 0.5rem;
   border-radius: 9999px;
-  background: #fcd34d;
+  background: var(--theme-color-warning, var(--color-status-warning));
 }
 
 .dotWarning {
   width: 0.5rem;
   height: 0.5rem;
   border-radius: 9999px;
-  background: #67e8f9;
+  background: var(--theme-color-info, var(--color-brand-primary));
 }
 
 .filters {
   padding: 0.625rem var(--space-4);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(15, 23, 42, 0.8);
+  background: color-mix(in srgb, var(--theme-color-bg-panel, var(--color-surface-panel)) 80%, transparent);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -64,12 +64,12 @@
 }
 
 .filterLabel {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--theme-color-text-muted, var(--color-text-muted));
 }
 
 .severitySelect {
-  background: #0f172a;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--theme-color-bg-input, var(--color-surface-input-dark));
+  border: 1px solid var(--theme-color-border-strong, rgba(255, 255, 255, 0.15));
   border-radius: var(--layout-radius-md);
   padding: var(--space-1) var(--space-2);
   font-size: 11px;
@@ -78,7 +78,7 @@
 
 .severitySelect:focus {
   outline: none;
-  box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.6);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--theme-color-success, var(--color-green)) 60%, transparent);
 }
 
 .categoryList {
@@ -95,18 +95,18 @@
   font-size: 11px;
   transition: background var(--duration-fast) var(--ease-default), border-color var(--duration-fast) var(--ease-default), color var(--duration-fast) var(--ease-default);
   cursor: pointer;
-  background: rgba(30, 41, 59, 0.6);
-  color: rgba(255, 255, 255, 0.45);
+  background: var(--theme-color-bg-card, rgba(255, 255, 255, 0.03));
+  color: var(--theme-color-text-muted, var(--color-text-muted));
 }
 
 .categoryChip:hover {
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--theme-color-text-secondary, var(--color-text-primary));
 }
 
 .categoryChipOn {
-  background: rgba(16, 185, 129, 0.1);
-  border-color: rgba(52, 211, 153, 0.6);
-  color: #d1fae5;
+  background: color-mix(in srgb, var(--theme-color-success, var(--color-green)) 10%, transparent);
+  border-color: color-mix(in srgb, var(--theme-color-success, var(--color-green)) 60%, transparent);
+  color: var(--theme-color-text-primary, var(--color-text-primary));
 }
 
 .inactiveToggle {
@@ -129,9 +129,9 @@
 .tableHeader {
   padding: var(--space-2) var(--space-3) var(--space-1);
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--theme-color-text-muted, var(--color-text-muted));
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(15, 23, 42, 0.7);
+  background: color-mix(in srgb, var(--theme-color-bg-panel, var(--color-surface-panel)) 70%, transparent);
 }
 
 .tableHeaderGrid {
@@ -153,7 +153,7 @@
 .row {
   border-radius: var(--layout-radius-lg);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(15, 23, 42, 0.8);
+  background: color-mix(in srgb, var(--theme-color-bg-panel, var(--color-surface-panel)) 80%, transparent);
   padding: 0.375rem 0.625rem;
   font-size: 11px;
   display: flex;
@@ -163,8 +163,8 @@
 }
 
 .row:hover {
-  border-color: rgba(52, 211, 153, 0.5);
-  background: rgba(30, 41, 59, 0.8);
+  border-color: color-mix(in srgb, var(--theme-color-success, var(--color-green)) 50%, transparent);
+  background: color-mix(in srgb, var(--theme-color-bg-elevated, var(--color-surface-zinc-900)) 80%, transparent);
 }
 
 .rowInactive {
@@ -183,19 +183,19 @@
   width: 0.625rem;
   height: 0.625rem;
   border-radius: 9999px;
-  background: #f87171;
+  background: var(--theme-color-danger, var(--color-red));
 }
 
 .stateDotIdle {
   width: 0.625rem;
   height: 0.625rem;
   border-radius: 9999px;
-  background: #737373;
+  background: var(--theme-color-text-muted, var(--color-text-muted));
 }
 
 .catName {
   font-family: ui-monospace, monospace;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--theme-color-text-secondary, var(--color-text-primary));
   max-width: 68px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -204,7 +204,7 @@
 
 .catCode {
   font-family: ui-monospace, monospace;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--theme-color-text-muted, var(--color-text-muted));
   font-size: 10px;
 }
 
@@ -221,21 +221,21 @@
 }
 
 .sevSevere {
-  background: rgba(239, 68, 68, 0.2);
-  color: #fca5a5;
-  border-color: rgba(239, 68, 68, 0.6);
+  background: color-mix(in srgb, var(--theme-color-danger, var(--color-red)) 20%, transparent);
+  color: var(--theme-color-text-danger, var(--color-red));
+  border-color: color-mix(in srgb, var(--theme-color-danger, var(--color-red)) 60%, transparent);
 }
 
 .sevIntermediate {
-  background: rgba(245, 158, 11, 0.15);
-  color: #fde68a;
-  border-color: rgba(251, 191, 36, 0.6);
+  background: color-mix(in srgb, var(--theme-color-warning, var(--color-status-warning)) 15%, transparent);
+  color: var(--theme-color-warning, var(--color-status-warning));
+  border-color: color-mix(in srgb, var(--theme-color-warning, var(--color-status-warning)) 60%, transparent);
 }
 
 .sevWarning {
-  background: rgba(34, 211, 238, 0.15);
-  color: #a5f3fc;
-  border-color: rgba(34, 211, 238, 0.6);
+  background: color-mix(in srgb, var(--theme-color-info, var(--color-brand-primary)) 15%, transparent);
+  color: var(--theme-color-info, var(--color-brand-primary));
+  border-color: color-mix(in srgb, var(--theme-color-info, var(--color-brand-primary)) 60%, transparent);
 }
 
 .statePill {
@@ -245,7 +245,7 @@
   align-items: center;
   gap: var(--space-1);
   font-size: 10px;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--theme-color-text-secondary, var(--color-text-primary));
 }
 
 .stateBadge {
@@ -271,7 +271,7 @@
 
 .descriptionMeta {
   font-size: 10px;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--theme-color-text-muted, var(--color-text-muted));
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -281,14 +281,14 @@
   width: 88px;
   text-align: right;
   font-size: 10px;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--theme-color-text-muted, var(--color-text-muted));
   font-family: ui-monospace, monospace;
   flex-shrink: 0;
 }
 
 .emptyState {
   font-size: 0.875rem;
-  color: #a3a3a3;
+  color: var(--theme-color-text-muted, var(--color-text-muted));
   padding: var(--space-8) var(--space-2);
   text-align: center;
 }

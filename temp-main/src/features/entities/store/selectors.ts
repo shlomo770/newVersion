@@ -1,4 +1,5 @@
 import type { RootState } from '@app/store';
+import { createSelector } from '@reduxjs/toolkit';
 import type { Entity } from './entitiesSlice';
 import { missionEntityIds } from '@domain/mappers/mission.mapper';
 
@@ -52,8 +53,10 @@ export function selectActiveMissionName(state: RootState): string | null {
   return missionsById[activeMissionId]?.name ?? null;
 }
 
-export function selectMissionsForStatusBar(state: RootState): { id: string; name: string }[] {
-  return Object.values(state.entities.missionsById)
-    .map((mission) => ({ id: mission.id, name: mission.name }))
-    .sort((a, b) => a.name.localeCompare(b.name, 'he'));
-}
+export const selectMissionsForStatusBar = createSelector(
+  [(state: RootState) => state.entities.missionsById],
+  (missionsById) =>
+    Object.values(missionsById)
+      .map((mission) => ({ id: mission.id, name: mission.name }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'he')),
+);

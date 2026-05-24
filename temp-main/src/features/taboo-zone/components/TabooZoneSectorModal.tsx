@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { CenterModal } from '@shared/components/Modal/CenterModal';
 import { DegreeInput } from '@shared/components/inputs/DegreeInput';
+import { AppButton, AppIconButton, AppInput } from '@shared/ui';
 import styles from './TabooZoneSectorModal.module.css';
 
 export interface TabooZoneSectorModalProps {
@@ -25,9 +26,9 @@ export function TabooZoneSectorModal({ open, onClose, onSend }: TabooZoneSectorM
     <CenterModal open={open} onClose={onClose}>
       <div className={styles.header}>
         <div className={styles.title}>Taboo Zone Sector</div>
-        <button type="button" onClick={onClose} className={styles.closeBtn} aria-label="Close">
+        <AppIconButton label="Close" size="sm" onClick={onClose}>
           ✕
-        </button>
+        </AppIconButton>
       </div>
 
       <div className={styles.row}>
@@ -36,35 +37,31 @@ export function TabooZoneSectorModal({ open, onClose, onSend }: TabooZoneSectorM
       </div>
 
       <div className={styles.field}>
-        <label className={styles.label} htmlFor="taboo-sector-radius">
-          Range (m)
-        </label>
-        <input
+        <AppInput
           id="taboo-sector-radius"
+          label="Range (m)"
           type="number"
           min={1}
           step={100}
           value={radius}
           onChange={(event) => setRadius(Number(event.target.value) || 0)}
-          className={styles.radiusInput}
         />
       </div>
 
       <div className={styles.footer}>
-        <button type="button" onClick={onClose} className={styles.cancelBtn}>
+        <AppButton size="sm" variant="secondary" onClick={onClose}>
           Cancel
-        </button>
-        <button
-          type="button"
+        </AppButton>
+        <AppButton
+          size="sm"
           disabled={!valid}
           onClick={() => {
             onSend({ minAngle, maxAngle, radius });
             onClose();
           }}
-          className={valid ? `${styles.applyBtn} ${styles.applyEnabled}` : `${styles.applyBtn} ${styles.applyDisabled}`}
         >
           Apply
-        </button>
+        </AppButton>
       </div>
     </CenterModal>
   );

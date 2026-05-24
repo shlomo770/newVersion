@@ -1,12 +1,22 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { MapState, Coordinates } from '@domain/models';
+import {
+  BRIGHTNESS_CONFIG,
+  DEFAULT_BASEMAP_ID,
+  DEFAULT_MAP_CENTER,
+  DEFAULT_MAP_ROTATION,
+  DEFAULT_MAP_ZOOM,
+  RESET_BASEMAP_ID,
+  RESET_MAP_CENTER,
+  RESET_MAP_ZOOM,
+} from '../config/mapDefaults.config';
 
 const initialState: MapState = {
-  rotation: 0,
-  brightness: 0,
-  center: { lng: 34.93993624253132, lat: 31.9865223910248 }, // Israel
-  zoom: 13,
-  selectedMapType: 'carto-light'
+  rotation: DEFAULT_MAP_ROTATION,
+  brightness: BRIGHTNESS_CONFIG.initial,
+  center: DEFAULT_MAP_CENTER,
+  zoom: DEFAULT_MAP_ZOOM,
+  selectedMapType: DEFAULT_BASEMAP_ID,
 };
 
 const mapSlice = createSlice({
@@ -18,7 +28,7 @@ const mapSlice = createSlice({
     },
 
     setBrightness: (state, action: PayloadAction<number>) => {
-      state.brightness = Math.max(0, Math.min(2, action.payload));
+      state.brightness = Math.max(0, Math.min(BRIGHTNESS_CONFIG.clampMax, action.payload));
     },
 
     setCenter: (state, action: PayloadAction<Coordinates>) => {
@@ -34,13 +44,13 @@ const mapSlice = createSlice({
     },
 
     resetMap: (state) => {
-      state.rotation = 0;
-      state.brightness = 1;
-      state.center = { lng: 34.784, lat: 32.055 };
-      state.zoom = 15;
-      state.selectedMapType = 'carto-light';
-    }
-  }
+      state.rotation = DEFAULT_MAP_ROTATION;
+      state.brightness = BRIGHTNESS_CONFIG.resetValue;
+      state.center = RESET_MAP_CENTER;
+      state.zoom = RESET_MAP_ZOOM;
+      state.selectedMapType = RESET_BASEMAP_ID;
+    },
+  },
 });
 
 export const {
@@ -49,7 +59,7 @@ export const {
   setCenter,
   setZoom,
   setMapType,
-  resetMap
+  resetMap,
 } = mapSlice.actions;
 
-export default mapSlice.reducer; 
+export default mapSlice.reducer;

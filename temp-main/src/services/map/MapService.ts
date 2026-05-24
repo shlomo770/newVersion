@@ -9,9 +9,11 @@ import { MapDrawingService, type DrawingUiState } from "./MapDrawingService";
 import { MapMeasurementService } from "./MapMeasurementService";
 import { MapStyleService } from "./MapStyleService";
 import type { MapLayerEntity } from './entity-manager/entityManagerTypes';
+import { attachMapErrorHandlers } from '@features/map/utils/mapErrorHandler';
 
 export class MapService {
   private map: maplibregl.Map | null = null;
+  private detachMapErrorHandlers: (() => void) | null = null;
   private layerManager: MapLayerManager | null = null;
   private entityRenderer: MapEntityRenderer | null = null;
   private drawingService: MapDrawingService | null = null;
@@ -55,6 +57,8 @@ export class MapService {
       boxZoom: true,
       doubleClickZoom: false
     });
+
+    this.detachMapErrorHandlers = attachMapErrorHandlers(this.map);
 
     const scaleControl = new maplibregl.ScaleControl({
       maxWidth: 150,
@@ -401,6 +405,8 @@ export class MapService {
   }
 
   public destroy() {
+    this.detachMapErrorHandlers?.();
+    this.detachMapErrorHandlers = null;
     this.drawingService?.destroy();
     this.drawingService = null;
     this.measurementService = null;
