@@ -9,7 +9,7 @@ import {
   type MeasureMenuItem,
   type MeasureToolMode,
 } from '@features/map/config';
-import styles from './MeasureToolMenu.module.css';
+import styles from './mapToolSubMenu.module.css';
 
 interface MeasureToolMenuProps {
   onClose?: () => void;

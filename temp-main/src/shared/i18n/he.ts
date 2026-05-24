@@ -58,6 +58,7 @@ export const he = {
     filter: 'סינון',
     panel: 'פאנל',
     basemap: 'החלף',
+    basemapMenuTitle: 'החלפת מפה',
     measureMenuTitle: 'כלי מדידה',
     measureDistance: {
       label: 'מרחק',

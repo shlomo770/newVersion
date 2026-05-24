@@ -1,8 +1,8 @@
 import type { FC, RefObject } from 'react';
 import { FlyoutMenu } from '@shared/components';
-import { BRIGHTNESS_CONFIG, MAP_TOOLBAR_FLYOUT } from '@features/map/config';
+import { BRIGHTNESS_CONFIG } from '@features/map/config';
 import { MAP_TOOL_ICONS } from '@/config';
-import styles from './MapControls.module.css';
+import subMenuStyles from './mapToolSubMenu.module.css';
 
 interface MapControlsBrightnessFlyoutProps {
   anchorRef: RefObject<HTMLElement>;
@@ -23,11 +23,12 @@ const MapControlsBrightnessFlyout: FC<MapControlsBrightnessFlyoutProps> = ({
     anchorRef={anchorRef}
     isOpen={isOpen}
     placement="bottom"
-    align={MAP_TOOLBAR_FLYOUT.align}
+    align="center"
     onClose={onClose}
+    className={subMenuStyles.compactFlyout}
   >
-    <div className={styles.brightnessPanel} onClick={(e) => e.stopPropagation()}>
-      <img src={MAP_TOOL_ICONS.brightness} className={styles.brightnessIcon} alt="" />
+    <div className={subMenuStyles.brightnessPanel} onClick={(e) => e.stopPropagation()}>
+      <img src={MAP_TOOL_ICONS.brightness} className={subMenuStyles.brightnessIcon} alt="" />
       <input
         type="range"
         min={BRIGHTNESS_CONFIG.uiMin}
@@ -36,7 +37,7 @@ const MapControlsBrightnessFlyout: FC<MapControlsBrightnessFlyoutProps> = ({
         value={brightness}
         onChange={(e) => onBrightnessChange(Number(e.target.value))}
         onClick={(e) => e.stopPropagation()}
-        className={styles.brightnessSlider}
+        className={subMenuStyles.brightnessSlider}
         style={{
           background: `linear-gradient(to right, var(--theme-color-primary) 0%, var(--theme-color-primary) ${brightness * 100}%, var(--theme-color-border) ${brightness * 100}%, var(--theme-color-border) 100%)`,
         }}

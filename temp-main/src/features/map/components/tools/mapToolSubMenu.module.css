@@ -1,0 +1,110 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 9.5rem;
+  padding: var(--space-1);
+  background: var(--theme-color-bg-panel-translucent, var(--color-surface-panel-translucent));
+  border: 1px solid var(--theme-color-border-subtle, var(--color-border-zinc));
+  border-radius: var(--theme-radius-sm, var(--layout-radius-sm));
+  box-shadow: var(--theme-shadow-floating, var(--shadow-floating));
+  color: var(--theme-color-text-inverse, var(--color-white));
+  font-family: var(--theme-font-family-sans, inherit);
+}
+
+.header {
+  font-size: var(--theme-font-size-xs, 0.75rem);
+  font-weight: 600;
+  padding: 2px var(--space-1);
+  color: var(--theme-color-text-muted, rgba(255, 255, 255, 0.7));
+  letter-spacing: 0.02em;
+  text-align: right;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: 2rem;
+  padding: var(--space-1) var(--space-2);
+  border: none;
+  border-radius: var(--theme-radius-sm, var(--layout-radius-sm));
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  text-align: right;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.row:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.rowActive {
+  background: var(--theme-color-primary-muted, var(--color-brand-primary-muted));
+}
+
+.row:focus-visible {
+  outline: 2px solid var(--theme-color-border-active, rgba(56, 189, 248, 0.6));
+  outline-offset: 1px;
+}
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--theme-font-size-xs, 0.75rem);
+  font-weight: 500;
+}
+
+.icon {
+  color: var(--theme-color-text-inverse, var(--color-white));
+  flex-shrink: 0;
+}
+
+.emojiIcon {
+  flex-shrink: 0;
+  font-size: 0.875rem;
+  line-height: 1;
+}
+
+.activeDot {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 9999px;
+  background: var(--color-green);
+  flex-shrink: 0;
+}
+
+.brightnessPanel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 9.5rem;
+  padding: var(--space-1);
+}
+
+.brightnessIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+
+.brightnessSlider {
+  appearance: none;
+  width: 6.5rem;
+  height: 0.75rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  outline: none;
+}
+
+.compactFlyout {
+  padding: 0;
+  border-radius: var(--theme-radius-sm, var(--layout-radius-sm));
+}

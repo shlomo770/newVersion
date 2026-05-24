@@ -7,7 +7,7 @@ import {
   TARGET_FILTER_MENU_TITLE,
   type TargetFilterItem,
 } from '@features/map/config';
-import styles from './TargetFilterMenu.module.css';
+import styles from './mapToolSubMenu.module.css';
 
 /**
  * Target filter sub-menu — fully config-driven.
