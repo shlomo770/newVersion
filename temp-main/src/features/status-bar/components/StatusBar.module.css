@@ -67,6 +67,33 @@
   transform: scale(1.1);
 }
 
+.coordsWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 250px;
+}
+
+.coordsCenterButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-1);
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: var(--layout-radius-sm);
+  background: transparent;
+  color: inherit;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.coordsCenterButton:hover,
+.coordsCenterButton[aria-expanded='true'] {
+  background: rgba(255, 255, 255, 0.1);
+}
+
 .coordsButton {
   display: flex;
   align-items: center;
@@ -94,6 +121,40 @@
   font-family: ui-monospace, monospace;
   white-space: nowrap;
   font-size: 1rem;
+}
+
+.coordsInput {
+  flex: 1;
+  min-width: 11rem;
+  max-width: 16rem;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--layout-radius-sm);
+  background: transparent;
+  color: inherit;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 1rem;
+  line-height: 1.25;
+  text-align: left;
+  direction: ltr;
+  touch-action: manipulation;
+}
+
+.coordsInput::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.8125rem;
+}
+
+.coordsInput:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.coordsInput:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(0, 0, 0, 0.25);
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15);
 }
 
 .elevationText {

@@ -137,10 +137,16 @@ export function useMapContextMenu(
 
     const handleMapClick = (e: MapMouseEvent) => {
       const availableTargetLayers = TARGET_LAYER_IDS.filter((layerId) => map.getLayer(layerId));
-      if (availableTargetLayers.length === 0) return;
+      if (availableTargetLayers.length === 0) {
+        closeMenus();
+        return;
+      }
 
       const features = map.queryRenderedFeatures(e.point, { layers: availableTargetLayers });
-      if (features.length === 0) return;
+      if (features.length === 0) {
+        closeMenus();
+        return;
+      }
 
       const uniqueIds = features
         .map((f) => String(f.properties?.id ?? ''))

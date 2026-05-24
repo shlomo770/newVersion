@@ -129,3 +129,44 @@
   font-weight: 700;
   color: var(--theme-color-text-accent, var(--color-map-hud));
 }
+
+.waitingAction {
+  position: relative;
+  width: 3.75rem;
+  height: 3.75rem;
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.waitingSpinner {
+  display: block;
+}
+
+.waitingAbortBtn {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 2.35rem;
+  height: 2.35rem;
+  padding: 0;
+  border: none;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 35% 30%, #ff6262 0%, #db2121 55%, #951010 100%);
+  color: var(--color-white);
+  font-size: 0.625rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.waitingAbortBtn:hover {
+  filter: brightness(1.06);
+}
+
+.waitingAbortBtn:active {
+  transform: scale(0.96);
+}

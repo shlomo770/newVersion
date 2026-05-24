@@ -56,8 +56,10 @@ export const ENTITIES_SIDEBAR_ICONS = {
 export const STATUS_BAR_ICONS = {
   /** Overlay glyph shown on radar/INS/gun icons when comms are down. */
   noComm: './icons/swap_no_link_arrows_512.png',
-  /** Coordinate-block "center to my position" icon. */
+  /** Coordinate-block launcher icon. */
   coordinatesCenter: './icons/pointing_center_512.png',
+  /** GPS center action inside the coordinate flyout. */
+  gps: '/icons/GPS_Status.svg',
 } as const;
 
 /* ------------------------------------------------------------------ */

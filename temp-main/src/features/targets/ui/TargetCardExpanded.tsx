@@ -106,13 +106,33 @@ export function TargetCardExpanded({
             />
           )}
           {(target.status === TargetStateString.track ||
-            target.status === TargetStateString.arm ||
-            target.status === TargetStateString.allocated) && (
+            target.status === TargetStateString.arm) && (
             <RedRoundButton
               onClick={() => onAbort(target.id)}
               size={ACTION_BUTTON_SIZES.abortRound}
               label="ביטול"
             />
+          )}
+          {target.status === TargetStateString.allocated && (
+            <div>
+              <div className={styles.waitingAction}>
+                <SpinnerMustard
+                  size={ACTION_BUTTON_SIZES.spinner}
+                  stroke={ACTION_BUTTON_SIZES.spinnerStroke}
+                  className={styles.waitingSpinner}
+                />
+                <button
+                  type="button"
+                  className={styles.waitingAbortBtn}
+                  onClick={() => onAbort(target.id)}
+                  aria-label="ביטול"
+                  title="ביטול"
+                >
+                  ביטול
+                </button>
+              </div>
+              <div className={styles.actionLabel}>בהמתנה</div>
+            </div>
           )}
           {target.status === TargetStateString.destroyed && (
             <div>
@@ -121,15 +141,6 @@ export function TargetCardExpanded({
                 src={TARGET_CARD_ICONS.destroyed}
               />
               <div className={styles.actionLabel}>הושמד</div>
-            </div>
-          )}
-          {target.status === TargetStateString.allocated && (
-            <div>
-              <SpinnerMustard
-                size={ACTION_BUTTON_SIZES.spinner}
-                stroke={ACTION_BUTTON_SIZES.spinnerStroke}
-              />
-              <div className={styles.actionLabel}>בהמתנה</div>
             </div>
           )}
         </div>
